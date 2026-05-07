@@ -53,6 +53,10 @@ export function CheatSheet({ isModal, onClose }: Props) {
           <li>
             <code>1</code> in a <code>1-2-3</code> run = 5 pts
           </li>
+          <li>
+            <code>1</code> in a formation of ones (e.g.{" "}
+            <code>1-1-1</code>) = 25 pts
+          </li>
           <li>Joly (Joker) = 50 pts</li>
         </ul>
       </section>
