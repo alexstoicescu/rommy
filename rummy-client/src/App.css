@@ -288,6 +288,29 @@
   50% { opacity: 0.55; }
 }
 
+.rupere-banner {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1050;
+  padding: 10px 22px;
+  border-radius: 6px;
+  background: rgba(36, 4, 12, 0.92);
+  border: 1px solid #ffe066;
+  color: #ffe066;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(255, 224, 102, 0.6);
+  box-shadow: 0 0 16px rgba(255, 224, 102, 0.4);
+  animation: pulse 1.6s ease-in-out infinite;
+  max-width: 90vw;
+  text-align: center;
+}
+
 .toast {
   position: fixed;
   bottom: 28px;

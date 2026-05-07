@@ -145,6 +145,10 @@ function advanceTurn(room: Room): void {
   room.hasDrawn = false;
   room.mustUseTileId = null;
   room.lastRupere = null;
+  // pendingRupereBonusCards should always be empty here (advanceTurn
+  // only fires after a valid discard, which the must-use rule blocks
+  // until the target is melded). Belt-and-braces: clear it.
+  room.pendingRupereBonusCards = [];
   if (room.currentTurn) {
     const idx = room.players.findIndex((p) => p.socketId === room.currentTurn);
     if (idx < 0) {
@@ -206,6 +210,30 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
 // =====================================================================
 //  Bot scheduling
 // =====================================================================
+
+/**
+ * If the active player has just satisfied a Rupere obligation (the
+ * target tile is no longer in their hand), drop the staged bonus
+ * tiles into their hand and clear the obligation.
+ *
+ * Returns true if a redemption happened, so callers can know to send
+ * a fresh broadcast.
+ */
+function maybeRedeemRupereBonus(room: Room, player: Player): boolean {
+  if (!room.mustUseTileId) return false;
+  if (player.hand.some((t) => t.id === room.mustUseTileId)) return false;
+  // Target left the hand — it's now on the board. Deliver the bonus.
+  if (room.pendingRupereBonusCards.length > 0) {
+    console.log(
+      `Rupere bonus delivered to ${player.name}: ${room.pendingRupereBonusCards.length} tile(s) [${room.pendingRupereBonusCards.map((t) => t.id).join(", ")}]`,
+    );
+    player.hand.push(...room.pendingRupereBonusCards);
+    room.pendingRupereBonusCards = [];
+  }
+  room.mustUseTileId = null;
+  room.lastRupere = null;
+  return true;
+}
 
 function maybeScheduleBotTurn(room: Room): void {
   if (!room.gameStarted || !room.currentTurn) return;
@@ -560,7 +588,7 @@ io.on("connection", (socket: Socket) => {
     (room.board[socket.id] ??= []).push(...proposedMelds);
     player.hasMeldedInitial = true;
     for (const meld of proposedMelds) player.meldedScore += scoreMeldFinal(meld);
-    room.lastRupere = null;
+    maybeRedeemRupereBonus(room, player);
     socket.emit("etalare_success");
     broadcastGameState(room);
   });
@@ -608,7 +636,7 @@ io.on("connection", (socket: Socket) => {
     player.hand = player.hand.filter((t) => !seen.has(t.id));
     (room.board[socket.id] ??= []).push(...proposedMelds);
     for (const meld of proposedMelds) player.meldedScore += scoreMeldFinal(meld);
-    room.lastRupere = null;
+    maybeRedeemRupereBonus(room, player);
     broadcastGameState(room);
   });
 
@@ -671,7 +699,7 @@ io.on("connection", (socket: Socket) => {
       player.hand.splice(tileIdx, 1);
       targetZone[meldIndex] = chosen;
       player.meldedScore += newS - oldS;
-      room.lastRupere = null;
+      maybeRedeemRupereBonus(room, player);
       broadcastGameState(room);
     },
   );
@@ -706,11 +734,21 @@ io.on("connection", (socket: Socket) => {
       return;
     }
     const lastIdx = room.discardPile.length - 1;
+    const targetTile = room.discardPile[pickIdx];
 
     const sendInvalid = (msg: string) => {
       socket.emit("invalid_move", msg);
       io.to(socket.id).emit("game_state_update", viewForSocket(room, socket.id));
     };
+
+    // First-Discard Ban: the seeded discard tile can never be Rupered.
+    if (
+      room.firstDiscardTileId &&
+      targetTile.id === room.firstDiscardTileId
+    ) {
+      sendInvalid("Cannot pick the first discarded card.");
+      return;
+    }
 
     if (!player.hasMeldedInitial) {
       // Rule A: must be the most recently discarded tile.
@@ -742,14 +780,15 @@ io.on("connection", (socket: Socket) => {
     }
     // Rule B (post-Etalare): any tile is fair game.
 
-    // splice(pickIdx) with no second arg removes pickIdx..end inclusive
-    // — exactly the "this tile + everything after it" semantics.
+    // Splice(pickIdx) lifts the target + every tile after it. Per the
+    // staged-Rupere protocol the player only *receives* the target
+    // immediately. The rest is held until they actually meld the
+    // target — anti-cheat against grabbing a fat pile and stalling.
     const takenTiles = room.discardPile.splice(pickIdx);
-    player.hand.push(...takenTiles);
+    const [received, ...bonus] = takenTiles;
+    player.hand.push(received);
+    room.pendingRupereBonusCards = bonus;
     room.hasDrawn = true;
-    // The must-use rule applies *only* to the specific tile the player
-    // clicked (the "break" tile). The bonus tiles swept up after it
-    // carry no obligation.
     room.mustUseTileId = tileId;
     room.lastRupere = {
       tiles: takenTiles.slice(),
@@ -757,7 +796,7 @@ io.on("connection", (socket: Socket) => {
       playerId: socket.id,
     };
     console.log(
-      `Rupere in ${room.id}: ${player.name} took ${takenTiles.length} tile(s) starting at ${tileId} (must-use=${tileId}) [${takenTiles.map((t) => t.id).join(", ")}]`,
+      `Rupere in ${room.id}: ${player.name} took target ${tileId}, ${bonus.length} tile(s) staged [${bonus.map((t) => t.id).join(", ")}]`,
     );
     broadcastGameState(room);
   });
@@ -772,16 +811,20 @@ io.on("connection", (socket: Socket) => {
       return;
     }
     const player = room.players.find((p) => p.socketId === socket.id)!;
-    const heldIds = new Set(player.hand.map((t) => t.id));
-    if (!undo.tiles.every((t) => heldIds.has(t.id))) {
-      // Some of the rupered tiles have been melded/attached — undo no
-      // longer makes sense.
+    // Under the staged Rupere protocol the target tile lives in the
+    // player's hand and the rest of the picked stack lives in
+    // pendingRupereBonusCards. Undo is only legal while the target is
+    // still in hand (i.e. it hasn't been melded yet).
+    const targetTileId = undo.tiles[0]?.id;
+    if (!targetTileId || !player.hand.some((t) => t.id === targetTileId)) {
       room.lastRupere = null;
       socket.emit("action_error", { reason: "rupere_already_used" });
       return;
     }
-    const undoIds = new Set(undo.tiles.map((t) => t.id));
-    player.hand = player.hand.filter((t) => !undoIds.has(t.id));
+    // Remove the target from hand; the bonus tiles are still in
+    // pending and will be discarded back along with it.
+    player.hand = player.hand.filter((t) => t.id !== targetTileId);
+    room.pendingRupereBonusCards = [];
     room.discardPile.splice(undo.pickIdx, 0, ...undo.tiles);
     room.hasDrawn = false;
     room.mustUseTileId = null;
@@ -878,7 +921,7 @@ io.on("connection", (socket: Socket) => {
       meld[jokerIdx] = replacement;
       player.hand.splice(handIdx, 1);
       player.hand.push(joker);
-      room.lastRupere = null;
+      maybeRedeemRupereBonus(room, player);
       console.log(
         `Joker swap in ${room.id}: ${player.name} replaced ${jokerId} on ${targetPlayerId}/meld-${meldIndex} with ${replacement.id}`,
       );

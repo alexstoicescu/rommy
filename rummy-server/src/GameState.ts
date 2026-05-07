@@ -40,10 +40,22 @@ export interface Room {
   /**
    * Snapshot of the tiles taken on this turn's Rupere (in pile order)
    * and the index they were picked from, so the move can be undone if
-   * the player realises they cannot meld. Cleared by any meld/attach
-   * commit and on turn advance.
+   * the player realises they cannot meld. Cleared on a successful
+   * meld of the target tile (after the bonus is delivered) and on
+   * turn advance.
    */
   lastRupere: { tiles: Tile[]; pickIdx: number; playerId: string } | null;
+  /**
+   * Bonus tiles "above" the rupered target — held by the server until
+   * the player actually melds the target tile. Pushed to the player's
+   * hand the moment they successfully play the target on the board.
+   */
+  pendingRupereBonusCards: Tile[];
+  /**
+   * Tile id of the very first discarded card of the round (the seeded
+   * discard). It can never be Rupered.
+   */
+  firstDiscardTileId: string | null;
 }
 
 export const MAX_PLAYERS = 4;
@@ -61,6 +73,8 @@ export function createRoom(id: string): Room {
     turnEndsAt: null,
     mustUseTileId: null,
     lastRupere: null,
+    pendingRupereBonusCards: [],
+    firstDiscardTileId: null,
   };
 }
 
@@ -120,6 +134,8 @@ export function dealRoom(room: Room): void {
   });
 
   room.discardPile = [deck[cursor]];
+  room.firstDiscardTileId = deck[cursor].id;
+  room.pendingRupereBonusCards = [];
   cursor += 1;
   room.drawPile = deck.slice(cursor);
   // Reset every player's zone — fresh empty arrays keyed by socketId.

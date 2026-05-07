@@ -895,6 +895,12 @@ function App() {
         {activeTile ? <TileComponent tile={activeTile} /> : null}
       </DragOverlay>
 
+      {isMyTurn && mustUseTileId && (
+        <div className="rupere-banner" role="status">
+          ⚠ Meld the drawn card to receive the rest of the pile!
+        </div>
+      )}
+
       {toast && (
         <div className="toast toast--error" role="status">
           {toast}
