@@ -597,6 +597,11 @@ function App() {
   };
 
   const isMyTurn = currentTurn === socket.id;
+  const localThemeColor = (() => {
+    const me = gamePlayers.find((p) => p.socketId === socket.id);
+    if (!me) return PLAYER_THEMES[0];
+    return PLAYER_THEMES[me.colorIndex % PLAYER_THEMES.length];
+  })();
 
   if (!roomCode) {
     return (
@@ -638,7 +643,10 @@ function App() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="app">
+      <div
+        className="app"
+        style={{ ["--theme-color" as string]: localThemeColor }}
+      >
         <header className="app-header">
           <div className="app-header__title-row">
             <h1>Rommy</h1>

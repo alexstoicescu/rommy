@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## Checkpoint 24 — Terminal Synth-wave Immersion Overhaul
+
+- **Outrun background (`.app`)** — felt green replaced with `#0d0221`. Layered backgrounds: the deep navy/purple base, a 44px × 44px neon-purple grid (`linear-gradient(rgba(188, 19, 254, 0.15) 1px, transparent 1px)` + the 90deg twin), and a `radial-gradient(circle, transparent 20%, #0d0221 100%)` vignette. `.app-header` switches to a translucent panel with `backdrop-filter: blur(4px)` and a thin neon-purple bottom border.
+- **CRT scanlines + flicker** — new `.app::after` (fixed, `pointer-events: none`, `z-index: 50`, `mix-blend-mode: multiply`) paints a `repeating-linear-gradient` of `rgba(18, 16, 33, 0.1)` every 2px. A 6s `crt-flicker` keyframe pulses opacity 0.9 → 1.0 → 0.9 for the slow flicker.
+- **Theme color plumbing** — `App.tsx` reads the local player's `colorIndex`, looks up the matching entry in `PLAYER_THEMES`, and sets `style={{ '--theme-color': … }}` on `.app`. `GameBoard` also sets `--theme-color` on each `.player-zone` so tiles inside that zone glow in the *owner's* color.
+- **Terminal HUD typography** — `room-code`, `room-count`, `player-tag`, `turn-indicator`, `turn-timer`, `rack-count`, `player-zone__points/cards/warn`, `draw-pile__badge` all forced to `'Courier New', Courier, monospace`. Static neon flicker via a small `text-shadow` keyed off `var(--theme-color)` (using `color-mix` for a softer outer glow).
+- **Neon tiles (`TileComponent.css`)** — base border softened to `1px solid rgba(255, 255, 255, 0.1)`. `:hover` and `.tile--selected` now apply a sharp two-stop neon outer glow `0 0 6px / 0 0 14px var(--theme-color)` plus the existing `translateY(-8px)` lift, with the border picking up the theme color too.
+
 ## Checkpoint 23 — Lean: Turn Broadcast Verify, 3-Tile Warning & Tile Hover
 
 - **Proactive turn broadcast (verify)** — confirmed `advanceTurn` runs `startTurnTimer` then `broadcastGameState` in that order (added in Checkpoint 21), so the moment a player discards every other client receives the fresh `turnEndsAt` and starts ticking down from 120s. No change required.

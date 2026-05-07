@@ -1,16 +1,57 @@
+/* ─────────────────────────────────────────────────────────────────
+   Synth-wave terminal background — deep navy/purple, neon grid,
+   radial vignette. The local player's theme color is plumbed in via
+   the `--theme-color` custom property (set inline on .app).
+   ──────────────────────────────────────────────────────────────── */
 .app {
+  --theme-color: #ffe066;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #1f3b2d;
   color: #f5f5f5;
   font-family: system-ui, sans-serif;
+  background-color: #0d0221;
+  background-image:
+    radial-gradient(circle at center, transparent 20%, #0d0221 100%),
+    linear-gradient(rgba(188, 19, 254, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(188, 19, 254, 0.15) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    44px 44px,
+    44px 44px;
+  position: relative;
+  isolation: isolate;
+}
+
+/* CRT scanlines + slow flicker, painted above everything but
+   non-interactive thanks to pointer-events: none. */
+.app::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(18, 16, 33, 0.1) 0,
+    rgba(18, 16, 33, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  mix-blend-mode: multiply;
+  z-index: 50;
+  animation: crt-flicker 6s ease-in-out infinite;
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.9; }
 }
 
 .app-header {
   padding: 16px 24px;
-  background: #14271d;
-  border-bottom: 2px solid #0c1813;
+  background: rgba(13, 2, 33, 0.75);
+  border-bottom: 1px solid rgba(188, 19, 254, 0.4);
+  backdrop-filter: blur(4px);
 }
 
 .app-header h1 {
@@ -54,6 +95,21 @@
   flex-wrap: wrap;
 }
 
+/* HUD typography — terminal monospace + a subtle neon glow keyed off
+   the local player's theme color. */
+.room-code,
+.room-count,
+.player-tag,
+.turn-indicator,
+.turn-timer,
+.rack-count,
+.player-zone__points,
+.player-zone__cards,
+.player-zone__warn,
+.draw-pile__badge {
+  font-family: "Courier New", Courier, monospace;
+}
+
 .room-code {
   font-size: 13px;
   letter-spacing: 2px;
@@ -62,11 +118,13 @@
 }
 
 .room-code strong {
-  font-family: "Courier New", monospace;
+  font-family: "Courier New", Courier, monospace;
   font-size: 18px;
   letter-spacing: 4px;
-  color: #ffe066;
-  text-shadow: 0 0 6px rgba(255, 224, 102, 0.6);
+  color: var(--theme-color, #ffe066);
+  text-shadow:
+    0 0 4px var(--theme-color, #ffe066),
+    0 0 10px color-mix(in srgb, var(--theme-color, #ffe066) 50%, transparent);
   margin-left: 6px;
 }
 
@@ -74,10 +132,11 @@
   font-size: 13px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.65);
   padding: 2px 10px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  background: rgba(188, 19, 254, 0.12);
+  border: 1px solid rgba(188, 19, 254, 0.3);
 }
 
 .player-tag {
@@ -85,9 +144,10 @@
   letter-spacing: 1.5px;
   font-weight: bold;
   padding: 2px 10px;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1.5px solid currentColor;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0 6px currentColor;
 }
 
 .board-actions {
@@ -163,17 +223,23 @@
 
 .turn-indicator {
   font-size: 14px;
-  color: #cfe2d6;
+  color: rgba(255, 255, 255, 0.85);
   padding: 4px 12px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  background: rgba(13, 2, 33, 0.55);
+  border: 1px solid rgba(188, 19, 254, 0.3);
+  font-variant-numeric: tabular-nums;
 }
 
 .turn-indicator--mine {
-  color: #14271d;
-  background: #ffe066;
+  color: var(--theme-color, #ffe066);
+  background: rgba(13, 2, 33, 0.75);
+  border-color: var(--theme-color, #ffe066);
   font-weight: bold;
-  box-shadow: 0 0 0 2px #ffd43b, 0 0 12px rgba(255, 224, 102, 0.6);
+  text-shadow:
+    0 0 4px var(--theme-color, #ffe066),
+    0 0 10px color-mix(in srgb, var(--theme-color, #ffe066) 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--theme-color, #ffe066) 40%, transparent);
 }
 
 .turn-indicator--low {
@@ -244,10 +310,12 @@
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #cfe2d6;
+  color: var(--theme-color, #cfe2d6);
   padding: 2px 10px;
-  border-radius: 5px;
-  background: rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+  background: rgba(13, 2, 33, 0.6);
+  border: 1px solid color-mix(in srgb, var(--theme-color, #cfe2d6) 50%, transparent);
+  text-shadow: 0 0 4px var(--theme-color, transparent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -302,4 +370,6 @@
 
 .rack-area {
   padding: 16px 24px 32px;
+  position: relative;
+  z-index: 1;
 }

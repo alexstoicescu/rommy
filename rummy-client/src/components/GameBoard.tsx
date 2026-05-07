@@ -57,6 +57,7 @@ export function GameBoard({
               style={{
                 borderColor: color,
                 boxShadow: `0 0 14px ${color}33, inset 0 0 8px ${color}22`,
+                ["--theme-color" as string]: color,
               }}
             >
               <div
