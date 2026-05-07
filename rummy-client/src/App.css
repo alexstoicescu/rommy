@@ -409,7 +409,7 @@
   width: 100%;
   padding: 0 2rem;
   box-sizing: border-box;
-  align-items: start;
+  align-items: center;
   position: relative;
   min-height: 0;
 }
@@ -437,8 +437,8 @@
 .play-grid > .cheat-sheet {
   grid-column: 3;
   width: 100%;
-  max-width: 300px;
-  justify-self: start;
+  max-width: 320px;
+  justify-self: center;
   flex: none;
 }
 
