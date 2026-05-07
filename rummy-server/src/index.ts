@@ -547,6 +547,15 @@ io.on("connection", (socket: Socket) => {
       sendInvalid("Invalid Etalare. Must be >= 45 points and include a Suita.");
       return;
     }
+    // If a Rupere is pending, the Etalare must include the broken tile —
+    // otherwise the player would dodge the must-use rule by melding the
+    // 45-pt threshold from other tiles and stranding the rupere'd one.
+    if (room.mustUseTileId && !seen.has(room.mustUseTileId)) {
+      sendInvalid(
+        "Your Etalare must include the tile you picked from the discard pile.",
+      );
+      return;
+    }
     player.hand = player.hand.filter((t) => !seen.has(t.id));
     (room.board[socket.id] ??= []).push(...proposedMelds);
     player.hasMeldedInitial = true;

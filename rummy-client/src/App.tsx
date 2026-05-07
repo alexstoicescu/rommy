@@ -145,6 +145,18 @@ function App() {
   const [drawPileCount, setDrawPileCount] = useState(0);
   const [handCounts, setHandCounts] = useState<Record<string, number>>({});
   const [meldPoints, setMeldPoints] = useState<Record<string, number>>({});
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    if (toastTimerRef.current != null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 3500);
+  };
   const [currentTurn, setCurrentTurn] = useState<string | null>(null);
   const [hasMelded, setHasMelded] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -248,7 +260,7 @@ function App() {
       );
     };
     const onInvalidMove = (message: string) => {
-      alert(message);
+      showToast(message);
       setDraftMelds([]);
       socket.emit("request_sync");
     };
@@ -816,6 +828,12 @@ function App() {
       <DragOverlay>
         {activeTile ? <TileComponent tile={activeTile} /> : null}
       </DragOverlay>
+
+      {toast && (
+        <div className="toast toast--error" role="status">
+          {toast}
+        </div>
+      )}
 
       {gameOver && (
         <GameOverModal

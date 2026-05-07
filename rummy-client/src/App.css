@@ -276,6 +276,36 @@
   50% { opacity: 0.55; }
 }
 
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 22px;
+  border-radius: 6px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  z-index: 1100;
+  animation: toast-in 220ms ease-out;
+  max-width: 80vw;
+  text-align: center;
+}
+
+.toast--error {
+  background: rgba(36, 4, 12, 0.92);
+  border: 1px solid #ff4060;
+  color: #ff8a8a;
+  text-shadow: 0 0 6px rgba(255, 64, 96, 0.55);
+  box-shadow: 0 0 16px rgba(255, 64, 96, 0.45);
+  font-weight: bold;
+}
+
+@keyframes toast-in {
+  from { transform: translate(-50%, 12px); opacity: 0; }
+  to   { transform: translate(-50%, 0);     opacity: 1; }
+}
+
 .rack-controls {
   display: flex;
   gap: 8px;
