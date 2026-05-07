@@ -321,12 +321,18 @@
 .rack-controls {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
-  padding: 0 12px 6px;
+  padding: 0 12px;
   flex-wrap: wrap;
   box-sizing: border-box;
+}
+
+.rack-controls__sorts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .rack-sort {
@@ -364,25 +370,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 1400px) {
-  /* Squeeze the side counterweights as the viewport narrows so the
-     board still gets enough breathing room. */
-  .board-area {
-    grid-template-columns: 1fr minmax(0, 1100px) 1fr;
-    gap: 1rem;
-  }
-}
-
 @media (max-width: 1024px) {
   /* Below 1024px the inline cheat-sheet hides (see CheatSheet.css) and
-     the board reclaims the entire width. */
-  .board-area {
+     the central pillar reclaims the entire width. */
+  .play-grid {
     grid-template-columns: 1fr;
-    max-width: 100%;
   }
-  .board-area__main {
+  .central-pillar {
     grid-column: 1;
-    width: 100%;
   }
 }
 
@@ -390,8 +385,7 @@
   .app-header h1 { font-size: 20px; }
   .lobby-controls { flex-wrap: wrap; gap: 8px; }
   .piles-area { padding-top: 12px; }
-  .board-area { padding: 0 12px; }
-  .rack-area { padding: 12px; }
+  .play-grid { padding: 0 12px; }
 }
 
 .piles-area {
@@ -402,38 +396,35 @@
   justify-content: center;
 }
 
-/* Strictly balanced 3-column grid:
-   - 300px left counterweight (empty, mirrors the rules panel),
-   - flexible center for the board (800-1200px),
-   - 300px right column for the cheat sheet.
-   The whole shelf is capped at 1800px and margin: auto so it sits
-   dead-center on ultra-wide displays. */
-.board-area {
+/* Master grid: empty counterweight | central pillar | rules sidecar.
+   align-items: start keeps the rules from stretching vertically;
+   margin-top on the cheat-sheet makes its top edge align with the
+   board's. */
+.play-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 300px minmax(800px, 1200px) 300px;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
+  grid-template-columns: 1fr minmax(auto, 1200px) 1fr;
+  align-items: start;
   width: 100%;
-  max-width: 1800px;
-  margin: 0 auto;
   padding: 0 24px;
   position: relative;
   min-height: 0;
   box-sizing: border-box;
 }
 
-.board-area__main {
+/* The Central Pillar — every primary gameplay element stacks here. */
+.central-pillar {
   grid-column: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 0;
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 1rem;
+  min-width: 0;
 }
 
-.board-area__main > .game-board {
+.central-pillar > .game-board {
   width: 100%;
   min-height: 60vh;
   /* Neon floating board */
@@ -443,17 +434,17 @@
     0 0 20px rgba(0, 255, 128, 0.2);
 }
 
-.board-area > .cheat-sheet {
+.play-grid > .cheat-sheet {
   grid-column: 3;
   width: 100%;
   max-width: 300px;
   justify-self: start;
+  margin-top: 2rem;
   flex: none;
 }
 
 .etalare-button {
   align-self: center;
-  margin-top: -8px;
   padding: 10px 22px;
   border-radius: 8px;
   font-family: "Courier New", Courier, monospace;
@@ -494,8 +485,3 @@
     inset 0 0 10px color-mix(in srgb, var(--theme-color, #ffe066) 35%, transparent);
 }
 
-.rack-area {
-  padding: 16px 24px 32px;
-  position: relative;
-  z-index: 1;
-}

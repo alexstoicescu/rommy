@@ -819,8 +819,8 @@ function App() {
           />
         </div>
 
-        <div className="board-area">
-          <div className="board-area__main">
+        <div className="play-grid">
+          <div className="central-pillar">
             <GameBoard
               board={board}
               draftMelds={draftMelds}
@@ -858,37 +858,36 @@ function App() {
                 </button>
               </div>
             )}
+            <div className="rack-controls">
+              <div className="rack-controls__sorts">
+                <button
+                  className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
+                  onClick={() => setSortMode("groups")}
+                >
+                  Sort by Groups
+                </button>
+                <button
+                  className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
+                  onClick={() => setSortMode("runs")}
+                >
+                  Sort by Runs
+                </button>
+                {sortMode !== "none" && (
+                  <button
+                    className="rack-sort"
+                    onClick={() => setSortMode("none")}
+                  >
+                    Clear sort
+                  </button>
+                )}
+              </div>
+              {gameStarted && (
+                <span className="rack-count">Cards: {hand.length}</span>
+              )}
+            </div>
+            <PlayerRack tiles={rackTiles} />
           </div>
           <CheatSheet />
-        </div>
-
-        <div className="rack-area">
-          <div className="rack-controls">
-            <button
-              className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
-              onClick={() => setSortMode("groups")}
-            >
-              Sort by Groups
-            </button>
-            <button
-              className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
-              onClick={() => setSortMode("runs")}
-            >
-              Sort by Runs
-            </button>
-            {sortMode !== "none" && (
-              <button
-                className="rack-sort"
-                onClick={() => setSortMode("none")}
-              >
-                Clear sort
-              </button>
-            )}
-            {gameStarted && (
-              <span className="rack-count">Cards: {hand.length}</span>
-            )}
-          </div>
-          <PlayerRack tiles={rackTiles} />
         </div>
       </div>
 
