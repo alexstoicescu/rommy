@@ -117,6 +117,8 @@ export function Landing({
         >
           {probedFull ? "Room Full" : "Join Game"}
         </button>
+
+        <div className="landing__version">v1.0.1 - Fog of War</div>
       </div>
     </div>
   );

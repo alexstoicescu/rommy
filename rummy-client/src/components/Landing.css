@@ -130,3 +130,14 @@
   background: rgba(255, 255, 255, 0.06);
   color: #cfe2d6;
 }
+
+.landing__version {
+  margin-top: 6px;
+  text-align: center;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  user-select: none;
+}

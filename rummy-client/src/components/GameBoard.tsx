@@ -68,7 +68,9 @@ export function GameBoard({
                 <span className="player-zone__stats">
                   <span className="player-zone__points">Points: {points}</span>
                   {!isLocal && (
-                    <span className="player-zone__cards">Cards: {cards}</span>
+                    <span className="player-zone__cards">
+                      Cards: {cards <= 3 ? cards : "3+"}
+                    </span>
                   )}
                   {lowCards && (
                     <span className="player-zone__warn">
