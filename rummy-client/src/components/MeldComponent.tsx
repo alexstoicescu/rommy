@@ -49,9 +49,10 @@ function JokerSlot({ meldId, tile }: JokerSlotProps) {
 export function MeldComponent({ id, tiles, interactive = true }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
+  const isDraft = id.startsWith("draft-meld-");
   const className = `meld${isOver ? " meld--over" : ""}${
     interactive ? "" : " meld--confirmed"
-  }`;
+  }${isDraft ? " meld--draft" : ""}`;
 
   if (!interactive) {
     return (

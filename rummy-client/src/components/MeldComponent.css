@@ -23,6 +23,18 @@
   border-color: rgba(135, 178, 156, 0.55);
 }
 
+/* Draft (in-progress) meld — every tile inside reads as "selected"
+   with a permanent neon lift + glow so the player knows exactly what
+   is staged for Etalare. */
+.meld--draft .tile {
+  transform: translateY(-4px);
+  border-color: var(--theme-color, #ffe066);
+  box-shadow:
+    0 0 6px var(--theme-color, #ffe066),
+    0 0 14px var(--theme-color, #ffe066),
+    0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
 .joker-slot {
   display: inline-flex;
   border-radius: 6px;

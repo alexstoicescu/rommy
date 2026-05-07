@@ -25,6 +25,12 @@ import { GameBoard } from "./components/GameBoard";
 import { GameOverModal } from "./components/GameOverModal";
 import { Landing } from "./components/Landing";
 import {
+  calculateMeldPoints,
+  canInitialMeld,
+  isValidFormatie,
+  isValidSuita,
+} from "./rules";
+import {
   playDiscard,
   playDraw,
   playMeld,
@@ -609,6 +615,61 @@ function App() {
   };
 
   const isMyTurn = currentTurn === socket.id;
+
+  // Smart meld-button state — derived from the local draft. The server
+  // is still the authority on commit, but this gives the player live
+  // feedback while they assemble the meld.
+  const meldButton = (() => {
+    if (draftMelds.length === 0) {
+      return {
+        label: "Select Tiles",
+        disabled: true,
+        active: false,
+        onClick: () => {},
+      } as const;
+    }
+    const allMeldsValid = draftMelds.every(
+      (m) => isValidSuita(m) || isValidFormatie(m),
+    );
+    if (!allMeldsValid) {
+      return {
+        label: "Invalid Meld",
+        disabled: true,
+        active: false,
+        onClick: () => {},
+      } as const;
+    }
+    if (!hasMelded) {
+      if (!canInitialMeld(draftMelds)) {
+        const total = draftMelds.reduce(
+          (s, m) => s + calculateMeldPoints(m),
+          0,
+        );
+        const hasSuita = draftMelds.some(isValidSuita);
+        const label = !hasSuita
+          ? "Need a Suita"
+          : `Not Enough Points (${total}/45)`;
+        return {
+          label,
+          disabled: true,
+          active: false,
+          onClick: () => {},
+        } as const;
+      }
+      return {
+        label: "Etalare",
+        disabled: false,
+        active: true,
+        onClick: handleSubmitEtalare,
+      } as const;
+    }
+    return {
+      label: "Play New Meld",
+      disabled: false,
+      active: true,
+      onClick: handlePlayNewMeld,
+    } as const;
+  })();
   const localThemeColor = (() => {
     const me = gamePlayers.find((p) => p.socketId === socket.id);
     if (!me) return PLAYER_THEMES[0];
@@ -769,10 +830,11 @@ function App() {
           {isMyTurn && (
             <div className="board-actions">
               <button
-                className="etalare-button"
-                onClick={hasMelded ? handlePlayNewMeld : handleSubmitEtalare}
+                className={`etalare-button${meldButton.active ? " etalare-button--active" : " etalare-button--idle"}`}
+                onClick={meldButton.onClick}
+                disabled={meldButton.disabled}
               >
-                {hasMelded ? "Play New Meld" : "Etalare"}
+                {meldButton.label}
               </button>
               {mustUseTileId && (
                 <button
