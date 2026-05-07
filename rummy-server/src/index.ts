@@ -26,12 +26,21 @@ import {
   tryNewMelds,
 } from "./Bot";
 
-const PORT = 3001;
-const CLIENT_ORIGIN = "http://localhost:5173";
+const PORT = Number(process.env.PORT) || 10_000;
 const TURN_DURATION_MS = 120_000;
 
+// Allowed CORS origins: the deployed Vercel frontend, an optional
+// override via FRONTEND_URL, and the local Vite dev server. We keep
+// localhost in the list so a developer running against the deployed
+// backend doesn't get bounced.
+const ALLOWED_ORIGINS = [
+  "https://rommyvercel.vercel.app",
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+].filter((o): o is string => typeof o === "string" && o.length > 0);
+
 const app = express();
-app.use(cors({ origin: CLIENT_ORIGIN }));
+app.use(cors({ origin: ALLOWED_ORIGINS }));
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -39,7 +48,7 @@ app.get("/health", (_req, res) => {
 
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: CLIENT_ORIGIN, methods: ["GET", "POST"] },
+  cors: { origin: ALLOWED_ORIGINS, methods: ["GET", "POST"] },
   pingInterval: 10_000,
   pingTimeout: 20_000,
 });
