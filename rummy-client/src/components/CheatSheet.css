@@ -1,0 +1,157 @@
+.cheat-sheet {
+  flex: 1;
+  max-width: 300px;
+  align-self: flex-start;
+  background: rgba(13, 2, 33, 0.7);
+  border: 1px solid rgba(188, 19, 254, 0.5);
+  border-radius: 10px;
+  padding: 16px 18px 18px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  letter-spacing: 0.4px;
+  box-shadow:
+    0 0 18px rgba(188, 19, 254, 0.25),
+    inset 0 0 14px rgba(188, 19, 254, 0.08);
+  backdrop-filter: blur(4px);
+  position: relative;
+}
+
+.cheat-sheet__title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #ff66ff;
+  text-shadow:
+    0 0 4px #ff66ff,
+    0 0 12px rgba(255, 102, 255, 0.55);
+  border-bottom: 1px solid rgba(188, 19, 254, 0.4);
+  padding-bottom: 6px;
+}
+
+.cheat-sheet__section {
+  margin-bottom: 14px;
+}
+
+.cheat-sheet__section:last-child {
+  margin-bottom: 0;
+}
+
+.cheat-sheet__section h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffe066;
+  text-shadow: 0 0 4px rgba(255, 224, 102, 0.5);
+}
+
+.cheat-sheet__section p {
+  margin: 0 0 6px;
+}
+
+.cheat-sheet__section ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.cheat-sheet__section li {
+  margin-bottom: 2px;
+}
+
+.cheat-sheet code {
+  font-family: "Courier New", Courier, monospace;
+  background: rgba(188, 19, 254, 0.18);
+  padding: 0 4px;
+  border-radius: 3px;
+  color: #fff;
+}
+
+.cheat-sheet em {
+  color: #00f2ff;
+  font-style: normal;
+  font-weight: bold;
+}
+
+.cheat-sheet strong {
+  color: #ffe066;
+}
+
+/* Modal mode for narrow viewports */
+.cheat-sheet--modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90vw;
+  max-height: 84vh;
+  overflow-y: auto;
+  z-index: 1200;
+  flex: none;
+}
+
+.cheat-sheet__close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ff66ff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.cheat-sheet__close:hover {
+  background: rgba(255, 102, 255, 0.18);
+}
+
+/* Floating "?" button on narrow screens */
+.cheat-sheet-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(13, 2, 33, 0.85);
+  border: 1.5px solid #ff66ff;
+  color: #ff66ff;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 900;
+  box-shadow:
+    0 0 10px rgba(255, 102, 255, 0.55),
+    inset 0 0 10px rgba(255, 102, 255, 0.18);
+  text-shadow: 0 0 6px rgba(255, 102, 255, 0.7);
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .cheat-sheet:not(.cheat-sheet--modal) {
+    display: none;
+  }
+  .cheat-sheet-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.cheat-sheet--modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1100;
+}

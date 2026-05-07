@@ -23,6 +23,7 @@ import { DrawPile } from "./components/DrawPile";
 import { DiscardPile, DISCARD_PILE_ID } from "./components/DiscardPile";
 import { GameBoard } from "./components/GameBoard";
 import { GameOverModal } from "./components/GameOverModal";
+import { CheatSheet } from "./components/CheatSheet";
 import { Landing } from "./components/Landing";
 import {
   calculateMeldPoints,
@@ -152,6 +153,7 @@ function App() {
   const [handCounts, setHandCounts] = useState<Record<string, number>>({});
   const [meldPoints, setMeldPoints] = useState<Record<string, number>>({});
   const [toast, setToast] = useState<string | null>(null);
+  const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
   const toastTimerRef = useRef<number | null>(null);
   const showToast = (msg: string) => {
     setToast(msg);
@@ -818,43 +820,46 @@ function App() {
         </div>
 
         <div className="board-area">
-          <GameBoard
-            board={board}
-            draftMelds={draftMelds}
-            players={gamePlayers}
-            themes={[...PLAYER_THEMES]}
-            localPlayerId={socket.id ?? ""}
-            handCounts={handCounts}
-            meldPoints={meldPoints}
-          />
-          {isMyTurn && (
-            <div className="board-actions">
-              <button
-                className={`etalare-button${meldButton.active ? " etalare-button--active" : " etalare-button--idle"}`}
-                onClick={meldButton.onClick}
-                disabled={meldButton.disabled}
-              >
-                {meldButton.label}
-              </button>
-              {mustUseTileId && (
+          <div className="board-area__main">
+            <GameBoard
+              board={board}
+              draftMelds={draftMelds}
+              players={gamePlayers}
+              themes={[...PLAYER_THEMES]}
+              localPlayerId={socket.id ?? ""}
+              handCounts={handCounts}
+              meldPoints={meldPoints}
+            />
+            {isMyTurn && (
+              <div className="board-actions">
                 <button
-                  className="undo-rupere-button"
-                  onClick={handleUndoRupere}
-                  title="Return the Rupere tile(s) to the discard pile"
+                  className={`etalare-button${meldButton.active ? " etalare-button--active" : " etalare-button--idle"}`}
+                  onClick={meldButton.onClick}
+                  disabled={meldButton.disabled}
                 >
-                  Undo Pick
+                  {meldButton.label}
                 </button>
-              )}
-              <button
-                className="end-turn-button"
-                onClick={handleEndTurn}
-                disabled={!hasDrawn || hand.length === 0}
-                title="Discards your last tile to end the turn"
-              >
-                End Turn (Discard)
-              </button>
-            </div>
-          )}
+                {mustUseTileId && (
+                  <button
+                    className="undo-rupere-button"
+                    onClick={handleUndoRupere}
+                    title="Return the Rupere tile(s) to the discard pile"
+                  >
+                    Undo Pick
+                  </button>
+                )}
+                <button
+                  className="end-turn-button"
+                  onClick={handleEndTurn}
+                  disabled={!hasDrawn || hand.length === 0}
+                  title="Discards your last tile to end the turn"
+                >
+                  End Turn (Discard)
+                </button>
+              </div>
+            )}
+          </div>
+          <CheatSheet />
         </div>
 
         <div className="rack-area">
@@ -895,6 +900,24 @@ function App() {
         <div className="toast toast--error" role="status">
           {toast}
         </div>
+      )}
+
+      <button
+        className="cheat-sheet-fab"
+        onClick={() => setCheatSheetOpen(true)}
+        aria-label="Show quick rules"
+        title="Quick Rules"
+      >
+        ?
+      </button>
+      {cheatSheetOpen && (
+        <>
+          <div
+            className="cheat-sheet--modal-overlay"
+            onClick={() => setCheatSheetOpen(false)}
+          />
+          <CheatSheet isModal onClose={() => setCheatSheetOpen(false)} />
+        </>
       )}
 
       {gameOver && (
