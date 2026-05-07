@@ -1,5 +1,83 @@
 # Rommy Changelog
 
+## [v1.2.2] - The "Deep Breath" Patch
+
+BALANCING: Turn Timer Adjustment
+
+Increased the global failsafe turn timer from an aggressive 30 seconds (Blitz) to the classic 120 seconds (Standard) to allow players sufficient time for complex meld calculations.
+
+## [v1.2.1] - The "Staged Rupere & Security" Patch
+
+BUGFIX: First-Discard Ban
+
+Implemented strict rule enforcement: Players can no longer perform Rupere on the very first card discarded in a match.
+
+SECURITY: Staged Rupere Protocol (Anti-Cheat)
+
+Prevented an information-leak exploit where players could grab the discard pile, view the cards, and intentionally fail the meld.
+
+Mechanic Update: Players performing Rupere are now given ONLY the target card initially. The server holds the remaining discarded cards in a secure pending state. The bonus cards are automatically injected into the player's hand only after the server validates a successful meld using the target card.
+
+UX: Added localized toast notifications to guide players through the Staged Rupere flow.
+
+## [v1.2.0] - The "Grid Stabilization" Update
+(Post-Rupere UI Architecture Overhaul)
+
+UI/UX: Central Pillar Architecture
+
+Unified the core gameplay elements (Game Board, Action Buttons, Sort Controls, and Player Tile Rack) into a single bounded container.
+
+Player Tile Rack width is now restricted to match the exact width of the game board, eliminating the "infinite stretch" footer issue.
+
+UI/UX: Symmetrical Master Grid
+
+Replaced the volatile flex-layout with a strict, 3-column CSS Grid (1fr / minmax / 1fr).
+
+The main play area is mathematically locked to the absolute dead-center of the monitor on wide displays, counterweighted by invisible gutters.
+
+UI/UX: Orbital HUD Alignment
+
+Recalibrated the Quick Rules side-panel axes (align-items: center, justify-self: center) so it floats perfectly in the center of the right-hand void, creating balanced negative space.
+
+BUGFIX: Collision & Clipping Eradication
+
+Purged rogue absolute positioning that caused the Rules panel to clip through the active game board.
+
+SYSTEM: Responsive Cloaking Protocol
+
+Added a max-width: 1400px media query fail-safe. If a user's screen is too narrow to safely render the board and rules side-by-side, the Quick Rules panel will automatically cloak (hide) to protect the integrity of the core game board.
+
+## [v1.1.0] - The "Rupere & Shadows" Update
+(Updates since Checkpoint 24 - Terminal Synthwave Immersion)
+
+FEATURE: Fog of War (Privacy Protocol) * Opponent hands are now masked. Card counts > 3 display as 3+ or ??.
+
+Warning systems stay active for opponents with 3 or fewer tiles (Endgame Protocol).
+
+FEATURE: The 'Rupere' Mechanic * Server-side validation implemented for drawing from the discard pile.
+
+Added conditional turn-locks: Players must meld the drawn discard tile in the same turn or the discard action is rejected by the server.
+
+UX/UI: Smart 'Etalare' Button
+
+Etalare (Meld) button is now state-aware.
+
+Grayed out/disabled until valid parameters (≥45 points, valid sequences/sets) are selected.
+
+Visual feedback added to selected tiles (Neon glow + Y-axis lift) for pre-meld clarity.
+
+UX/UI: Persistent Cheat Sheet
+
+Added a persistent "Quick Rules" side-panel to utilize ultra-wide screen real estate without breaking the central focal point.
+
+UX/UI: Viewport & Alignment Overhaul
+
+Locked the root viewport to prevent accidental mobile-scrolling (100vw/100vh).
+
+Migrated primary board to a symmetrical 3-column Grid for absolute geometric centering.
+
+Added Z-axis floating shadow effects to the main play area.
+
 ## Checkpoint 24 — Terminal Synth-wave Immersion Overhaul
 
 - **Outrun background (`.app`)** — felt green replaced with `#0d0221`. Layered backgrounds: the deep navy/purple base, a 44px × 44px neon-purple grid (`linear-gradient(rgba(188, 19, 254, 0.15) 1px, transparent 1px)` + the 90deg twin), and a `radial-gradient(circle, transparent 20%, #0d0221 100%)` vignette. `.app-header` switches to a translucent panel with `backdrop-filter: blur(4px)` and a thin neon-purple bottom border.
