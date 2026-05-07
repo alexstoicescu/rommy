@@ -27,7 +27,7 @@ import {
 } from "./Bot";
 
 const PORT = Number(process.env.PORT) || 10_000;
-const TURN_DURATION_MS = 120_000;
+const TURN_DURATION_MS = 30_000;
 
 // Allowed CORS origins: the deployed Vercel frontend, an optional
 // override via FRONTEND_URL, and the local Vite dev server. We keep
@@ -169,6 +169,23 @@ function runAutoPass(room: Room): void {
   console.log(
     `Auto-pass: ${player.name} (${player.socketId}) timed out in ${room.id}`,
   );
+  // If a Rupere is pending and the target hasn't been melded, return
+  // the entire picked stack to the discard pile so the auto-pass
+  // doesn't strand bonuses or break must-use bookkeeping.
+  if (room.lastRupere && room.lastRupere.playerId === player.socketId) {
+    const targetId = room.lastRupere.tiles[0]?.id;
+    if (targetId && player.hand.some((t) => t.id === targetId)) {
+      player.hand = player.hand.filter((t) => t.id !== targetId);
+      room.discardPile.splice(
+        room.lastRupere.pickIdx,
+        0,
+        ...room.lastRupere.tiles,
+      );
+      room.pendingRupereBonusCards = [];
+      room.mustUseTileId = null;
+      room.lastRupere = null;
+    }
+  }
   if (!room.hasDrawn && room.drawPile.length > 0) {
     const tile = room.drawPile.shift()!;
     player.hand.push(tile);
@@ -179,7 +196,8 @@ function runAutoPass(room: Room): void {
     maybeScheduleBotTurn(room);
     return;
   }
-  const tile = player.hand.shift()!;
+  // Auto-discard the LAST tile in the hand (most recently drawn).
+  const tile = player.hand.pop()!;
   room.discardPile.push(tile);
   if (player.hand.length === 0) {
     finalizeRound(room, player.socketId, tile);
@@ -247,9 +265,51 @@ function maybeScheduleBotTurn(room: Room): void {
   }, delay);
 }
 
+/**
+ * Safe-move fallback when the bot's normal logic throws or bails.
+ * Pure draw + discard (last tile in hand) + advance — never tries
+ * Rupere or anything fancy. Keeps the game flowing no matter what.
+ */
+function botSafeMove(room: Room, bot: Player): void {
+  if (!room.gameStarted) return;
+  if (!room.hasDrawn && room.drawPile.length > 0) {
+    bot.hand.push(room.drawPile.shift()!);
+    room.hasDrawn = true;
+  }
+  if (bot.hand.length === 0) {
+    advanceTurn(room);
+    maybeScheduleBotTurn(room);
+    return;
+  }
+  const tile = bot.hand.pop()!;
+  room.discardPile.push(tile);
+  if (bot.hand.length === 0) {
+    finalizeRound(room, bot.socketId, tile);
+    return;
+  }
+  advanceTurn(room);
+  maybeScheduleBotTurn(room);
+}
+
 function runBotTurn(room: Room, bot: Player): void {
+  try {
+    runBotTurnInner(room, bot);
+  } catch (err) {
+    console.error(
+      `Bot ${bot.name} threw during turn — falling back to safe move:`,
+      err,
+    );
+    botSafeMove(room, bot);
+  }
+}
+
+function runBotTurnInner(room: Room, bot: Player): void {
   if (!room.gameStarted) return;
 
+  // Bots only ever draw from the main deck — never the discard pile.
+  // The Rupere flow has too many staged-state edge cases that the
+  // greedy heuristic isn't equipped to handle, and a misfire would
+  // freeze the game on the must-use rule.
   if (!room.hasDrawn && room.drawPile.length > 0) {
     bot.hand.push(room.drawPile.shift()!);
     room.hasDrawn = true;
