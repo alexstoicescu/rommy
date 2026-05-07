@@ -27,7 +27,7 @@ import {
 } from "./Bot";
 
 const PORT = Number(process.env.PORT) || 10_000;
-const TURN_DURATION_MS = 30_000;
+const TURN_DURATION_MS = 120_000;
 
 // Allowed CORS origins: the deployed Vercel frontend, an optional
 // override via FRONTEND_URL, and the local Vite dev server. We keep
