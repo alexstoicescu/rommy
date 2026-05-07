@@ -1,0 +1,48 @@
+.draw-pile {
+  width: 44px;
+  height: 64px;
+  border: 1px solid #222;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      #1a3a6b,
+      #1a3a6b 4px,
+      #224b8a 4px,
+      #224b8a 8px
+    );
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3), inset 0 0 0 2px #fffdf6;
+  cursor: pointer;
+  user-select: none;
+}
+
+.draw-pile--empty {
+  background: #2a2a2a;
+  cursor: default;
+  opacity: 0.5;
+}
+
+.draw-pile--disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  filter: grayscale(0.8);
+}
+
+.draw-pile-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.draw-pile__badge {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #cfe2d6;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 1px 8px;
+  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+}

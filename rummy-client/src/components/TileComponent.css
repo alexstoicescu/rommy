@@ -1,0 +1,27 @@
+.tile {
+  width: 44px;
+  height: 64px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #fffdf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Georgia", serif;
+  font-size: 22px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+  user-select: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.tile:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.35), inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.tile--joker {
+  font-size: 14px;
+  font-style: italic;
+  color: #222;
+}
