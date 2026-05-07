@@ -82,7 +82,7 @@ function compareByRuns(a: Tile, b: Tile): number {
   return a.value - b.value;
 }
 
-const socket = io("http://localhost:3001");
+const socket = io(import.meta.env.VITE_SOCKET_URL);
 
 interface LobbyPlayer {
   id: string;
