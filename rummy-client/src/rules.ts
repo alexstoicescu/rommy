@@ -96,13 +96,16 @@ export function calculateMeldPoints(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const r = reifySuita(meld)!;
     return r.reduce(
-      (s, t, i) => s + suitaTilePoints(t.effective, i, r.length),
+      (s, t, i) =>
+        s +
+        (meld[i].isJoker ? 50 : suitaTilePoints(t.effective, i, r.length)),
       0,
     );
   }
   if (isValidFormatie(meld)) {
     const real = meld.filter((t) => !t.isJoker);
-    return meld.length * formatieTilePoints(real[0].value);
+    const jokers = meld.length - real.length;
+    return real.length * formatieTilePoints(real[0].value) + jokers * 50;
   }
   return 0;
 }

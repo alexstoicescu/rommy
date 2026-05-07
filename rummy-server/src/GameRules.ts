@@ -168,14 +168,17 @@ export function calculateMeldPoints(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const reified = reifySuita(meld)!;
     return reified.reduce(
-      (sum, t, i) => sum + suitaTilePoints(t.effective, i, reified.length),
+      (sum, t, i) =>
+        sum +
+        (t.isJoker ? 50 : suitaTilePoints(t.effective, i, reified.length)),
       0,
     );
   }
   if (isValidFormatie(meld)) {
     const real = meld.filter((t) => !t.isJoker);
+    const jokers = meld.length - real.length;
     const setValue = real[0].value;
-    return meld.length * formatieTilePoints(setValue);
+    return real.length * formatieTilePoints(setValue) + jokers * 50;
   }
   return 0;
 }
