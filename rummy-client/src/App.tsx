@@ -149,12 +149,14 @@ interface GameStateUpdate {
   meldPoints: Record<string, number>;
   players: Array<{
     socketId: string;
+    sessionId: string;
     name: string;
     handCount: number;
     hasMeldedInitial: boolean;
     isBot: boolean;
     colorIndex: number;
     bonusPoints: number;
+    connectionStatus: "active" | "disconnected";
   }>;
   atu: Tile | null;
   atuAwardedTo: string | null;
@@ -212,11 +214,13 @@ function App() {
     Array<{
       socketId: string;
       name: string;
+      sessionId: string;
       handCount: number;
       hasMeldedInitial: boolean;
       isBot: boolean;
       colorIndex: number;
       bonusPoints: number;
+      connectionStatus: "active" | "disconnected";
     }>
   >([]);
   const [atu, setAtu] = useState<Tile | null>(null);

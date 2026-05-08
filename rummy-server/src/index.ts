@@ -28,9 +28,14 @@ import {
 import {
   bindSocket,
   createBotSession,
+  getSessionBySocket,
+  markActive,
+  markDisconnected,
   resolveSession,
   type Session,
 } from "./SessionStore";
+
+const RECONNECT_GRACE_MS = 60_000;
 
 const PORT = Number(process.env.PORT) || 10_000;
 const TURN_DURATION_MS = 120_000;
@@ -433,6 +438,13 @@ io.on("connection", (socket: Socket) => {
       player.socketId = socket.id;
       socket.join(existingRoom.id);
       socketToRoom.set(socket.id, existingRoom.id);
+      // Came back inside the 60-second grace window — clear the eviction
+      // timer and let the rest of the room know they're live again.
+      markActive(session);
+      io.to(existingRoom.id).emit("player_status_change", {
+        sessionId: session.sessionId,
+        status: "active",
+      });
       console.log(
         `Session ${session.sessionId} rebound to room ${existingRoom.id} (socket ${socket.id})`,
       );
@@ -1109,23 +1121,67 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("disconnect", (reason) => {
     console.log(`User disconnected: ${socket.id} (${reason})`);
+    const sessionForSocket = getSessionBySocket(socket.id);
     const room = getRoom(socket.id);
     socketToRoom.delete(socket.id);
-    if (!room) return;
-    const before = room.players.length;
-    room.players = room.players.filter((p) => p.socketId !== socket.id);
-    if (room.players.length === before) return;
-    // If only bots remain, the room is dead — drop it.
-    const humans = room.players.filter((p) => !p.isBot).length;
-    if (humans === 0) {
-      stopTurnTimer(room);
-      rooms.delete(room.id);
-      console.log(`Room ${room.id} closed (no humans left)`);
-      return;
-    }
+    if (!room || !sessionForSocket) return;
+    const player = room.players.find(
+      (p) => p.sessionId === sessionForSocket.sessionId,
+    );
+    if (!player) return;
+    // Ghost protocol: don't evict the player from the room. Mark them
+    // disconnected, broadcast the status, and schedule a 60-second
+    // eviction timer that fires if (and only if) they don't reconnect.
+    markDisconnected(
+      sessionForSocket,
+      (sessionId) => evictSession(sessionId),
+      RECONNECT_GRACE_MS,
+    );
+    io.to(room.id).emit("player_status_change", {
+      sessionId: sessionForSocket.sessionId,
+      status: "disconnected",
+    });
     broadcastRoomUpdate(room);
+    broadcastGameState(room);
   });
 });
+
+/**
+ * Called when a session's 60-second grace timer expires without a
+ * reconnect. Removes the player from whatever room seated them and
+ * tears the room down if no humans remain.
+ */
+function evictSession(sessionId: string): void {
+  const room = findRoomBySession(sessionId);
+  if (!room) return;
+  const player = room.players.find((p) => p.sessionId === sessionId);
+  if (!player) return;
+  console.log(
+    `Session ${sessionId} eviction (grace expired): removing ${player.name} from ${room.id}`,
+  );
+  // If it's their turn, advance first so the table doesn't deadlock.
+  const wasTheirTurn = room.currentTurn === player.socketId;
+  room.players = room.players.filter((p) => p.sessionId !== sessionId);
+  delete room.board[player.socketId];
+  if (wasTheirTurn && room.gameStarted && room.players.length > 0) {
+    const next = room.players[0];
+    room.currentTurn = next.socketId;
+    startTurnTimer(room);
+  }
+  io.to(room.id).emit("player_status_change", {
+    sessionId,
+    status: "evicted",
+  });
+  const humans = room.players.filter((p) => !p.isBot).length;
+  if (humans === 0) {
+    stopTurnTimer(room);
+    rooms.delete(room.id);
+    console.log(`Room ${room.id} closed (no humans left)`);
+    return;
+  }
+  broadcastRoomUpdate(room);
+  broadcastGameState(room);
+}
 
 httpServer.listen(PORT, () => {
   console.log(`Rommy server listening on http://localhost:${PORT}`);

@@ -1,4 +1,11 @@
 import { scoreMeldFinal, type Tile, type TileColor } from "./GameRules";
+import { getSession } from "./SessionStore";
+
+function getConnectionStatus(sessionId: string): "active" | "disconnected" {
+  // Bot sessions and any oddball case both report active — the only
+  // way a session is "disconnected" is via markDisconnected.
+  return getSession(sessionId)?.connectionStatus ?? "active";
+}
 
 export interface Player {
   /**
@@ -181,12 +188,14 @@ export interface PublicRoomView {
   roomId: string;
   players: Array<{
     socketId: string;
+    sessionId: string;
     name: string;
     handCount: number;
     hasMeldedInitial: boolean;
     isBot: boolean;
     colorIndex: number;
     bonusPoints: number;
+    connectionStatus: "active" | "disconnected";
   }>;
   board: Record<string, Tile[][]>;
   drawPileCount: number;
@@ -221,12 +230,14 @@ export function publicView(room: Room): PublicRoomView {
     roomId: room.id,
     players: room.players.map((p) => ({
       socketId: p.socketId,
+      sessionId: p.sessionId,
       name: p.name,
       handCount: p.hand.length,
       hasMeldedInitial: p.hasMeldedInitial,
       isBot: p.isBot,
       colorIndex: p.colorIndex,
       bonusPoints: p.bonusPoints,
+      connectionStatus: getConnectionStatus(p.sessionId),
     })),
     board: room.board,
     drawPileCount: room.drawPile.length,

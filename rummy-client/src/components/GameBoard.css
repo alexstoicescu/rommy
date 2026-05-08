@@ -32,6 +32,25 @@
   border-radius: 10px;
   padding: 8px 10px 10px;
   background: rgba(0, 0, 0, 0.18);
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+/* Ghost protocol: a player whose session has dropped but is inside the
+   60-second reconnect grace window. Greyed out so others see at a glance
+   that they're waiting on someone. */
+.player-zone--offline {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.player-zone--offline::after {
+  content: "⏸ disconnected";
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ffb84d;
+  margin-top: 4px;
 }
 
 .player-zone__header {

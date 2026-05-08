@@ -9,6 +9,7 @@ interface BoardPlayer {
   name: string;
   hasMeldedInitial: boolean;
   colorIndex: number;
+  connectionStatus?: "active" | "disconnected";
 }
 
 interface Props {
@@ -52,10 +53,11 @@ export function GameBoard({
           const points = meldPoints[p.socketId] ?? 0;
           const cards = handCounts[p.socketId] ?? 0;
           const lowCards = !isLocal && cards > 0 && cards <= 3;
+          const isOffline = p.connectionStatus === "disconnected";
           return (
             <div
               key={p.socketId}
-              className="player-zone"
+              className={`player-zone${isOffline ? " player-zone--offline" : ""}`}
               style={{
                 borderColor: color,
                 boxShadow: `0 0 14px ${color}33, inset 0 0 8px ${color}22`,

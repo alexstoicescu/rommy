@@ -94,6 +94,33 @@ export function deleteSession(sessionId: string): void {
   sessions.delete(sessionId);
 }
 
+/**
+ * Flag a session as disconnected and start its 60-second eviction timer.
+ * If the timer fires (no reconnect) the supplied onExpire callback runs
+ * with the sessionId so the caller can evict the player from any room.
+ */
+export function markDisconnected(
+  session: Session,
+  onExpire: (sessionId: string) => void,
+  graceMs: number,
+): void {
+  session.connectionStatus = "disconnected";
+  if (session.reconnectTimer) clearTimeout(session.reconnectTimer);
+  session.reconnectTimer = setTimeout(() => {
+    session.reconnectTimer = null;
+    onExpire(session.sessionId);
+  }, graceMs);
+}
+
+/** Reverse of markDisconnected — used the moment the client comes back. */
+export function markActive(session: Session): void {
+  session.connectionStatus = "active";
+  if (session.reconnectTimer) {
+    clearTimeout(session.reconnectTimer);
+    session.reconnectTimer = null;
+  }
+}
+
 /** For bots: synthetic session with no networking. */
 export function createBotSession(name: string): Session {
   const sessionId = `bot-${randomUUID()}`;
