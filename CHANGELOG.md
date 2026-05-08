@@ -1,5 +1,23 @@
 # Rommy Changelog
 
+## [v2.1.0] - The "Neon Tactician" Update
+
+UI/UX Architecture
+
+Unified Sidebar: Consolidated the "Vestiar" (Lobby), player management buttons, and the global Leaderboard into a strict Left Column hierarchy.
+
+Header Optimization: Relocated the Rommy logo to the top-left and anchored the "Reguli Rapide" modal button to the top-right Meta-Bar.
+
+Deck Anchoring: Removed dead space above the board. Docked the Draw and Discard piles directly flush with the top-center edge of the active play area.
+
+Visual Upgrades
+
+Digital Player Dock: Deleted the legacy wooden rack styling. Replaced it with a sleek, translucent dark dock featuring neon borders.
+
+Data Chip Tiles: Overhauled tile CSS. Removed physical bakelite styling in favor of dark translucent backgrounds, suit-specific neon borders, and glowing text-shadow values.
+
+Interactive Hover States: Added tactile CSS scaling and intensified glow effects when users hover over their data chips.
+
 ## [v2.0.0] - The "Command Center" Update
 
 Overview
