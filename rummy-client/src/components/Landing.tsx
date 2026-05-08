@@ -122,7 +122,7 @@ export function Landing({
           {probedFull ? t("landing_room_full_btn") : t("landing_join_btn")}
         </button>
 
-        <div className="landing__version">v2.6.0 - THE FRIENDS UPDATE</div>
+        <div className="landing__version">v2.7.0 - THE INTELLIGENCE UPDATE</div>
       </div>
     </div>
   );
