@@ -566,16 +566,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Dealer Area — anchored to the very top edge of the green play
-   board. position: absolute pulls it out of the flex flow so the
-   GameBoard underneath can claim the full arena__board height. The
-   transform pushes it up by half its own height so the piles
-   visually straddle the top border. */
+/* Dealer Area — anchored cleanly inside the top of the green play
+   board (no longer straddling the border). 24px breathing room from
+   the top of .arena__board lands the piles a few pixels inside the
+   GameBoard so they read as part of the table without clipping. */
 .dealer-area {
   position: absolute;
-  top: 16px;
+  top: 24px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -585,12 +584,14 @@
 }
 
 /* Player Console — full-width digital dock at the bottom of the
-   arena, sized to comfortably hold the new glowing data-chip tiles. */
+   arena, sized to comfortably hold the new glowing data-chip tiles.
+   Sits flush against whatever's above it (no top margin) so the
+   action bar is the unambiguous top edge of the dock. */
 .player-console {
   flex: none;
   width: 100%;
   min-height: 168px;
-  margin: 12px 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -604,18 +605,21 @@
     0 -4px 18px rgba(0, 242, 255, 0.18),
     inset 0 0 22px rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(6px);
-  box-sizing: border-box;
   overflow: hidden;
 }
 
+/* Unified Control Panel: the bar is the literal top edge of the dock,
+   not a tinted strip floating above it. Transparent background lets
+   the dock's gradient show through; only a hairline neon separator
+   distinguishes the controls row from the rack below. */
 .player-console__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 12px;
-  background: rgba(0, 242, 255, 0.06);
-  border-bottom: 1px solid rgba(0, 242, 255, 0.18);
+  padding: 8px 14px;
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 242, 255, 0.22);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   flex-wrap: wrap;
 }

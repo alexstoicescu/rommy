@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## [v2.2.1] - The "Pixel Perfect" Hotfix
+
+UI Refinement: Resolved viewport overflow issues that caused phantom scrollbars on the left sidebar.
+
+Component Anchoring: Adjusted deck positioning to sit cleanly inside the arena boundary, preventing geometry clipping.
+
+Console Alignment: Docked sorting controls flush with the player console for a unified interface.
+
 ## [v2.2.0] - The "Immersive Arena" Layout
 
 CSS Architecture: Migrated to a strict 100vh Grid (320px 1fr), eliminating dead space and maximizing viewport utility.

@@ -50,6 +50,14 @@
   }
 }
 
+/* Universal border-box: every padding/border counts toward the
+   declared width so 100vw / 100vh containers can never overflow. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #root {
@@ -58,12 +66,12 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 #root {
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
 h1,

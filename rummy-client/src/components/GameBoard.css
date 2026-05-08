@@ -4,10 +4,11 @@
   min-width: 0;
   min-height: 0;
   margin: 0;
-  /* Top padding bumped so the absolutely-positioned dealer-area
-     (which straddles the top border) doesn't overlap the player
-     zones — the lower ~half of the atu-slot dips into the table. */
-  padding: 70px 16px 16px;
+  /* The dealer-area sits entirely inside the board now (top: 24px
+     within .arena__board). Reserve enough top padding for the full
+     pile height — the tallest is the atu-slot (label + tile +
+     holder, ~120px) — so the player zones stay clear. */
+  padding: 140px 16px 16px;
   border: 2px solid #2c5530;
   border-radius: 12px;
   background: #0f5132;
