@@ -28,7 +28,7 @@ export interface Player {
   bonusPoints: number;
 }
 
-export type RoomPhase = "lobby" | "playing" | "scoreboard";
+export type RoomPhase = "lobby" | "scrambling" | "playing" | "scoreboard";
 
 export interface Room {
   id: string;
@@ -41,6 +41,14 @@ export interface Room {
   phase: RoomPhase;
   /** Epoch-ms deadline for the scoreboard auto-deal. Null while playing. */
   scoreboardEndsAt: number | null;
+  /**
+   * Pre-deal scramble phase: a shared 10-second tactile shuffle where
+   * everyone sees the same 106 face-down tiles in a messy cluster.
+   * scrambleEndsAt is the deal deadline; scrambleSeed seeds the pile
+   * layout so every client renders the same chaos.
+   */
+  scrambleEndsAt: number | null;
+  scrambleSeed: number | null;
   /**
    * Per-player meld zones, keyed by `socketId`. Every meld lives in
    * exactly one zone — the zone owned by the player who first placed
@@ -99,6 +107,8 @@ export function createRoom(id: string): Room {
     players: [],
     phase: "lobby",
     scoreboardEndsAt: null,
+    scrambleEndsAt: null,
+    scrambleSeed: null,
     board: {},
     drawPile: [],
     discardPile: [],
@@ -189,6 +199,8 @@ export function dealRoom(room: Room): void {
   room.gameStarted = true;
   room.phase = "playing";
   room.scoreboardEndsAt = null;
+  room.scrambleEndsAt = null;
+  room.scrambleSeed = null;
   // First player was dealt 15 tiles — they "skip" the draw step and
   // begin in a state where they can only discard.
   room.hasDrawn = true;
@@ -229,6 +241,8 @@ export interface PublicRoomView {
   atuAwardedTo: string | null;
   phase: RoomPhase;
   scoreboardEndsAt: number | null;
+  scrambleEndsAt: number | null;
+  scrambleSeed: number | null;
   /** SessionId -> cumulative score across rounds in this room. */
   globalScores: Record<string, number>;
 }
@@ -271,6 +285,8 @@ export function publicView(room: Room): PublicRoomView {
     atuAwardedTo: room.atuAwardedTo,
     phase: room.phase,
     scoreboardEndsAt: room.scoreboardEndsAt,
+    scrambleEndsAt: room.scrambleEndsAt,
+    scrambleSeed: room.scrambleSeed,
     globalScores: Object.fromEntries(
       room.players.map((p) => [
         p.sessionId,

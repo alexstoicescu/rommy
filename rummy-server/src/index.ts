@@ -38,8 +38,55 @@ import {
 
 const RECONNECT_GRACE_MS = 60_000;
 const SCOREBOARD_DURATION_MS = 15_000;
+const SCRAMBLE_DURATION_MS = 10_000;
 
 const scoreboardTimers = new Map<string, NodeJS.Timeout>();
+const scrambleTimers = new Map<string, NodeJS.Timeout>();
+
+/**
+ * Enter the 10-second collaborative scramble phase before any deal.
+ * Clients use scrambleSeed to render the same 106-tile messy cluster
+ * and broadcast cursor positions to each other; the server is purely
+ * the timer. When it fires we deal and transition to 'playing'.
+ */
+function beginScramble(room: Room): void {
+  const prior = scrambleTimers.get(room.id);
+  if (prior) clearTimeout(prior);
+  // Reset per-round residue but DON'T deal yet — dealRoom is what flips
+  // gameStarted on. During scramble the room is in a pre-game phase.
+  room.board = {};
+  room.discardPile = [];
+  room.drawPile = [];
+  room.gameStarted = false;
+  room.currentTurn = null;
+  room.phase = "scrambling";
+  room.scrambleSeed = Math.floor(Math.random() * 0x7fffffff) || 1;
+  room.scrambleEndsAt = Date.now() + SCRAMBLE_DURATION_MS;
+  console.log(
+    `Scramble in ${room.id} (seed=${room.scrambleSeed}, players=${room.players.length})`,
+  );
+  broadcastRoomUpdate(room);
+  broadcastGameState(room);
+  const handle = setTimeout(() => {
+    scrambleTimers.delete(room.id);
+    if (!rooms.has(room.id)) return;
+    if (room.players.length < 2) {
+      // Players bailed during the scramble — drop back to lobby.
+      room.phase = "lobby";
+      room.scrambleEndsAt = null;
+      room.scrambleSeed = null;
+      broadcastRoomUpdate(room);
+      broadcastGameState(room);
+      return;
+    }
+    dealRoom(room);
+    startTurnTimer(room);
+    broadcastRoomUpdate(room);
+    broadcastGameState(room);
+    maybeScheduleBotTurn(room);
+  }, SCRAMBLE_DURATION_MS);
+  scrambleTimers.set(room.id, handle);
+}
 
 const PORT = Number(process.env.PORT) || 10_000;
 const TURN_DURATION_MS = 120_000;
@@ -293,11 +340,10 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
       broadcastGameState(room);
       return;
     }
-    dealRoom(room);
-    startTurnTimer(room);
-    broadcastRoomUpdate(room);
-    broadcastGameState(room);
-    maybeScheduleBotTurn(room);
+    // Run the next round through the scramble phase too, so every deal
+    // — first or Nth — gets the same pre-game tactile shuffle.
+    room.scoreboardEndsAt = null;
+    beginScramble(room);
   }, SCOREBOARD_DURATION_MS);
   scoreboardTimers.set(room.id, handle);
 }
@@ -615,7 +661,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("start_game", () => {
     const room = getRoom(socket.id);
     if (!room) return;
-    if (room.gameStarted) {
+    if (room.gameStarted || room.phase === "scrambling") {
       socket.emit("start_error", { reason: "already_started" });
       return;
     }
@@ -623,32 +669,33 @@ io.on("connection", (socket: Socket) => {
       socket.emit("start_error", { reason: "need_more_players" });
       return;
     }
-    dealRoom(room);
-    console.log(
-      `Game started in ${room.id} with ${room.players.length} players`,
-    );
-    startTurnTimer(room);
-    broadcastRoomUpdate(room);
-    broadcastGameState(room);
-    maybeScheduleBotTurn(room);
+    beginScramble(room);
   });
 
   socket.on("restart_game", () => {
     const room = getRoom(socket.id);
     if (!room) return;
-    if (room.gameStarted) return;
+    if (room.gameStarted || room.phase === "scrambling") return;
     if (room.players.length < 2) {
       socket.emit("start_error", { reason: "need_more_players" });
       return;
     }
-    room.board = {};
-    room.discardPile = [];
-    room.drawPile = [];
-    dealRoom(room);
-    startTurnTimer(room);
-    broadcastRoomUpdate(room);
-    broadcastGameState(room);
-    maybeScheduleBotTurn(room);
+    beginScramble(room);
+  });
+
+  // Cursor relay for the scramble phase. The server is fan-out only;
+  // it doesn't validate or store positions. Throttling is the client's
+  // job (~30Hz). We tag every broadcast with the sender's sessionId so
+  // peers can render stable per-player ghost cursors.
+  socket.on("cursor_move", (payload: { x: number; y: number }) => {
+    const room = getRoom(socket.id);
+    if (!room || room.phase !== "scrambling") return;
+    const session = (socket.data as { session: Session }).session;
+    socket.to(room.id).emit("peer_cursor", {
+      sessionId: session.sessionId,
+      x: payload.x,
+      y: payload.y,
+    });
   });
 
   socket.on("draw_tile", () => {

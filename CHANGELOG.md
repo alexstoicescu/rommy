@@ -1,5 +1,15 @@
 # Rommy Changelog
 
+## [v1.7.0] - The "Tactile Wash" Update
+
+UX: Collaborative Scramble
+
+Introduced a 10-second pre-game SCRAMBLING phase.
+
+Implemented shared cursor physics for face-down tile mixing.
+
+Added a terminal glitch transition to the deal phase.
+
 ## [v1.6.0] - The "Persistence" Update
 
 ARCHITECTURE: Session Decoupling
