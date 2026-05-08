@@ -1,5 +1,15 @@
 # Rommy Changelog
 
+## [v2.5.1] - The "Gatekeeper" Hotfix
+
+🎨 UI/UX Refinement
+
+Corrected Positioning: Re-anchored the language toggle to the modal interior, resolving the overlap conflict with the main branding.
+
+Layout Stability: Implemented fixed-container logic for localized strings to prevent "UI jumping" when switching between English and Romanian.
+
+Branding Integrity: Restored the visual hierarchy of the Rommy logo by clearing the top-right corner of the login gate.
+
 ## [v2.5.0] - The "Friends Update" (Final Gate)
 
 ⚙️ Core Infrastructure

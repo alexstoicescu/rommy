@@ -19,7 +19,10 @@
   background: rgba(10, 4, 30, 0.85);
   border: 1px solid rgba(255, 64, 192, 0.4);
   border-radius: 14px;
-  padding: 28px 28px 24px;
+  /* Top padding bumped from 28px -> 60px so the absolutely-positioned
+     language toggle has its own dead space above the ROMMY wordmark
+     and never overlaps. */
+  padding: 60px 28px 24px;
   box-shadow: 0 0 30px rgba(255, 64, 192, 0.25),
     inset 0 0 30px rgba(64, 192, 255, 0.08);
   display: flex;
@@ -28,12 +31,12 @@
   position: relative;
 }
 
-/* Language toggle pinned in the top-right corner of the modal so it
-   doesn't compete with the ROMMY wordmark below it. */
+/* Language toggle docked in the modal's top-right dead space. The
+   absolute positioning is anchored to .landing__panel (relative). */
 .landing__lang {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 1.5rem;
+  right: 1.5rem;
   z-index: 2;
 }
 

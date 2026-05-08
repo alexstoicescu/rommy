@@ -12,10 +12,16 @@
   border: 1px solid transparent;
   background: transparent;
   border-radius: 5px;
-  padding: 2px 8px;
+  /* Fixed width so swapping locales doesn't reflow the modal — flag
+     emojis render at slightly different widths across platforms,
+     which used to cause a 1-2px jitter on toggle. */
+  width: 36px;
+  flex: 0 0 36px;
+  padding: 2px 0;
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
+  text-align: center;
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
