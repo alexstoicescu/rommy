@@ -1047,51 +1047,53 @@ function App() {
                 />
               )}
             {roomPhase !== "scrambling" && (
-              <>
-                <div className="dealer-area" aria-label="Dealer area">
-                  {atu && (
-                    <div
-                      className="atu-slot"
-                      title={`${t("atu_label")} — +50`}
-                    >
-                      <span className="atu-slot__label">{t("atu_label")}</span>
-                      <TileComponent tile={atu} />
-                      {atuAwardedTo && (
-                        <span className="atu-slot__holder">
-                          {atuAwardedTo === socket.id
-                            ? t("atu_holder_self")
-                            : t("atu_holder_other", {
-                                name:
-                                  gamePlayers.find(
-                                    (p) => p.socketId === atuAwardedTo,
-                                  )?.name ?? "—",
-                              })}
+              <GameBoard
+                board={board}
+                draftMelds={draftMelds}
+                players={gamePlayers}
+                themes={[...PLAYER_THEMES]}
+                localPlayerId={socket.id ?? ""}
+                handCounts={handCounts}
+                meldPoints={meldPoints}
+                tableHeader={
+                  <>
+                    {atu && (
+                      <div
+                        className="atu-slot"
+                        title={`${t("atu_label")} — +50`}
+                      >
+                        <span className="atu-slot__label">
+                          {t("atu_label")}
                         </span>
-                      )}
-                    </div>
-                  )}
-                  <DrawPile
-                    onClick={drawFromDeck}
-                    empty={drawPileCount === 0}
-                    disabled={hasDrawn}
-                    count={drawPileCount}
-                  />
-                  <DiscardPile
-                    tiles={discardPile}
-                    canRupere={isMyTurn && !hasDrawn}
-                    onRupere={handleRupere}
-                  />
-                </div>
-                <GameBoard
-                  board={board}
-                  draftMelds={draftMelds}
-                  players={gamePlayers}
-                  themes={[...PLAYER_THEMES]}
-                  localPlayerId={socket.id ?? ""}
-                  handCounts={handCounts}
-                  meldPoints={meldPoints}
-                />
-              </>
+                        <TileComponent tile={atu} />
+                        {atuAwardedTo && (
+                          <span className="atu-slot__holder">
+                            {atuAwardedTo === socket.id
+                              ? t("atu_holder_self")
+                              : t("atu_holder_other", {
+                                  name:
+                                    gamePlayers.find(
+                                      (p) => p.socketId === atuAwardedTo,
+                                    )?.name ?? "—",
+                                })}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <DrawPile
+                      onClick={drawFromDeck}
+                      empty={drawPileCount === 0}
+                      disabled={hasDrawn}
+                      count={drawPileCount}
+                    />
+                    <DiscardPile
+                      tiles={discardPile}
+                      canRupere={isMyTurn && !hasDrawn}
+                      onRupere={handleRupere}
+                    />
+                  </>
+                }
+              />
             )}
           </div>
 

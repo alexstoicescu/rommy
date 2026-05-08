@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import type { Tile } from "../types/game";
@@ -20,6 +21,8 @@ interface Props {
   localPlayerId: string;
   handCounts: Record<string, number>;
   meldPoints: Record<string, number>;
+  /** Atu / Draw / Discard ride inside the green table's header strip. */
+  tableHeader?: ReactNode;
 }
 
 const NEW_MELD_ID = "board-new-meld";
@@ -32,6 +35,7 @@ export function GameBoard({
   localPlayerId,
   handCounts,
   meldPoints,
+  tableHeader,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: NEW_MELD_ID });
   const { t } = useTranslation();
@@ -40,7 +44,12 @@ export function GameBoard({
 
   return (
     <div className="game-board" aria-label={t("board_aria")}>
-      <div className="game-board__zones">
+      {tableHeader && (
+        <div className="table-header" role="region" aria-label="Dealer">
+          {tableHeader}
+        </div>
+      )}
+      <div className="meld-zone game-board__zones">
         {meldedPlayers.length === 0 && (
           <div className="game-board__empty-hint">
             {t("board_empty_hint")}

@@ -191,11 +191,11 @@
 }
 
 /* The Arena Board — flex-grow:1 so it eats every pixel between the
-   header and the player console. position:relative anchors the
-   absolutely-positioned dealer-area. */
+   header and the player console. The GameBoard inside owns its own
+   table-header (Atu / Draw / Discard) and meld-zone now, so this
+   wrapper is just a padded flex container. */
 .arena__board {
   flex: 1 1 auto;
-  position: relative;
   display: flex;
   min-height: 0;
   padding: 16px 24px 0;
@@ -665,22 +665,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Dealer Area — anchored cleanly inside the top of the green play
-   board (no longer straddling the border). 24px breathing room from
-   the top of .arena__board lands the piles a few pixels inside the
-   GameBoard so they read as part of the table without clipping. */
-.dealer-area {
-  position: absolute;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 22px;
-  z-index: 4;
-  flex-wrap: wrap;
-}
+/* Legacy .dealer-area selector retained as a no-op for safety —
+   the dealer items now live inside .table-header (see GameBoard.css). */
 
 /* Player Console — minimal frame around the wooden rack. The rack
    itself owns the warm backlight + grain texture; the console just

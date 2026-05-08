@@ -1,5 +1,33 @@
 # Rommy Changelog
 
+## [v2.6.1] - The "Spatial Balance" Patch
+
+🎨 Layout Calibration
+
+Zonal Anchoring: Implemented a fixed 'Table Header' to lock the Draw and Discard piles to the top of the board.
+
+Tactical Scaling: Re-calibrated clamp() values for tiles to prioritize board real estate for late-game melds.
+
+Infinite Table: Enabled vertical scrolling for the Meld Area, ensuring the UI remains stable regardless of the number of tiles on the board.
+
+## [v2.6.0] - The "Systemic Logic" Overhaul
+
+⚙️ Core Architecture
+
+Dynamic Grid Engine: Full refactor to a 100vh reactive grid system.
+
+Fluid Scaling: Integrated clamp() typography and component sizing.
+
+Localization 2.0: Standardized 'ENG/RO' ISO codes and 'Meld' terminology.
+
+🎨 Visual Identity
+
+Command Center Header: Synchronized branding and navigation heights.
+
+Tactile Materials: Refined varnished wood and rim-lit bakelite tile textures.
+
+Atmospheric Polish: Slow-pulse neon branding and suit-reactive rack lighting.
+
 # [v2.5.3] - The "Global Standard" Patch
 
 🌐 Localization Logic
