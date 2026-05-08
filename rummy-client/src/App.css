@@ -56,11 +56,15 @@
   /* Flush with the top of the viewport so its top edge lines up with
      the arena header's top edge — that's the "continuous horizontal
      line across the top". Spacing to the leaderboard below is
-     supplied by the .sidebar flex gap. */
+     supplied by the .sidebar flex gap. v2.6.x: footprint roughly
+     doubled (font + padding) so the wordmark anchors the top-left
+     with authority. The vertical extent (~96px) tracks the arena
+     header's gameStarted height (~92px). */
   margin: 0;
-  padding: 10px 14px;
-  font-size: 33px;            /* +25% from 26px */
-  letter-spacing: 5px;
+  padding: 22px 18px;
+  font-size: 52px;
+  letter-spacing: 7px;
+  line-height: 1;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-weight: 700;
   text-align: center;
@@ -69,8 +73,8 @@
   border: 1px solid rgba(0, 242, 255, 0.45);
   border-radius: 6px;
   box-shadow:
-    0 0 12px rgba(0, 242, 255, 0.18),
-    inset 0 0 18px rgba(0, 242, 255, 0.08);
+    0 0 14px rgba(0, 242, 255, 0.22),
+    inset 0 0 22px rgba(0, 242, 255, 0.1);
   animation: brand-neon-pulse 6s linear infinite;
 }
 
