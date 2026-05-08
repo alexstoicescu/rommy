@@ -63,6 +63,8 @@
   "game_over_closing": "Placă de închidere:",
   "game_over_player_col": "Jucător",
   "game_over_score_col": "Scor rundă",
+  "game_over_total_col": "Total",
+  "game_over_next_round_in": "Runda următoare în {{seconds}}s",
   "game_over_replay": "Joacă din nou",
 
   "board_aria": "Tablă de joc",

@@ -28,9 +28,19 @@ export interface Player {
   bonusPoints: number;
 }
 
+export type RoomPhase = "lobby" | "playing" | "scoreboard";
+
 export interface Room {
   id: string;
   players: Player[];
+  /**
+   * Lifecycle phase. 'lobby' before the first deal, 'playing' during a
+   * round, 'scoreboard' for the 15-second leaderboard pause after a
+   * round closes (auto-deals back to 'playing' on timer fire).
+   */
+  phase: RoomPhase;
+  /** Epoch-ms deadline for the scoreboard auto-deal. Null while playing. */
+  scoreboardEndsAt: number | null;
   /**
    * Per-player meld zones, keyed by `socketId`. Every meld lives in
    * exactly one zone — the zone owned by the player who first placed
@@ -87,6 +97,8 @@ export function createRoom(id: string): Room {
   return {
     id,
     players: [],
+    phase: "lobby",
+    scoreboardEndsAt: null,
     board: {},
     drawPile: [],
     discardPile: [],
@@ -175,6 +187,8 @@ export function dealRoom(room: Room): void {
   for (const p of room.players) room.board[p.socketId] = [];
   room.currentTurn = room.players[0]?.socketId ?? null;
   room.gameStarted = true;
+  room.phase = "playing";
+  room.scoreboardEndsAt = null;
   // First player was dealt 15 tiles — they "skip" the draw step and
   // begin in a state where they can only discard.
   room.hasDrawn = true;
@@ -213,6 +227,10 @@ export interface PublicRoomView {
   atu: Tile | null;
   /** SocketId of the player who was awarded the +50 Atu bonus. */
   atuAwardedTo: string | null;
+  phase: RoomPhase;
+  scoreboardEndsAt: number | null;
+  /** SessionId -> cumulative score across rounds in this room. */
+  globalScores: Record<string, number>;
 }
 
 export function publicView(room: Room): PublicRoomView {
@@ -251,6 +269,14 @@ export function publicView(room: Room): PublicRoomView {
     meldPoints,
     atu: room.atu,
     atuAwardedTo: room.atuAwardedTo,
+    phase: room.phase,
+    scoreboardEndsAt: room.scoreboardEndsAt,
+    globalScores: Object.fromEntries(
+      room.players.map((p) => [
+        p.sessionId,
+        getSession(p.sessionId)?.globalScore ?? 0,
+      ]),
+    ),
   };
 }
 

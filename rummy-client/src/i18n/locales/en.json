@@ -63,6 +63,8 @@
   "game_over_closing": "Closing tile:",
   "game_over_player_col": "Player",
   "game_over_score_col": "Round Score",
+  "game_over_total_col": "Total",
+  "game_over_next_round_in": "Next round in {{seconds}}s",
   "game_over_replay": "Play Again",
 
   "board_aria": "Game board",

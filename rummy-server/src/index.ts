@@ -28,6 +28,7 @@ import {
 import {
   bindSocket,
   createBotSession,
+  getSession,
   getSessionBySocket,
   markActive,
   markDisconnected,
@@ -36,6 +37,9 @@ import {
 } from "./SessionStore";
 
 const RECONNECT_GRACE_MS = 60_000;
+const SCOREBOARD_DURATION_MS = 15_000;
+
+const scoreboardTimers = new Map<string, NodeJS.Timeout>();
 
 const PORT = Number(process.env.PORT) || 10_000;
 const TURN_DURATION_MS = 120_000;
@@ -244,19 +248,58 @@ function runAutoPass(room: Room): void {
 function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
   const scoreMap = calculateFinalScores(room.players, winnerId, closingTile);
   const scoresByName: Record<string, number> = {};
+  const globalScoresByName: Record<string, number> = {};
   const winner = room.players.find((p) => p.socketId === winnerId);
-  for (const p of room.players) scoresByName[p.name] = scoreMap[p.socketId] ?? 0;
+  for (const p of room.players) {
+    const round = scoreMap[p.socketId] ?? 0;
+    scoresByName[p.name] = round;
+    // Continuous leaderboard: persist round delta into the session's
+    // running global score. Bots accumulate too (so the leaderboard
+    // makes sense even when a human is playing solo against Ramis).
+    const sess = getSession(p.sessionId);
+    if (sess) sess.globalScore += round;
+    globalScoresByName[p.name] = sess?.globalScore ?? round;
+  }
+  stopTurnTimer(room);
   room.gameStarted = false;
   room.currentTurn = null;
-  stopTurnTimer(room);
+  room.phase = "scoreboard";
+  room.scoreboardEndsAt = Date.now() + SCOREBOARD_DURATION_MS;
   console.log(
-    `Game over in ${room.id}: winner=${winner?.name} closing=${closingTile.isJoker ? "JOKER" : closingTile.value} scores=${JSON.stringify(scoresByName)}`,
+    `Game over in ${room.id}: winner=${winner?.name} closing=${closingTile.isJoker ? "JOKER" : closingTile.value} scores=${JSON.stringify(scoresByName)} totals=${JSON.stringify(globalScoresByName)}`,
   );
   io.to(room.id).emit("game_over", {
     winnerName: winner?.name ?? "?",
     scores: scoresByName,
+    globalScores: globalScoresByName,
     closingTile,
+    nextDealAt: room.scoreboardEndsAt,
   });
+  broadcastGameState(room);
+
+  // 15-second pause, then auto-deal a fresh round. If the room has been
+  // emptied during the pause (everyone evicted), bail out cleanly.
+  const prior = scoreboardTimers.get(room.id);
+  if (prior) clearTimeout(prior);
+  const handle = setTimeout(() => {
+    scoreboardTimers.delete(room.id);
+    if (!rooms.has(room.id)) return;
+    if (room.players.length < 2) {
+      // Not enough seats to start a round — drop back to lobby and let
+      // the host re-press Start when more players arrive.
+      room.phase = "lobby";
+      room.scoreboardEndsAt = null;
+      broadcastRoomUpdate(room);
+      broadcastGameState(room);
+      return;
+    }
+    dealRoom(room);
+    startTurnTimer(room);
+    broadcastRoomUpdate(room);
+    broadcastGameState(room);
+    maybeScheduleBotTurn(room);
+  }, SCOREBOARD_DURATION_MS);
+  scoreboardTimers.set(room.id, handle);
 }
 
 // =====================================================================

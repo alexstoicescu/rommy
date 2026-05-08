@@ -131,7 +131,11 @@ interface LobbyPlayer {
 interface GameOverPayload {
   winnerName: string;
   scores: Record<string, number>;
+  /** Cumulative session-level totals after this round's deltas applied. */
+  globalScores: Record<string, number>;
   closingTile: Tile;
+  /** Epoch-ms when the auto-deal will fire. */
+  nextDealAt: number;
 }
 
 interface GameStateUpdate {
@@ -1023,7 +1027,9 @@ function App() {
         <GameOverModal
           winnerName={gameOver.winnerName}
           scores={gameOver.scores}
+          globalScores={gameOver.globalScores}
           closingTile={gameOver.closingTile}
+          nextDealAt={gameOver.nextDealAt}
           onPlayAgain={handlePlayAgain}
         />
       )}
