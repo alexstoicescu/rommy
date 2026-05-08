@@ -35,7 +35,11 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 16px 14px;
+  /* No top padding — the brand box anchors flush with the arena
+     header so a single horizontal line runs across the top of the
+     viewport. The 14px horizontal padding is what gives every
+     sidebar box its consistent left edge. */
+  padding: 0 14px 16px;
   background: rgba(13, 2, 33, 0.78);
   border-right: 1px solid rgba(188, 19, 254, 0.4);
   backdrop-filter: blur(6px);
@@ -44,18 +48,58 @@
   box-sizing: border-box;
 }
 
+/* Logo box — sits as the head element of the sidebar column. Same
+   left edge as the leaderboard / volume slider beneath, top edge
+   flush with the arena header's so the cross-viewport line reads
+   continuously. Slow neon pulse cycles cyan -> indigo -> cyan. */
 .sidebar__brand {
-  margin: 0 0 4px;
-  font-size: 26px;
-  letter-spacing: 4px;
+  /* Flush with the top of the viewport so its top edge lines up with
+     the arena header's top edge — that's the "continuous horizontal
+     line across the top". Spacing to the leaderboard below is
+     supplied by the .sidebar flex gap. */
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 33px;            /* +25% from 26px */
+  letter-spacing: 5px;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  color: var(--theme-color, #ffe066);
-  text-shadow:
-    0 0 6px var(--theme-color, #ffe066),
-    0 0 14px color-mix(in srgb, var(--theme-color, #ffe066) 40%, transparent);
+  font-weight: 700;
   text-align: center;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(188, 19, 254, 0.3);
+  color: #00f2ff;
+  background: rgba(2, 8, 14, 0.78);
+  border: 1px solid rgba(0, 242, 255, 0.45);
+  border-radius: 6px;
+  box-shadow:
+    0 0 12px rgba(0, 242, 255, 0.18),
+    inset 0 0 18px rgba(0, 242, 255, 0.08);
+  animation: brand-neon-pulse 6s linear infinite;
+}
+
+@keyframes brand-neon-pulse {
+  /* Subtle two-stop oscillation between cyan and a violet-tinted
+     cyan. Linear timing keeps the breathing steady — never strobes. */
+  0%, 100% {
+    color: #00f2ff;
+    text-shadow:
+      0 0 6px rgba(0, 242, 255, 0.65),
+      0 0 14px rgba(0, 242, 255, 0.4),
+      0 0 28px rgba(0, 242, 255, 0.18);
+  }
+  50% {
+    color: #b3a4ff;
+    text-shadow:
+      0 0 8px rgba(170, 110, 255, 0.7),
+      0 0 18px rgba(170, 110, 255, 0.45),
+      0 0 36px rgba(170, 110, 255, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar__brand {
+    animation: none;
+    text-shadow:
+      0 0 6px rgba(0, 242, 255, 0.55),
+      0 0 14px rgba(0, 242, 255, 0.35);
+  }
 }
 
 /* The leaderboard + sidebar-lobby + volume drop their own max-width
