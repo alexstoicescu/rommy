@@ -912,15 +912,11 @@ io.on("connection", (socket: Socket) => {
       socket.emit("action_error", { reason: "cannot_rupere_now" });
       return;
     }
-    // Round 1 lockout: until every player has had a chance to discard
-    // once, the pile is too short to support Rupere mechanics.
-    if (room.discardPile.length <= room.players.length) {
-      socket.emit(
-        "error",
-        "The discard pile is locked until the first round is complete.",
-      );
-      return;
-    }
+    // Per the spec, the *only* universal pile-position rule is the
+    // First-Discard Ban (room.firstDiscardTileId, enforced below). No
+    // length-based round-1 lockout — pre-Etalare players are gated by
+    // the "must form a valid Etalare with the picked tile" check, and
+    // post-Etalare players can freely Rupere.
     const player = room.players.find((p) => p.socketId === socket.id)!;
     const pickIdx = room.discardPile.findIndex((t) => t.id === tileId);
     if (pickIdx < 0) {

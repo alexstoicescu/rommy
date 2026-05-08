@@ -906,11 +906,6 @@ function App() {
           <DiscardPile
             tiles={discardPile}
             canRupere={isMyTurn && !hasDrawn}
-            locked={
-              gameStarted &&
-              gamePlayers.length > 0 &&
-              discardPile.length <= gamePlayers.length
-            }
             onRupere={handleRupere}
           />
         </div>
