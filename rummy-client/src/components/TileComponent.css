@@ -54,13 +54,62 @@
     0 8px 14px rgba(0, 0, 0, 0.45);
 }
 
+/* Joker — single bold "J" Power-Card style. The wrapper stays a flex
+   center; the J is sized 1.4em, the optional "JOKER" footer is a 6px
+   uppercase strip pinned to the bottom edge so it never collides
+   with the glyph. Rim light uses the same data-color="joker" purple
+   suit-glow, which reads vibrantly against the cream face. */
 .tile--joker {
   --suit-color: #6b1bb3;
-  --suit-glow: rgba(160, 60, 220, 0.55);
-  font-size: 13px;
-  font-style: italic;
-  letter-spacing: 1.5px;
+  --suit-glow: rgba(160, 60, 220, 0.6);
+  position: relative;
+  flex-direction: column;
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 22px; /* base — the glyph overrides via 1.4em */
+}
+
+.tile__joker-glyph {
+  display: block;
+  font-size: 1.4em;
+  font-weight: 900;
+  font-family: "Georgia", "Times New Roman", serif;
+  line-height: 1;
+  color: var(--suit-color);
+  /* Center on both axes inside the flex parent. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -54%);
+}
+
+.tile__joker-subtext {
+  position: absolute;
+  bottom: 3px;
+  left: 0;
+  right: 0;
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
+  text-align: center;
+  color: var(--suit-color);
+  opacity: 0.6;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  pointer-events: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Atu (Trump) tile — slightly thicker rim glow so it reads as marked

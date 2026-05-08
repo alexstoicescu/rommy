@@ -9,7 +9,11 @@ export function TileComponent({ tile }: Props) {
   if (tile.isJoker) {
     return (
       <div className="tile tile--joker" data-color="joker">
-        Joker
+        <span className="tile__joker-glyph">J</span>
+        <span className="tile__joker-subtext" aria-hidden="true">
+          JOKER
+        </span>
+        <span className="visually-hidden">Joker</span>
       </div>
     );
   }

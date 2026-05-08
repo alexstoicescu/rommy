@@ -1,5 +1,29 @@
 # Rommy Changelog
 
+## [v2.4.1] - The "Pulse & Polish" Patch
+
+🎨 Visual Polish
+
+Grid Integration: Realigned the 'Rommy' logo box to create a clean 'L-shaped' container structure at the top-left, anchoring it perfectly to the left sidebar column and the top header row.
+
+Dominant Branding: Increased the visual weight and font size of the 'Rommy' logo.
+
+Atmospheric Animation: Implemented a slow, smooth, cyan/magenta neon pulse animation to the main logo to enhance the terminal atmosphere without creating visual fatigue.
+
+# [v2.4.0] - The "Hype Foundation"
+
+SOCKET: Shared Momentum
+
+Implemented backend aggregation for multi-player cursor velocity.
+
+UX: The Hype Engine
+
+Integrated a top-docked neon progress bar to track group activity during the scramble phase.
+
+VISUAL: Reward Logic
+
+Added "Max Hype" screen-shake and glow triggers for successful group coordination.
+
 ## [v2.3.0] - The "Control & Exit" Update
 
 ⚙️ Audio Management
