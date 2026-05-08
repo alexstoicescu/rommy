@@ -15,6 +15,8 @@ for every rule (Etalare, Lipire, Rupere, Joker swap, closing) and the React
 client is purely a window into its state — no client-side rule fudging,
 no rule duplication.
 
+Available to try at https://rommyvercel.vercel.app/
+
 ---
 
 ## Tech Stack
