@@ -39,9 +39,14 @@ import {
 const RECONNECT_GRACE_MS = 60_000;
 const SCOREBOARD_DURATION_MS = 45_000;
 const SCRAMBLE_DURATION_MS = 10_000;
+const HYPE_TICK_MS = 100;
+const HYPE_INPUT_CAP = 200;        // cap each velocity event so a stuck high value can't dominate
+const HYPE_GAIN = 0.045;           // pool -> level scaling factor
+const HYPE_DECAY = 1.6;            // -level / tick when no input arrives
 
 const scoreboardTimers = new Map<string, NodeJS.Timeout>();
 const scrambleTimers = new Map<string, NodeJS.Timeout>();
+const hypeTickers = new Map<string, NodeJS.Timeout>();
 
 /**
  * Enter the 10-second collaborative scramble phase before any deal.
@@ -52,6 +57,7 @@ const scrambleTimers = new Map<string, NodeJS.Timeout>();
 function beginScramble(room: Room): void {
   const prior = scrambleTimers.get(room.id);
   if (prior) clearTimeout(prior);
+  stopHypeTicker(room);
   // Reset per-round residue but DON'T deal yet — dealRoom is what flips
   // gameStarted on. During scramble the room is in a pre-game phase.
   room.board = {};
@@ -62,14 +68,19 @@ function beginScramble(room: Room): void {
   room.phase = "scrambling";
   room.scrambleSeed = Math.floor(Math.random() * 0x7fffffff) || 1;
   room.scrambleEndsAt = Date.now() + SCRAMBLE_DURATION_MS;
+  room.hypeLevel = 0;
+  room.hypePool = 0;
+  room.hypeClimaxFired = false;
   console.log(
     `Scramble in ${room.id} (seed=${room.scrambleSeed}, players=${room.players.length})`,
   );
   broadcastRoomUpdate(room);
   broadcastGameState(room);
+  startHypeTicker(room);
   const handle = setTimeout(() => {
     scrambleTimers.delete(room.id);
     if (!rooms.has(room.id)) return;
+    stopHypeTicker(room);
     if (room.players.length < 2) {
       // Players bailed during the scramble — drop back to lobby.
       room.phase = "lobby";
@@ -86,6 +97,39 @@ function beginScramble(room: Room): void {
     maybeScheduleBotTurn(room);
   }, SCRAMBLE_DURATION_MS);
   scrambleTimers.set(room.id, handle);
+}
+
+/**
+ * Drain the per-room hypePool into hypeLevel every 100ms during the
+ * scramble phase. Broadcasts a compact hype_update so clients can
+ * paint the meter without parsing the full PublicRoomView, and fires
+ * a one-shot hype_climax the first time the bar tops out.
+ */
+function startHypeTicker(room: Room): void {
+  stopHypeTicker(room);
+  const handle = setInterval(() => {
+    if (room.phase !== "scrambling") {
+      stopHypeTicker(room);
+      return;
+    }
+    const delta = room.hypePool * HYPE_GAIN - HYPE_DECAY;
+    room.hypePool = 0;
+    room.hypeLevel = Math.max(0, Math.min(100, room.hypeLevel + delta));
+    io.to(room.id).emit("hype_update", { hypeLevel: room.hypeLevel });
+    if (room.hypeLevel >= 100 && !room.hypeClimaxFired) {
+      room.hypeClimaxFired = true;
+      io.to(room.id).emit("hype_climax");
+    }
+  }, HYPE_TICK_MS);
+  hypeTickers.set(room.id, handle);
+}
+
+function stopHypeTicker(room: Room): void {
+  const t = hypeTickers.get(room.id);
+  if (t) {
+    clearInterval(t);
+    hypeTickers.delete(room.id);
+  }
 }
 
 const PORT = Number(process.env.PORT) || 10_000;
@@ -756,6 +800,17 @@ io.on("connection", (socket: Socket) => {
       x: payload.x,
       y: payload.y,
     });
+  });
+
+  // Hype meter — clients drip throttled velocity readings. The 100ms
+  // ticker (startHypeTicker) drains the pooled velocity into a
+  // shared hypeLevel and broadcasts it to the room.
+  socket.on("scramble_velocity", (payload: { velocity: number }) => {
+    const room = getRoom(socket.id);
+    if (!room || room.phase !== "scrambling") return;
+    const v = Number(payload?.velocity);
+    if (!Number.isFinite(v) || v <= 0) return;
+    room.hypePool += Math.min(v, HYPE_INPUT_CAP);
   });
 
   socket.on("draw_tile", () => {

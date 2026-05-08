@@ -16,9 +16,103 @@
   touch-action: none;
 }
 
+/* Hype Engine — sleek horizontal meter pinned at the very top of the
+   scramble container. Group momentum fills cyan → green → white-hot
+   as the room's combined velocity accumulates. */
+.hype-meter {
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  right: 12px;
+  z-index: 11;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 255, 130, 0.5);
+  border-radius: 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #b9f5d0;
+  box-shadow: 0 0 10px rgba(0, 255, 130, 0.18);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.hype-meter__label {
+  text-shadow: 0 0 1px #b9f5d0, 0 0 4px rgba(0, 255, 130, 0.5);
+}
+
+.hype-meter__track {
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(0, 255, 130, 0.12);
+  overflow: hidden;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.hype-meter__fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 200, 255, 0.85) 0%,
+    rgba(0, 255, 130, 0.95) 60%,
+    rgba(255, 255, 255, 1) 100%
+  );
+  box-shadow: 0 0 8px rgba(0, 255, 130, 0.7);
+  transition: width 0.12s linear, box-shadow 0.2s;
+}
+
+.hype-meter__value {
+  font-variant-numeric: tabular-nums;
+  color: #ffe066;
+  text-shadow: 0 0 1px #ffe066, 0 0 4px rgba(255, 224, 102, 0.45);
+}
+
+.hype-meter--max {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 18px rgba(0, 255, 130, 0.55),
+    0 0 32px rgba(255, 255, 255, 0.35);
+}
+
+.hype-meter--max .hype-meter__fill {
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.85);
+}
+
+/* Climax flash — quick board glow + screen shake when hypeLevel hits
+   100. Triggered by the .scramble--climax class for 600ms from the
+   parent App. */
+.scramble--climax {
+  animation: scramble-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  box-shadow:
+    0 0 32px rgba(0, 255, 130, 0.85),
+    0 0 70px rgba(0, 255, 130, 0.45),
+    inset 0 0 50px rgba(255, 255, 255, 0.25);
+}
+
+@keyframes scramble-shake {
+  0%   { transform: translate(0, 0); }
+  15%  { transform: translate(-4px, 2px); }
+  30%  { transform: translate(5px, -3px); }
+  45%  { transform: translate(-3px, 4px); }
+  60%  { transform: translate(4px, -2px); }
+  75%  { transform: translate(-3px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scramble--climax {
+    animation: none;
+  }
+}
+
 .scramble__hud {
   position: absolute;
-  top: 8px;
+  top: 36px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;

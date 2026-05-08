@@ -17,9 +17,16 @@ interface Props {
   endsAt: number;
   /** SocketIO emitter — wired to forward cursor positions up. */
   onCursorMove: (x: number, y: number) => void;
+  /** SocketIO emitter for the hype meter — receives the px traveled
+   *  in the last throttle window. */
+  onVelocity: (velocity: number) => void;
   peers: PeerCursor[];
   /** Local player's color, used to tint their own (silent) cursor. */
   selfColor: string;
+  /** Server-broadcast hype level (0..100). */
+  hypeLevel: number;
+  /** Pulses ~600ms when the room hits 100 hype. */
+  climaxFlash: boolean;
 }
 
 const TILE_COUNT = 106;
@@ -30,6 +37,7 @@ const TILE_H = 52;
 const BUMP_RADIUS = 90; // px; cursor influence radius
 const BUMP_STRENGTH = 22; // px; cap of additional displacement
 const CURSOR_THROTTLE_MS = 33; // ~30Hz
+const VELOCITY_THROTTLE_MS = 30; // ~33Hz, per spec
 const CURSOR_FADE_MS = 1500;
 
 /** Tiny seeded PRNG (mulberry32). Deterministic across clients. */
@@ -69,14 +77,21 @@ export function ScramblePile({
   seed,
   endsAt,
   onCursorMove,
+  onVelocity,
   peers,
   selfColor,
+  hypeLevel,
+  climaxFlash,
 }: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [localCursor, setLocalCursor] = useState<{ x: number; y: number } | null>(null);
   const lastEmitRef = useRef(0);
+  // Velocity book-keeping — sum px traveled since last emit, then send.
+  const velocityAccumRef = useRef(0);
+  const lastVelocityEmitRef = useRef(0);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const layout = useMemo(() => buildLayout(seed), [seed]);
 
@@ -96,16 +111,34 @@ export function ScramblePile({
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
     setLocalCursor({ x: px, y: py });
-    // Throttle outbound emits.
+    // Velocity = px traveled in container-pixel units since last sample.
+    // We work in absolute pixels so a fast 4K user and a 1080p user
+    // contribute comparable hype.
+    const xpx = px * CLUSTER_W;
+    const ypx = py * CLUSTER_H;
+    const last = lastPosRef.current;
+    if (last) {
+      velocityAccumRef.current += Math.hypot(xpx - last.x, ypx - last.y);
+    }
+    lastPosRef.current = { x: xpx, y: ypx };
     const t = performance.now();
+    // Cursor fan-out (~30Hz)
     if (t - lastEmitRef.current >= CURSOR_THROTTLE_MS) {
       lastEmitRef.current = t;
       onCursorMove(px, py);
+    }
+    // Velocity drip (~33Hz, per spec — 30ms throttle)
+    if (t - lastVelocityEmitRef.current >= VELOCITY_THROTTLE_MS) {
+      const v = velocityAccumRef.current;
+      velocityAccumRef.current = 0;
+      lastVelocityEmitRef.current = t;
+      if (v > 0) onVelocity(v);
     }
   };
 
   const handlePointerLeave = () => {
     setLocalCursor(null);
+    lastPosRef.current = null;
   };
 
   // Combine local + active peer cursors into px-coords for bump physics.
@@ -124,15 +157,34 @@ export function ScramblePile({
     return list;
   }, [localCursor, livePeers]);
 
+  const hypePct = Math.max(0, Math.min(100, hypeLevel));
+  const hypeMaxed = hypePct >= 99.5;
+
   return (
     <div
       ref={containerRef}
-      className={`scramble${ending ? " scramble--ending" : ""}`}
+      className={`scramble${ending ? " scramble--ending" : ""}${climaxFlash ? " scramble--climax" : ""}`}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       role="presentation"
       style={{ width: CLUSTER_W, height: CLUSTER_H }}
     >
+      <div
+        className={`hype-meter${hypeMaxed ? " hype-meter--max" : ""}`}
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(hypePct)}
+      >
+        <div className="hype-meter__label">{t("hype_engine_label")}</div>
+        <div className="hype-meter__track">
+          <div
+            className="hype-meter__fill"
+            style={{ width: `${hypePct}%` }}
+          />
+        </div>
+        <div className="hype-meter__value">{Math.round(hypePct)}%</div>
+      </div>
       <div className="scramble__hud">
         <span className="scramble__label">{t("scramble_label")}</span>
         <span className="scramble__countdown">

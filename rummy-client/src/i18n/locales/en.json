@@ -103,6 +103,7 @@
 
   "scramble_label": "Scramble",
   "scramble_countdown": "Dealing in {{seconds}}s",
+  "hype_engine_label": "Hype Engine",
 
   "leaderboard_title": "Leaderboard",
   "leaderboard_empty": "(no players yet)",

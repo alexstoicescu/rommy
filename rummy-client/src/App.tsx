@@ -250,6 +250,9 @@ function App() {
   const [peerCursors, setPeerCursors] = useState<
     Map<string, { sessionId: string; x: number; y: number; ts: number }>
   >(new Map());
+  const [hypeLevel, setHypeLevel] = useState(0);
+  const [hypeClimax, setHypeClimax] = useState(false);
+  const hypeClimaxTimerRef = useRef<number | null>(null);
 
   // Tiles in draftMelds also live in `hand` (server-authoritative). The
   // rack is hand minus whatever the player has staged in draft melds.
@@ -330,8 +333,13 @@ function App() {
       setScoreboardEndsAt(state.scoreboardEndsAt);
       setReadyForNext(state.readyForNext);
       setGlobalScores(state.globalScores);
-      // Drop stale peer cursors when leaving the scramble phase.
-      if (state.phase !== "scrambling") setPeerCursors(new Map());
+      // Drop stale peer cursors when leaving the scramble phase, and
+      // wipe the hype meter so the next round starts at zero.
+      if (state.phase !== "scrambling") {
+        setPeerCursors(new Map());
+        setHypeLevel(0);
+        setHypeClimax(false);
+      }
       // Announce the Atu once per round, the first time we see it awarded.
       if (
         state.gameStarted &&
@@ -391,6 +399,19 @@ function App() {
         return next;
       });
     };
+    const onHypeUpdate = (payload: { hypeLevel: number }) => {
+      setHypeLevel(payload.hypeLevel);
+    };
+    const onHypeClimax = () => {
+      setHypeClimax(true);
+      if (hypeClimaxTimerRef.current != null) {
+        window.clearTimeout(hypeClimaxTimerRef.current);
+      }
+      hypeClimaxTimerRef.current = window.setTimeout(() => {
+        setHypeClimax(false);
+        hypeClimaxTimerRef.current = null;
+      }, 600);
+    };
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -404,8 +425,12 @@ function App() {
     socket.on("etalare_success", onEtalareSuccess);
     socket.on("game_over", onGameOver);
     socket.on("peer_cursor", onPeerCursor);
+    socket.on("hype_update", onHypeUpdate);
+    socket.on("hype_climax", onHypeClimax);
     return () => {
       socket.off("peer_cursor", onPeerCursor);
+      socket.off("hype_update", onHypeUpdate);
+      socket.off("hype_climax", onHypeClimax);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("room_update", onRoomUpdate);
@@ -1014,6 +1039,11 @@ function App() {
                   onCursorMove={(x, y) =>
                     socket.emit("cursor_move", { x, y })
                   }
+                  onVelocity={(velocity) =>
+                    socket.emit("scramble_velocity", { velocity })
+                  }
+                  hypeLevel={hypeLevel}
+                  climaxFlash={hypeClimax}
                 />
               )}
             {roomPhase !== "scrambling" && (

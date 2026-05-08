@@ -50,6 +50,17 @@ export interface Room {
   scrambleEndsAt: number | null;
   scrambleSeed: number | null;
   /**
+   * 0-100 group-momentum gauge that fills during SCRAMBLING as
+   * players whisk their cursors through the pile. Reset whenever a
+   * fresh scramble starts.
+   */
+  hypeLevel: number;
+  /** Transient — velocity received in the current 100ms tick. */
+  hypePool: number;
+  /** True once hypeLevel has hit 100 this scramble (so the climax
+   *  broadcast fires only once per round). */
+  hypeClimaxFired: boolean;
+  /**
    * SessionIds of players who have clicked "Ready for Next Round" during
    * the scoreboard phase. When every connected human is in this set the
    * server skips the rest of the timer and deals immediately.
@@ -115,6 +126,9 @@ export function createRoom(id: string): Room {
     scoreboardEndsAt: null,
     scrambleEndsAt: null,
     scrambleSeed: null,
+    hypeLevel: 0,
+    hypePool: 0,
+    hypeClimaxFired: false,
     readyForNext: new Set<string>(),
     board: {},
     drawPile: [],
@@ -218,6 +232,9 @@ export function dealRoom(room: Room): void {
   room.scoreboardEndsAt = null;
   room.scrambleEndsAt = null;
   room.scrambleSeed = null;
+  room.hypeLevel = 0;
+  room.hypePool = 0;
+  room.hypeClimaxFired = false;
   room.readyForNext.clear();
   // First player was dealt 15 tiles — they "skip" the draw step and
   // begin in a state where they can only discard.
@@ -261,6 +278,9 @@ export interface PublicRoomView {
   scoreboardEndsAt: number | null;
   scrambleEndsAt: number | null;
   scrambleSeed: number | null;
+  /** Live hype gauge during SCRAMBLING (also pushed via dedicated
+   *  hype_update events at 100ms cadence). */
+  hypeLevel: number;
   /** SessionIds that have clicked "Ready for Next Round" this intermission. */
   readyForNext: string[];
   /** SessionId -> cumulative score across rounds in this room. */
@@ -307,6 +327,7 @@ export function publicView(room: Room): PublicRoomView {
     scoreboardEndsAt: room.scoreboardEndsAt,
     scrambleEndsAt: room.scrambleEndsAt,
     scrambleSeed: room.scrambleSeed,
+    hypeLevel: room.hypeLevel,
     readyForNext: Array.from(room.readyForNext),
     globalScores: Object.fromEntries(
       room.players.map((p) => [
