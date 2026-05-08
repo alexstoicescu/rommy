@@ -23,6 +23,9 @@ import { DrawPile } from "./components/DrawPile";
 import { DiscardPile, DISCARD_PILE_ID } from "./components/DiscardPile";
 import { GameBoard } from "./components/GameBoard";
 import { GameOverModal } from "./components/GameOverModal";
+import { AfterActionReport } from "./components/AfterActionReport";
+import { ReplayScrubber } from "./components/ReplayScrubber";
+import type { MatchTape } from "./replay/types";
 import { CheatSheet } from "./components/CheatSheet";
 import { Landing } from "./components/Landing";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
@@ -253,6 +256,11 @@ function App() {
   const [hypeLevel, setHypeLevel] = useState(0);
   const [hypeClimax, setHypeClimax] = useState(false);
   const hypeClimaxTimerRef = useRef<number | null>(null);
+  // Match tape arrives once per round close. Cleared the moment the
+  // next round phase changes away from "scoreboard" so the events
+  // array (which can run several MB) is freed promptly.
+  const [matchTape, setMatchTape] = useState<MatchTape | null>(null);
+  const [showReplay, setShowReplay] = useState(false);
 
   // Tiles in draftMelds also live in `hand` (server-authoritative). The
   // rack is hand minus whatever the player has staged in draft melds.
@@ -363,6 +371,15 @@ function App() {
       if (state.phase === "scrambling" || state.gameStarted) {
         setGameOver(null);
       }
+      // Drop the previous round's tape and any open replay view as
+      // soon as we're no longer in the post-round intermission. This
+      // is the main memory-leak guard for the recorder pipeline —
+      // the tape can be several MB so we don't want it sticking
+      // around across rounds.
+      if (state.phase !== "scoreboard") {
+        setMatchTape(null);
+        setShowReplay(false);
+      }
       // Drop any drafts whose tiles are no longer in our hand (the
       // server has either committed them to the board or they were
       // re-allocated for some other reason).
@@ -427,10 +444,13 @@ function App() {
     socket.on("peer_cursor", onPeerCursor);
     socket.on("hype_update", onHypeUpdate);
     socket.on("hype_climax", onHypeClimax);
+    const onMatchTape = (tape: MatchTape) => setMatchTape(tape);
+    socket.on("match_tape", onMatchTape);
     return () => {
       socket.off("peer_cursor", onPeerCursor);
       socket.off("hype_update", onHypeUpdate);
       socket.off("hype_climax", onHypeClimax);
+      socket.off("match_tape", onMatchTape);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("room_update", onRoomUpdate);
@@ -1197,7 +1217,6 @@ function App() {
           const total = gamePlayers.filter(
             (p) => !p.isBot && p.connectionStatus === "active",
           ).length;
-          // readyForNext from the server is the authoritative count.
           const expectedSet = new Set(
             gamePlayers
               .filter(
@@ -1207,6 +1226,26 @@ function App() {
           );
           const count = readyForNext.filter((s) => expectedSet.has(s)).length;
           const dealAt = scoreboardEndsAt ?? gameOver.nextDealAt;
+          // Prefer the AAR overlay when the match_tape has arrived
+          // (which it should, milliseconds after game_over). The
+          // legacy GameOverModal stays as a fallback in case the tape
+          // is missing for any reason.
+          if (matchTape) {
+            if (showReplay) return null;
+            return (
+              <AfterActionReport
+                tape={matchTape}
+                themes={PLAYER_THEMES}
+                nextDealAt={dealAt}
+                ready={ready}
+                readyCount={count}
+                readyTotal={total}
+                onReady={() => socket.emit("ready_up")}
+                onWatchReplay={() => setShowReplay(true)}
+                onPlayAgain={handlePlayAgain}
+              />
+            );
+          }
           return (
             <GameOverModal
               winnerName={gameOver.winnerName}
@@ -1221,6 +1260,14 @@ function App() {
             />
           );
         })()}
+
+      {matchTape && showReplay && (
+        <ReplayScrubber
+          tape={matchTape}
+          themes={PLAYER_THEMES}
+          onClose={() => setShowReplay(false)}
+        />
+      )}
     </DndContext>
   );
 }

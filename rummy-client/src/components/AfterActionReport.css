@@ -1,0 +1,289 @@
+/* After-Action Report — full-screen terminal report overlay. The
+   component unmounts when the tape clears, so all per-card state
+   (countdown timer, analytics memo) is freed automatically. */
+.aar {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(2, 6, 14, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: #cfe2d6;
+}
+
+.aar__shell {
+  width: 100%;
+  max-width: 1080px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.92), rgba(2, 6, 14, 0.96));
+  border: 1px solid rgba(0, 242, 255, 0.45);
+  border-radius: 10px;
+  box-shadow:
+    0 0 24px rgba(0, 242, 255, 0.18),
+    inset 0 0 26px rgba(0, 242, 255, 0.05);
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.aar__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.aar__prompt {
+  color: #00f2ff;
+  font-weight: 700;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
+}
+
+.aar__title {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #00f2ff;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
+}
+
+.aar__countdown {
+  margin-left: auto;
+  color: #ffe066;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bento grid — 6 cards across 3 columns. The MVP and Highlights
+   cards span 1 row each; the chart spans 2 columns. */
+.aar__bento {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "mvp     chart  chart"
+    "fortune stats  stats"
+    "highlights highlights highlights";
+  gap: 12px;
+}
+
+.aar__card {
+  --card-accent: rgba(0, 242, 255, 0.55);
+  background: rgba(2, 8, 14, 0.78);
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  border-left: 3px solid var(--card-accent);
+  border-radius: 6px;
+  padding: 12px 14px;
+  box-shadow: inset 0 0 14px rgba(0, 242, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.aar__card--mvp { grid-area: mvp; }
+.aar__card--chart { grid-area: chart; }
+.aar__card--fortune { grid-area: fortune; }
+.aar__card--stats { grid-area: stats; }
+.aar__card--highlights { grid-area: highlights; }
+
+.aar__card-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(0, 242, 255, 0.7);
+  text-shadow: 0 0 1px rgba(0, 242, 255, 0.5);
+}
+
+/* MVP */
+.aar__card-name {
+  font-family: "Georgia", serif;
+  font-size: 28px;
+  letter-spacing: 1px;
+  color: var(--card-accent);
+  text-shadow:
+    0 0 8px var(--card-accent),
+    0 0 18px color-mix(in srgb, var(--card-accent) 50%, transparent);
+}
+
+.aar__card-stat {
+  font-size: 18px;
+  color: #ffe066;
+  font-variant-numeric: tabular-nums;
+}
+
+.aar__card-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(207, 226, 214, 0.7);
+}
+
+/* Chart */
+.aar__chart-wrap {
+  flex: 1;
+  min-height: 200px;
+}
+
+/* Fortune table */
+.aar__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.aar__table th,
+.aar__table td {
+  padding: 4px 6px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+}
+
+.aar__table th {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(0, 242, 255, 0.65);
+}
+
+.aar__table-value {
+  color: #ffe066;
+  font-weight: 700;
+}
+
+/* Stat list */
+.aar__statlist {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+}
+
+.aar__statlist dt {
+  color: rgba(0, 242, 255, 0.7);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.aar__statlist dd {
+  margin: 0;
+  color: #cfe2d6;
+}
+
+/* Highlights */
+.aar__highlights {
+  margin: 0;
+  padding: 0 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.aar__highlights li::marker {
+  color: #00f2ff;
+}
+
+.aar__empty {
+  font-style: italic;
+  color: rgba(207, 226, 214, 0.4);
+  font-size: 12px;
+}
+
+/* Footer */
+.aar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 242, 255, 0.18);
+  flex-wrap: wrap;
+}
+
+.aar__ready-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aar__ready-status {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(0, 242, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+.aar__btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aar__btn {
+  padding: 8px 14px;
+  background: rgba(0, 242, 255, 0.08);
+  color: #00f2ff;
+  border: 1px solid rgba(0, 242, 255, 0.5);
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s, color 0.15s;
+}
+
+.aar__btn:hover:not(:disabled) {
+  background: rgba(0, 242, 255, 0.18);
+  box-shadow: 0 0 14px rgba(0, 242, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.aar__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.aar__btn--ready-done {
+  background: rgba(0, 242, 255, 0.04);
+}
+
+.aar__btn--play-again {
+  background: rgba(255, 224, 102, 0.16);
+  color: #ffe066;
+  border-color: rgba(255, 224, 102, 0.55);
+}
+
+.aar__btn--play-again:hover:not(:disabled) {
+  background: rgba(255, 224, 102, 0.28);
+  box-shadow: 0 0 14px rgba(255, 224, 102, 0.45);
+}
+
+@media (max-width: 800px) {
+  .aar__bento {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "mvp"
+      "chart"
+      "fortune"
+      "stats"
+      "highlights";
+  }
+}

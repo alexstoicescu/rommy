@@ -1,0 +1,59 @@
+// Mirror of rummy-server/src/MatchRecorder.ts public shapes. The
+// server emits these via the `match_tape` socket event; the client
+// stores them only while the After-Action Report or replay scrubber
+// is mounted, then releases the reference.
+import type { Tile } from "../types/game";
+
+export type MatchEventType =
+  | "scramble_start"
+  | "deal"
+  | "draw"
+  | "rupere"
+  | "rupere_undo"
+  | "etalare"
+  | "play_meld"
+  | "attach"
+  | "discard"
+  | "auto_pass"
+  | "finalize";
+
+export interface MatchSnapshot {
+  board: Record<string, Tile[][]>;
+  hands: Record<string, Tile[]>;
+  discardPile: Tile[];
+  drawPileCount: number;
+  currentTurn: string | null;
+  hasDrawn: boolean;
+  mustUseTileId: string | null;
+  meldedScores: Record<string, number>;
+  roundScores?: Record<string, number>;
+}
+
+export interface MatchEvent {
+  ts: number;
+  type: MatchEventType;
+  actor?: string;
+  meta?: Record<string, unknown>;
+  snapshot: MatchSnapshot;
+}
+
+export interface MatchTapePlayer {
+  sessionId: string;
+  name: string;
+  isBot: boolean;
+  colorIndex: number;
+}
+
+export interface MatchTape {
+  roomId: string;
+  startedAt: number;
+  endedAt: number;
+  players: MatchTapePlayer[];
+  atu: Tile | null;
+  events: MatchEvent[];
+  hypeContrib: Record<string, number>;
+  finalScores: Record<string, number>;
+  globalScores: Record<string, number>;
+  winnerSessionId: string;
+  closingTile: Tile;
+}
