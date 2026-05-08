@@ -1,5 +1,15 @@
 # Rommy Changelog
 
+## [v2.5.2] - The "Scale & Spacing" Patch
+
+🎨 UI/UX Refinement
+
+Branding Clearance: Resolved the overlap between the language switcher and the Rommy logo by implementing a top-down spacing hierarchy in the login modal.
+
+Global Tile Scaling: Increased all in-game tile dimensions by 15% to enhance visibility and tabletop immersion.
+
+Component Harmonization: Adjusted hand-rack and board containers to seamlessly fit the new tile scale.
+
 ## [v2.5.1] - The "Gatekeeper" Hotfix
 
 🎨 UI/UX Refinement

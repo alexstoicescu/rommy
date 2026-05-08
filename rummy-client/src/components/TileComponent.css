@@ -4,8 +4,9 @@
 .tile {
   --suit-color: #444;
   --suit-glow: rgba(0, 0, 0, 0.2);
-  width: 44px;
-  height: 64px;
+  /* Base tile dimensions (v2.6.0: +15% from the original 44 x 64). */
+  width: 51px;
+  height: 74px;
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 6px;
   background: #fffdf6;
@@ -13,7 +14,7 @@
   align-items: center;
   justify-content: center;
   font-family: "Georgia", "Times New Roman", serif;
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 700;
   color: var(--suit-color);
   /* Rim light: two inset shadows trace the inner edge with the suit
@@ -67,7 +68,7 @@
   font-style: normal;
   letter-spacing: 0;
   text-transform: none;
-  font-size: 22px; /* base — the glyph overrides via 1.4em */
+  font-size: 25px; /* matches base tile — the glyph overrides via 1.4em */
 }
 
 .tile__joker-glyph {

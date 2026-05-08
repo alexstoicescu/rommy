@@ -1,6 +1,7 @@
 .draw-pile {
-  width: 44px;
-  height: 64px;
+  /* Matches .tile dimensions (v2.6.0: +15%). */
+  width: 51px;
+  height: 74px;
   border: 1px solid #222;
   border-radius: 6px;
   background:

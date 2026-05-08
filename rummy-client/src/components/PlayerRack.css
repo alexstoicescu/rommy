@@ -46,8 +46,10 @@
     inset 0 0 14px rgba(0, 0, 0, 0.55);
   box-sizing: border-box;
   overflow: visible;
-  /* Cap height so 30+ tiles still scroll instead of pushing the page. */
-  max-height: 220px;
+  /* Cap height so 30+ tiles still scroll instead of pushing the page.
+     Bumped from 220 -> 252 in v2.6.0 to keep three rows of the larger
+     74px tiles visible without scrolling. */
+  max-height: 252px;
   overflow-y: auto;
   scrollbar-width: thin;
   transition: box-shadow 240ms ease;
