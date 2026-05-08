@@ -442,11 +442,15 @@ function App() {
     }
   }, [currentTurn, gameStarted]);
 
-  // Tick warning sound once per second when under 10s remaining.
+  // Tick warning sound once per second when under 10s remaining — but
+  // ONLY for the player whose turn it actually is. Everyone else still
+  // sees the visual countdown (the turn-indicator pill keeps rendering
+  // turnSecondsRemaining regardless); we just don't blast the audio.
   const lastTickedSecondRef = useRef<number | null>(null);
   useEffect(() => {
     if (turnSecondsRemaining == null) return;
-    if (turnSecondsRemaining > 0 && turnSecondsRemaining <= 10) {
+    const myTurn = currentTurn != null && currentTurn === socket.id;
+    if (myTurn && turnSecondsRemaining > 0 && turnSecondsRemaining <= 10) {
       if (lastTickedSecondRef.current !== turnSecondsRemaining) {
         lastTickedSecondRef.current = turnSecondsRemaining;
         playTick();
@@ -454,7 +458,7 @@ function App() {
     } else {
       lastTickedSecondRef.current = null;
     }
-  }, [turnSecondsRemaining]);
+  }, [turnSecondsRemaining, currentTurn]);
 
   const persistUsername = (name: string) => {
     setUsername(name);
