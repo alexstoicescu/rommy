@@ -169,24 +169,34 @@ export function generateDeck(): Tile[] {
  * the draw pile.
  */
 export function dealRoom(room: Room): void {
+  // generateDeck() returns a freshly Fisher–Yates shuffled 106-tile
+  // deck with unique ids per copy.
   const deck = generateDeck();
+
+  // 1. Atu extraction: take the very first tile of the shuffled deck
+  //    and SPLICE it out of the dealable array so it cannot end up in
+  //    any player's hand. Earlier versions left it in deck[0] and then
+  //    started dealing at cursor=0, which is why player 0 always held
+  //    the Atu — that was a bug, not the intended rule.
+  const [atuTile] = deck.splice(0, 1);
+  room.atu = atuTile ?? null;
+  // The Atu sits face-up on the table. Nobody is auto-credited for
+  // holding it; the +50 bonus rule was an artifact of the deal bug.
+  room.atuAwardedTo = null;
+
+  // 2. The deal: player 0 gets 15, every other player gets 14.
   let cursor = 0;
-
-  // Atu = the very first tile of the shuffled deck. It physically
-  // ends up in player 0's hand (they're dealt the first 15 tiles)
-  // and that player is permanently credited the +50 bonus.
-  room.atu = deck[0] ?? null;
-  room.atuAwardedTo = room.players[0]?.socketId ?? null;
-
   room.players.forEach((player, idx) => {
     const handSize = idx === 0 ? 15 : 14;
     player.hand = deck.slice(cursor, cursor + handSize);
     player.hasMeldedInitial = false;
     player.meldedScore = 0;
-    player.bonusPoints = idx === 0 && room.atu ? 50 : 0;
+    player.bonusPoints = 0;
     cursor += handSize;
   });
 
+  // 3. Seed the discard pile with the next tile, then the rest is the
+  //    draw pile. (e.g. 4-player game: 105 - 15 - 42 - 1 = 47 in draw.)
   room.discardPile = [deck[cursor]];
   room.firstDiscardTileId = deck[cursor].id;
   room.pendingRupereBonusCards = [];

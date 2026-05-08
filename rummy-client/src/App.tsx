@@ -917,15 +917,17 @@ function App() {
             <div className="atu-slot" title={`${t("atu_label")} — +50`}>
               <span className="atu-slot__label">{t("atu_label")}</span>
               <TileComponent tile={atu} />
-              <span className="atu-slot__holder">
-                {atuAwardedTo === socket.id
-                  ? t("atu_holder_self")
-                  : t("atu_holder_other", {
-                      name:
-                        gamePlayers.find((p) => p.socketId === atuAwardedTo)
-                          ?.name ?? "—",
-                    })}
-              </span>
+              {atuAwardedTo && (
+                <span className="atu-slot__holder">
+                  {atuAwardedTo === socket.id
+                    ? t("atu_holder_self")
+                    : t("atu_holder_other", {
+                        name:
+                          gamePlayers.find((p) => p.socketId === atuAwardedTo)
+                            ?.name ?? "—",
+                      })}
+                </span>
+              )}
             </div>
           )}
           <DrawPile
