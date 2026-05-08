@@ -5,11 +5,14 @@ import { Server, Socket } from "socket.io";
 import {
   createRoom,
   dealRoom,
+  setEloLookup,
   viewForSocket,
   MAX_PLAYERS,
   type Player,
   type Room,
 } from "./GameState";
+import { EloLedger } from "./EloLedger";
+import { computeEloDeltas, type EloSeat } from "./EloEngine";
 import {
   canInitialMeld,
   calculateFinalScores,
@@ -36,6 +39,14 @@ import {
   type Session,
 } from "./SessionStore";
 import { MatchRecorder } from "./MatchRecorder";
+
+// Syndicate Reputation Ledger — single shared instance.
+const LEDGER_PATH = process.env.LEDGER_PATH ?? "./ledger.json";
+const eloLedger = new EloLedger(LEDGER_PATH);
+setEloLookup((signatureId) => {
+  if (!signatureId) return 1200;
+  return eloLedger.get(signatureId).eloScore;
+});
 
 const RECONNECT_GRACE_MS = 60_000;
 const SCOREBOARD_DURATION_MS = 45_000;
@@ -169,10 +180,22 @@ const io = new Server(httpServer, {
 // SessionStore. The client either passes back the sessionId we minted
 // for it last time (handshake.auth.sessionId) or — first visit — gets a
 // fresh one. Either way socket.data.session is the canonical record.
+//
+// The Syndicate Reputation Ledger identity (signatureId + alias) also
+// rides on the auth handshake. Every socket event therefore carries
+// the alias and signature_id implicitly via socket.data.session — no
+// per-event payload duplication required.
 io.use((socket, next) => {
-  const auth = socket.handshake.auth as { sessionId?: string } | undefined;
+  const auth = socket.handshake.auth as
+    | { sessionId?: string; signatureId?: string; alias?: string }
+    | undefined;
   const session = resolveSession(auth?.sessionId);
   bindSocket(session, socket.id);
+  if (auth?.signatureId) {
+    session.signatureId = auth.signatureId;
+    session.alias = (auth.alias || "").trim() || session.alias || "Anon";
+    eloLedger.upsert(session.signatureId, session.alias ?? "Anon");
+  }
   (socket.data as { session: Session }).session = session;
   next();
 });
@@ -365,6 +388,36 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
     globalScoresByName[p.name] = sess?.globalScore ?? round;
     globalScoresBySession[p.sessionId] = sess?.globalScore ?? round;
   }
+
+  // === Syndicate Reputation Ledger update ===
+  // Pairwise ELO across the table. Bots get a synthetic id so the
+  // pairing math has someone to compute against, but their delta is
+  // discarded (no persistent ledger entry for bots).
+  const eloSeats: EloSeat[] = room.players.map((p) => {
+    const synthBotId = `bot::${p.sessionId}`;
+    const sigId = p.signatureId ?? synthBotId;
+    const rating = p.isBot ? 1200 : eloLedger.get(sigId).eloScore;
+    return {
+      signatureId: sigId,
+      rating,
+      isBot: p.isBot,
+      score: scoreMap[p.socketId] ?? 0,
+    };
+  });
+  const deltaBySig = computeEloDeltas(eloSeats);
+  const eloDeltasBySession: Record<string, number> = {};
+  const eloAfterBySession: Record<string, number> = {};
+  for (const p of room.players) {
+    const sigId = p.signatureId ?? `bot::${p.sessionId}`;
+    const delta = deltaBySig.get(sigId) ?? 0;
+    eloDeltasBySession[p.sessionId] = delta;
+    if (!p.isBot && p.signatureId) {
+      const updated = eloLedger.applyDelta(p.signatureId, delta);
+      eloAfterBySession[p.sessionId] = updated.eloScore;
+    } else {
+      eloAfterBySession[p.sessionId] = 1200;
+    }
+  }
   stopTurnTimer(room);
   room.gameStarted = false;
   room.currentTurn = null;
@@ -379,6 +432,8 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
     globalScores: globalScoresByName,
     closingTile,
     nextDealAt: room.scoreboardEndsAt,
+    eloDeltas: eloDeltasBySession,
+    eloAfter: eloAfterBySession,
   });
   // Seal the match tape (recorder spans scramble + round) and ship
   // it to clients as a separate event so the After-Action Report
@@ -396,6 +451,10 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
       finalScoresBySession,
       globalScoresBySession,
     );
+    // Decorate the tape with ELO deltas so the AAR can render them
+    // without a second round-trip to the server.
+    tape.eloDeltas = eloDeltasBySession;
+    tape.eloAfter = eloAfterBySession;
     io.to(room.id).emit("match_tape", tape);
   }
   // Free the recorder so its events array doesn't linger between
@@ -654,8 +713,15 @@ io.on("connection", (socket: Socket) => {
 
   function attachToRoom(room: Room, name: string): void {
     session.playerName = name;
+    if (session.signatureId && name) {
+      // Keep the ledger alias in sync with the in-game display name
+      // — joining a room is the natural moment to commit that.
+      session.alias = name;
+      eloLedger.upsert(session.signatureId, name);
+    }
     room.players.push({
       sessionId: session.sessionId,
+      signatureId: session.signatureId,
       socketId: socket.id,
       name,
       hand: [],
@@ -743,6 +809,7 @@ io.on("connection", (socket: Socket) => {
     }
     room.players.push({
       sessionId: botSession.sessionId,
+      signatureId: null, // bots are not part of the persistent ledger
       socketId: botSocketId,
       name: botName,
       hand: [],

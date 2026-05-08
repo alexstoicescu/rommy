@@ -3,3 +3,7 @@ dist/
 .claude/
 .DS_Store
 *.log
+
+# Syndicate Reputation Ledger — runtime persistent store.
+ledger.json
+ledger.json.tmp

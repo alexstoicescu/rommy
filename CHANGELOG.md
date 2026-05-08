@@ -1,5 +1,50 @@
 # Rommy Changelog
 
+## [v2.8.0] - The "Syndicate Ledger" Update
+
+⚙️ Reputation Architecture
+
+Accountless Persistence: Implemented UUID-based signatures to track nicknames without requiring logins.
+
+Reputation Engine: Fully integrated the Elo math system with suit-reactive volatility.
+
+Identity Portability: Added "Neural Link" codes for moving aliases across different browsers.
+
+🤖 Synthetic Calibration
+
+Bot Tiers: Introduced weighted scoring for bot matches to maintain leaderboard integrity.
+
+## [v2.7.0] – The Intelligence Hub
+Focus: Implementing full-match state recording, skill heuristics, and visual replay capabilities.
+
+🧠 Core Infrastructure: The Match Tape
+Event-Sourced Logging: Implemented a new MatchRecorder middleware that captures every socket event (Draw, Meld, Discard, Scramble) alongside a complete delta of the game state.
+
+State Snapshots: The system now generates a MatchTape JSON object at the conclusion of every game, providing a verifiable record of the entire match.
+
+Deterministic Replay Engine: Developed a playback utility that can reconstruct the board state at any specific timestamp from the captured logs.
+
+📊 Analytics & Heuristics
+Fortune Factor (Luck vs. Skill): Created an algorithm to compare tiles drawn from the deck versus tiles successfully melded. This produces a "Luck" percentage for each player.
+
+The Pivot Point: Implemented a data visualization that identifies the exact turn where the winning player’s point trajectory surpassed the competition.
+
+Tile Efficiency Metric: Tracks how long high-value tiles (like the Joker) were held before being used or discarded, scoring players on their "Reaction Speed."
+
+📺 UI/UX: After Action Report (AAR)
+Bento-Style Report: Replaced the simple "Winner" screen with a high-fidelity, multi-panel dashboard containing MVP stats and performance charts.
+
+Visual Replay Scrubber: Integrated a playback controller (Play, Pause, 2x Speed) at the bottom of the board once a game ends.
+
+Hype Correlation: Integrated data from the v2.5.0 Hype Meter to show how "Scramble Intensity" correlated with the initial hand quality.
+
+🛠️ Technical Refinements
+Localization Sync: Fully localized the new "Intelligence" strings (e.g., "Pivot Point," "Match Tape," "Efficiency Score") in both ENG and RO.
+
+Memory Management: Optimized the replay engine to prevent memory leaks during long scrubs by using a virtualized state-clearing method.
+
+Socket Middleware: Updated backend handlers to ensure recording doesn't add measurable latency to live gameplay (processed on a separate thread).
+
 ## [v2.6.1] - The "Spatial Balance" Patch
 
 🎨 Layout Calibration

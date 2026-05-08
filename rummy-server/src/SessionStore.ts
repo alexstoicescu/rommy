@@ -26,6 +26,14 @@ export interface Session {
    * Cleared the moment the client comes back.
    */
   reconnectTimer: NodeJS.Timeout | null;
+  /**
+   * Persistent reputation identity (Syndicate Reputation Ledger).
+   * Generated client-side on first load and exportable. Distinct from
+   * sessionId, which is volatile per browser.
+   */
+  signatureId: string | null;
+  /** Alias the client wants displayed on the ledger. Mirrors playerName. */
+  alias: string | null;
 }
 
 const sessions = new Map<string, Session>();
@@ -59,6 +67,8 @@ export function resolveSession(claimedId: string | undefined): Session {
     connectionStatus: "active",
     currentSocketId: null,
     reconnectTimer: null,
+    signatureId: null,
+    alias: null,
   };
   sessions.set(sessionId, session);
   return session;
@@ -131,6 +141,8 @@ export function createBotSession(name: string): Session {
     connectionStatus: "active",
     currentSocketId: null,
     reconnectTimer: null,
+    signatureId: null,
+    alias: name,
   };
   sessions.set(sessionId, session);
   return session;

@@ -8,6 +8,15 @@ function getConnectionStatus(sessionId: string): "active" | "disconnected" {
   return getSession(sessionId)?.connectionStatus ?? "active";
 }
 
+// Pluggable ELO lookup. index.ts wires the EloLedger in at boot via
+// setEloLookup; until then publicView returns the starting rating
+// (1200) for everyone. Keeps GameState.ts free of a hard dependency
+// on the ledger module.
+let eloLookup: (signatureId: string | null) => number = () => 1200;
+export function setEloLookup(fn: typeof eloLookup): void {
+  eloLookup = fn;
+}
+
 export interface Player {
   /**
    * Stable identity (UUID for humans, "bot-<uuid>" for bots).
@@ -16,6 +25,11 @@ export interface Player {
   sessionId: string;
   /** Current socket binding. Updated whenever a session reconnects. */
   socketId: string;
+  /**
+   * Persistent reputation identity (Syndicate Ledger). Null for bots.
+   * Captured at room-join time from the player's session.
+   */
+  signatureId: string | null;
   name: string;
   hand: Tile[];
   hasMeldedInitial: boolean;
@@ -265,6 +279,8 @@ export interface PublicRoomView {
     colorIndex: number;
     bonusPoints: number;
     connectionStatus: "active" | "disconnected";
+    /** Current Syndicate Ledger ELO. 1200 default for new / unknown. */
+    eloScore: number;
   }>;
   board: Record<string, Tile[][]>;
   drawPileCount: number;
@@ -318,6 +334,7 @@ export function publicView(room: Room): PublicRoomView {
       colorIndex: p.colorIndex,
       bonusPoints: p.bonusPoints,
       connectionStatus: getConnectionStatus(p.sessionId),
+      eloScore: p.isBot ? 1200 : eloLookup(p.signatureId),
     })),
     board: room.board,
     drawPileCount: room.drawPile.length,

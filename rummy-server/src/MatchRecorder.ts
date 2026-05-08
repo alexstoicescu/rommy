@@ -77,6 +77,10 @@ export interface MatchTape {
   finalScores: Record<string, number>;
   /** sessionId -> cumulative globalScore including this round. */
   globalScores: Record<string, number>;
+  /** sessionId -> ELO delta applied this round (signed). */
+  eloDeltas: Record<string, number>;
+  /** sessionId -> post-update ELO. 1200 for bots / unknown. */
+  eloAfter: Record<string, number>;
   winnerSessionId: string;
   closingTile: Tile;
 }
@@ -168,6 +172,8 @@ export class MatchRecorder {
       hypeContrib: Object.fromEntries(this.hypeContrib),
       finalScores,
       globalScores,
+      eloDeltas: {},
+      eloAfter: {},
       winnerSessionId,
       closingTile,
     };
