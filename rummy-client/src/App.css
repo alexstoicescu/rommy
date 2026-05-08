@@ -479,24 +479,30 @@
 
 .rack-sort {
   padding: 4px 10px;
-  background: #2c5530;
-  color: #cfe2d6;
-  border: 1px solid #87b29c;
+  background: rgba(60, 36, 16, 0.85);
+  color: #f5e3c2;
+  border: 1px solid rgba(255, 170, 60, 0.45);
   border-radius: 6px;
-  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 120ms, color 120ms, border-color 120ms;
+  transition: background 120ms, color 120ms, border-color 120ms,
+    box-shadow 120ms;
 }
 
 .rack-sort:hover {
-  background: #3a6e3f;
+  background: rgba(85, 50, 22, 0.9);
+  box-shadow: 0 0 8px rgba(255, 170, 60, 0.35);
 }
 
 .rack-sort--active {
   background: #ffe066;
-  color: #14271d;
+  color: #2a1a0c;
   border-color: #b8860b;
   font-weight: bold;
+  box-shadow: 0 0 10px rgba(255, 200, 80, 0.45);
 }
 
 .rack-count {
@@ -583,43 +589,35 @@
   flex-wrap: wrap;
 }
 
-/* Player Console — full-width digital dock at the bottom of the
-   arena, sized to comfortably hold the new glowing data-chip tiles.
-   Sits flush against whatever's above it (no top margin) so the
-   action bar is the unambiguous top edge of the dock. */
+/* Player Console — minimal frame around the wooden rack. The rack
+   itself owns the warm backlight + grain texture; the console just
+   hosts the sort bar + tiles below it and stays flush against the
+   bottom of the arena. */
 .player-console {
   flex: none;
   width: 100%;
   min-height: 168px;
   margin: 0;
-  padding: 0;
+  padding: 12px 16px 16px;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(
-    180deg,
-    rgba(2, 8, 14, 0.78),
-    rgba(2, 8, 14, 0.92)
-  );
-  border-top: 1px solid rgba(0, 242, 255, 0.45);
-  box-shadow:
-    0 -4px 18px rgba(0, 242, 255, 0.18),
-    inset 0 0 22px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
+  gap: 8px;
+  background: rgba(13, 2, 33, 0.55);
+  border-top: 1px solid rgba(255, 170, 60, 0.28);
+  box-shadow: 0 -4px 18px rgba(255, 150, 40, 0.12);
   overflow: hidden;
 }
 
-/* Unified Control Panel: the bar is the literal top edge of the dock,
-   not a tinted strip floating above it. Transparent background lets
-   the dock's gradient show through; only a hairline neon separator
-   distinguishes the controls row from the rack below. */
+/* Sort bar — tucked above the wooden rack as a thin amber-tinted
+   strip so the controls feel like part of the same console without
+   re-introducing the dark digital surface. */
 .player-console__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 14px;
+  padding: 4px 6px;
   background: transparent;
-  border-bottom: 1px solid rgba(0, 242, 255, 0.22);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   flex-wrap: wrap;
 }

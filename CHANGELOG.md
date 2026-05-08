@@ -1,5 +1,21 @@
 # Rommy Changelog
 
+## [v2.1.1] - The "Classic Wood" Rollback
+
+VISUAL: Aesthetic Rollback
+
+Removed "glowing data chip" tile styling.
+
+Re-implemented classic, solid-background tiles with suit-matching subtle neon outlines for clarity.
+
+Deleted the "digital dark dock" and restored the classic "wooden rack" styling for the player hand.
+
+VISUAL: Refinement
+
+Integrated a warm neon backlighting effect to the new wooden rack.
+
+Muted the Atu card glow, replacing it with a subtle, suit-matching neon border outline.
+
 ## [v2.2.1] - The "Pixel Perfect" Hotfix
 
 UI Refinement: Resolved viewport overflow issues that caused phantom scrollbars on the left sidebar.

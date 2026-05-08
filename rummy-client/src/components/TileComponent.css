@@ -1,89 +1,77 @@
-/* Glowing data-chip tiles. Each tile is a translucent dark slab with a
-   neon border, glow, and text colored to match the Romanian Rummy
-   suit. Suit color is exposed as a CSS custom property so descendants
-   (Atu pulse, hover state) can derive matching effects without
-   hardcoding hex values. */
+/* Classic "old-school" tile face: clean cream background, classic
+   suit-colored numerals, no internal glow. Integration with the
+   neon arena comes from a single low-intensity colored outline that
+   matches the tile's suit. */
 .tile {
-  --suit-color: #00f2ff;
+  --suit-color: #444;
+  --suit-glow: rgba(0, 0, 0, 0.2);
   width: 44px;
   height: 64px;
-  border: 1.5px solid var(--suit-color);
+  border: 1px solid rgba(0, 0, 0, 0.45);
   border-radius: 6px;
-  background: rgba(10, 10, 15, 0.8);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: #fffdf6;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: "Georgia", "Times New Roman", serif;
   font-size: 22px;
   font-weight: 700;
   color: var(--suit-color);
-  text-shadow:
-    0 0 4px var(--suit-color),
-    0 0 10px color-mix(in srgb, var(--suit-color) 55%, transparent);
   box-shadow:
-    0 0 8px color-mix(in srgb, var(--suit-color) 55%, transparent),
-    0 0 16px color-mix(in srgb, var(--suit-color) 22%, transparent),
-    inset 0 0 8px rgba(0, 0, 0, 0.55);
+    0 0 0 1px var(--suit-glow),
+    0 0 6px var(--suit-glow),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.06);
   user-select: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease,
-    border-color 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-/* Per-suit neon palette, swapped via the data-color attribute on the
-   tile element. Black is rendered as a violet so it reads as a glowing
-   suit instead of disappearing into the dark background. */
-.tile[data-color="red"]    { --suit-color: #ff3366; }
-.tile[data-color="black"]  { --suit-color: #bc13fe; }
-.tile[data-color="blue"]   { --suit-color: #00d4ff; }
-.tile[data-color="yellow"] { --suit-color: #ffe066; }
+/* Suit palette — classic ink colors for the numeral, with the
+   matching neon outlining the tile in a low-intensity halo. */
+.tile[data-color="red"] {
+  --suit-color: #cc1a2c;
+  --suit-glow: rgba(255, 60, 90, 0.32);
+}
+.tile[data-color="black"] {
+  --suit-color: #111;
+  --suit-glow: rgba(160, 90, 220, 0.28);
+}
+.tile[data-color="blue"] {
+  --suit-color: #1f3aa8;
+  --suit-glow: rgba(80, 150, 255, 0.32);
+}
+.tile[data-color="yellow"] {
+  --suit-color: #b8860b;
+  --suit-glow: rgba(255, 200, 80, 0.34);
+}
 
 .tile:hover,
 .tile.tile--selected {
-  transform: scale(1.05) translateY(-2px);
-  border-color: var(--suit-color);
+  transform: translateY(-6px);
   box-shadow:
-    0 0 14px var(--suit-color),
-    0 0 28px color-mix(in srgb, var(--suit-color) 60%, transparent),
-    inset 0 0 10px rgba(0, 0, 0, 0.55);
+    0 0 0 1px var(--suit-glow),
+    0 0 10px var(--suit-glow),
+    0 8px 14px rgba(0, 0, 0, 0.45),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .tile--joker {
-  --suit-color: #ff66ff;
+  --suit-color: #6b1bb3;
+  --suit-glow: rgba(160, 60, 220, 0.32);
   font-size: 13px;
   font-style: italic;
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 
-/* Atu (Trump) tile — pulses to advertise the +50 status. The atu-slot
-   wraps the chip in the dealer area; we target the nested .tile so the
-   gold frame around it stays static while the chip itself breathes. */
+/* Atu (Trump) tile — no pulse, no internal glow. Just a slightly
+   stronger suit-colored neon outline so it reads as marked without
+   distracting from the play area. */
 .atu-slot .tile {
-  animation: tile-atu-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes tile-atu-pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow:
-      0 0 10px var(--suit-color),
-      0 0 22px color-mix(in srgb, var(--suit-color) 55%, transparent),
-      inset 0 0 10px rgba(0, 0, 0, 0.55);
-  }
-  50% {
-    transform: scale(1.06);
-    box-shadow:
-      0 0 24px var(--suit-color),
-      0 0 48px color-mix(in srgb, var(--suit-color) 70%, transparent),
-      0 0 70px color-mix(in srgb, var(--suit-color) 30%, transparent),
-      inset 0 0 14px rgba(0, 0, 0, 0.6);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .atu-slot .tile {
-    animation: none;
-  }
+  animation: none;
+  box-shadow:
+    0 0 0 1.5px var(--suit-glow),
+    0 0 8px var(--suit-glow),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.06);
 }
