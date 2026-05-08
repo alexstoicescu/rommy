@@ -34,12 +34,12 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--ui-gap);
   /* No top padding — the brand box anchors flush with the arena
      header so a single horizontal line runs across the top of the
-     viewport. The 14px horizontal padding is what gives every
-     sidebar box its consistent left edge. */
-  padding: 0 14px 16px;
+     viewport. The horizontal padding is what gives every sidebar
+     box its consistent left edge. */
+  padding: 0 14px var(--ui-gap);
   background: rgba(13, 2, 33, 0.78);
   border-right: 1px solid rgba(188, 19, 254, 0.4);
   backdrop-filter: blur(6px);
@@ -55,19 +55,20 @@
 .sidebar__brand {
   /* Flush with the top of the viewport so its top edge lines up with
      the arena header's top edge — that's the "continuous horizontal
-     line across the top". Spacing to the leaderboard below is
-     supplied by the .sidebar flex gap. v2.6.x: footprint roughly
-     doubled (font + padding) so the wordmark anchors the top-left
-     with authority. The vertical extent (~96px) tracks the arena
-     header's gameStarted height (~92px). */
+     line across the top". Both heads share --header-height so the
+     unibrow reads as one seamless horizontal bar across the macro
+     grid. */
   margin: 0;
-  padding: 22px 18px;
+  height: var(--header-height);
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 52px;
   letter-spacing: 7px;
   line-height: 1;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-weight: 700;
-  text-align: center;
   color: #00f2ff;
   background: rgba(2, 8, 14, 0.78);
   border: 1px solid rgba(0, 242, 255, 0.45);
@@ -79,8 +80,8 @@
 }
 
 @keyframes brand-neon-pulse {
-  /* Subtle two-stop oscillation between cyan and a violet-tinted
-     cyan. Linear timing keeps the breathing steady — never strobes. */
+  /* Cyan ↔ magenta oscillation per the v2026 command-center spec.
+     Linear timing keeps the breathing steady — never strobes. */
   0%, 100% {
     color: #00f2ff;
     text-shadow:
@@ -89,11 +90,11 @@
       0 0 28px rgba(0, 242, 255, 0.18);
   }
   50% {
-    color: #b3a4ff;
+    color: #ff66ff;
     text-shadow:
-      0 0 8px rgba(170, 110, 255, 0.7),
-      0 0 18px rgba(170, 110, 255, 0.45),
-      0 0 36px rgba(170, 110, 255, 0.2);
+      0 0 8px rgba(255, 102, 255, 0.7),
+      0 0 18px rgba(255, 102, 255, 0.45),
+      0 0 36px rgba(255, 102, 255, 0.2);
   }
 }
 
@@ -139,7 +140,8 @@
   box-shadow:
     0 0 12px rgba(255, 77, 109, 0.18),
     inset 0 0 14px rgba(255, 77, 109, 0.08);
-  transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+  transition: background 0.15s, box-shadow 0.15s, color 0.15s,
+    transform 0.15s;
 }
 
 .sidebar__exit:hover,
@@ -150,6 +152,7 @@
   box-shadow:
     0 0 18px rgba(255, 77, 109, 0.45),
     inset 0 0 14px rgba(255, 77, 109, 0.18);
+  transform: scale(1.05);
 }
 
 /* ── Arena (right, 1fr) ───────────────────────────────────────────── */
@@ -163,12 +166,14 @@
 
 .arena__header {
   flex: none;
-  padding: 10px 24px;
+  height: var(--header-height);
+  padding: 0 24px;
   background: rgba(13, 2, 33, 0.7);
   border-bottom: 1px solid rgba(188, 19, 254, 0.35);
   backdrop-filter: blur(4px);
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 6px;
 }
 
@@ -236,12 +241,13 @@
   text-transform: uppercase;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
 .header-rules-btn:hover {
   background: rgba(0, 242, 255, 0.22);
   box-shadow: 0 0 12px rgba(0, 242, 255, 0.4);
+  transform: scale(1.05);
 }
 
 .lobby-status {
@@ -575,12 +581,13 @@
   text-transform: uppercase;
   cursor: pointer;
   transition: background 120ms, color 120ms, border-color 120ms,
-    box-shadow 120ms;
+    box-shadow 120ms, transform 120ms;
 }
 
 .rack-sort:hover {
   background: rgba(85, 50, 22, 0.9);
   box-shadow: 0 0 8px rgba(255, 170, 60, 0.35);
+  transform: scale(1.05);
 }
 
 .rack-sort--active {

@@ -774,18 +774,21 @@ io.on("connection", (socket: Socket) => {
 
   // Manual abandon — the client clicked "Exit Terminal" on the sidebar.
   // Bypass the 60-second ghost-protocol grace and evict immediately
-  // so the rest of the table sees them gone right away.
-  socket.on("player_quit", () => {
+  // so the rest of the table sees them gone right away. Listens on
+  // both event names; player_leave is the v2026 standard, player_quit
+  // is kept for any cached client during the rollover.
+  const handleVoluntaryLeave = () => {
     const sessionForSocket = (socket.data as { session: Session }).session;
     if (!sessionForSocket) return;
     console.log(
-      `Voluntary quit: session=${sessionForSocket.sessionId} socket=${socket.id}`,
+      `Voluntary leave: session=${sessionForSocket.sessionId} socket=${socket.id}`,
     );
-    // Clear any pending ghost timer first; evictSession does the rest.
     markActive(sessionForSocket);
     evictSession(sessionForSocket.sessionId);
     socketToRoom.delete(socket.id);
-  });
+  };
+  socket.on("player_leave", handleVoluntaryLeave);
+  socket.on("player_quit", handleVoluntaryLeave);
 
   // Cursor relay for the scramble phase. The server is fan-out only;
   // it doesn't validate or store positions. Throttling is the client's

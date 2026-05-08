@@ -5,14 +5,46 @@
   border-radius: 8px;
   padding: 4px 12px;
   transition: background 120ms, box-shadow 120ms;
-  /* v2.7.x: roughly doubled the lane (520 -> 1040). The viewport
-     guard (calc(100vw - 380px)) leaves room for the 320px sidebar
-     plus the arena's horizontal padding so the lane never punches
-     past the green board's right edge or triggers a scrollbar. */
+  /* Full-width strip (v2026 command-center spec). The strip lives
+     inside .dealer-area which is centered absolutely on the green
+     board, so 100% means "as wide as the dealer-area's flex row
+     allows" — capped by the viewport guard so the lane never
+     overflows the arena column's right edge. */
   width: 100%;
-  max-width: min(1040px, calc(100vw - 380px));
+  max-width: calc(100vw - 380px);
   overflow-x: auto;
+  /* Custom scrollbar — invisible by default, thin neon pill on
+     hover. Webkit-only; Firefox falls back to its native thin
+     scrollbar via scrollbar-width below. */
+  scrollbar-width: none;
+  scrollbar-color: rgba(0, 242, 255, 0.55) transparent;
+}
+
+.discard-pile:hover {
   scrollbar-width: thin;
+}
+
+.discard-pile::-webkit-scrollbar {
+  height: 0;
+  transition: height 0.15s;
+}
+
+.discard-pile:hover::-webkit-scrollbar {
+  height: 6px;
+}
+
+.discard-pile::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.discard-pile::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 255, 0.55);
+  border-radius: 999px;
+  box-shadow: 0 0 6px rgba(0, 242, 255, 0.45);
+}
+
+.discard-pile::-webkit-scrollbar-thumb:hover {
+  background: #00f2ff;
 }
 
 .discard-pile--over {
@@ -33,9 +65,9 @@
    so the empty state still reads as a live drop target on a busy
    green board. */
 .discard-pile__empty {
-  /* Matches .tile dimensions (v2.6.0: +15%). */
-  width: 51px;
-  height: 74px;
+  /* Matches .tile responsive sizing (v2026 clamp). */
+  width: clamp(48px, 6vw, 90px);
+  aspect-ratio: 51 / 74;
   border: 2px dashed rgba(0, 242, 255, 0.65);
   border-radius: 6px;
   background: rgba(0, 242, 255, 0.04);

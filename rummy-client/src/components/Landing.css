@@ -20,8 +20,10 @@
   border: 1px solid rgba(255, 64, 192, 0.4);
   border-radius: 14px;
   /* Generous top padding so the ROMMY wordmark sits cleanly below
-     the extreme-corner switcher with a comfortable gap (no touching). */
-  padding: 64px 28px 24px;
+     the extreme-corner switcher with 40px clearance between them
+     (toggle bottom edge ≈ 40px + 24px padding-headroom = 64; this
+     gives a 40px logo-clear band below the toggle). */
+  padding: 84px 28px 24px;
   box-shadow: 0 0 30px rgba(255, 64, 192, 0.25),
     inset 0 0 30px rgba(64, 192, 255, 0.08);
   display: flex;

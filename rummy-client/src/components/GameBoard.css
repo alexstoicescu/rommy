@@ -6,10 +6,10 @@
   margin: 0;
   /* The dealer-area sits entirely inside the board now (top: 24px
      within .arena__board). Reserve enough top padding for the full
-     pile height — the tallest is the atu-slot (label + tile +
-     holder, now ~134px after the v2.6.0 +15% tile bump) — so the
-     player zones stay clear. */
-  padding: 156px 16px 16px;
+     pile height — at the clamp() ceiling (90px tile @ 1920vw) the
+     atu-slot stack runs ~140px, plus the 24px dealer-area offset
+     and a safety margin = 180px — so player zones never collide. */
+  padding: 180px 16px 16px;
   border: 2px solid #2c5530;
   border-radius: 12px;
   background: #0f5132;

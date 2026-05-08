@@ -58,6 +58,14 @@
   box-sizing: border-box;
 }
 
+/* Command-center system tokens — referenced by sidebar / arena
+   header / dock / etc. so a single source of truth controls macro
+   spacing and the unified-header height. */
+:root {
+  --ui-gap: 1.25rem;
+  --header-height: 80px;
+}
+
 html,
 body,
 #root {

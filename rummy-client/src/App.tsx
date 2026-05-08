@@ -523,7 +523,7 @@ function App() {
     // tears down. Then clear the persistent session id so we come back
     // as a fresh player on next visit, and bounce to the landing.
     try {
-      socket.emit("player_quit");
+      socket.emit("player_leave");
     } catch {
       /* ignore — we're leaving anyway */
     }
