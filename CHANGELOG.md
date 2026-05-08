@@ -1,5 +1,35 @@
 # Rommy Changelog
 
+## [v2.5.0] - The "Friends Update" (Final Gate)
+
+⚙️ Core Infrastructure
+
+Major Version Bump: Officially transitioned to v2.5.0 across the entire application ecosystem.
+
+Localization Layer: Integrated a dual-language (EN/RO) engine for the landing page.
+
+Preference Persistence: Implemented local storage hooks to remember user language settings across sessions.
+
+🎨 Landing UI/UX
+
+Neon Language Toggle: Added a high-contrast, atmospheric language switcher to the login portal.
+
+Footer Update: Refreshed the versioning and subtitle to reflect the "Friends Update" milestone.
+
+## [v2.4.2] - The "Joker Refit" Patch
+
+UI: Glyph Replacement
+
+Replaced the overflowing "JOKER" string with a centered, high-visibility "J" glyph.
+
+VISUAL: Hierarchy
+
+Adjusted Joker font-scaling to 140% of standard tile values for better tactical recognition.
+
+CSS: Center-Alignment Fix
+
+Refactored the internal flexbox of the Tile component to handle single-character symbols without offset.
+
 ## [v2.4.1] - The "Pulse & Polish" Patch
 
 🎨 Visual Polish

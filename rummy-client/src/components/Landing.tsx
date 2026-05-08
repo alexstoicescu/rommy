@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import "./Landing.css";
 
 interface RoomStatus {
@@ -58,6 +59,9 @@ export function Landing({
   return (
     <div className="landing">
       <div className="landing__panel">
+        <div className="landing__lang">
+          <LanguageSwitcher />
+        </div>
         <h1 className="landing__title">ROMMY</h1>
         <p className="landing__subtitle">{t("landing_subtitle")}</p>
 
@@ -118,7 +122,7 @@ export function Landing({
           {probedFull ? t("landing_room_full_btn") : t("landing_join_btn")}
         </button>
 
-        <div className="landing__version">v1.0.1 - Fog of War</div>
+        <div className="landing__version">v2.5.0 — THE FRIENDS UPDATE</div>
       </div>
     </div>
   );
