@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import "./DrawPile.css";
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function DrawPile({ onClick, empty, disabled, count }: Props) {
+  const { t } = useTranslation();
   const inactive = empty || disabled;
   const cls = [
     "draw-pile",
@@ -20,7 +22,7 @@ export function DrawPile({ onClick, empty, disabled, count }: Props) {
     <div className="draw-pile-wrap">
       <div
         className={cls}
-        aria-label="Draw pile"
+        aria-label={t("draw")}
         aria-disabled={inactive ? "true" : undefined}
         onClick={inactive ? undefined : onClick}
       />

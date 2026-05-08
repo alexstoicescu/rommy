@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import "./CheatSheet.css";
 
 interface Props {
@@ -6,10 +7,11 @@ interface Props {
 }
 
 export function CheatSheet({ isModal, onClose }: Props) {
+  const { t } = useTranslation();
   return (
     <aside
       className={`cheat-sheet${isModal ? " cheat-sheet--modal" : ""}`}
-      aria-label="Quick rules"
+      aria-label={t("rules_header")}
     >
       {isModal && onClose && (
         <button
@@ -21,7 +23,7 @@ export function CheatSheet({ isModal, onClose }: Props) {
         </button>
       )}
 
-      <h3 className="cheat-sheet__title">Quick Rules</h3>
+      <h3 className="cheat-sheet__title">{t("rules_header")}</h3>
 
       <section className="cheat-sheet__section">
         <h4>Etalare (Initial Meld)</h4>

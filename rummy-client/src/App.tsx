@@ -25,6 +25,8 @@ import { GameBoard } from "./components/GameBoard";
 import { GameOverModal } from "./components/GameOverModal";
 import { CheatSheet } from "./components/CheatSheet";
 import { Landing } from "./components/Landing";
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import {
   calculateMeldPoints,
   canInitialMeld,
@@ -132,6 +134,7 @@ interface GameStateUpdate {
 }
 
 function App() {
+  const { t } = useTranslation();
   const [hand, setHand] = useState<Tile[]>([]);
   const [board, setBoard] = useState<Record<string, Tile[][]>>({});
   const [draftMelds, setDraftMelds] = useState<Tile[][]>([]);
@@ -769,6 +772,7 @@ function App() {
         <header className="app-header">
           <div className="app-header__title-row">
             <h1>Rommy</h1>
+            <LanguageSwitcher />
             <span className="room-code">
               Room <strong>{roomCode}</strong>
             </span>
@@ -824,7 +828,7 @@ function App() {
                   (p) => p.socketId === currentTurn,
                 );
                 const turnLabel = myTurn
-                  ? "Your Turn"
+                  ? t("turn_notification")
                   : `${turnPlayer?.name ?? "—"}'s Turn`;
                 const lowTime =
                   turnSecondsRemaining != null && turnSecondsRemaining <= 10;
@@ -846,8 +850,8 @@ function App() {
 
         <div className="piles-area">
           {atu && (
-            <div className="atu-slot" title="Atu (Trump) — +50 to its holder">
-              <span className="atu-slot__label">Atu</span>
+            <div className="atu-slot" title={`${t("atu_label")} — +50`}>
+              <span className="atu-slot__label">{t("atu_label")}</span>
               <TileComponent tile={atu} />
               <span className="atu-slot__holder">
                 {atuAwardedTo === socket.id
@@ -965,8 +969,8 @@ function App() {
       <button
         className="cheat-sheet-fab"
         onClick={() => setCheatSheetOpen(true)}
-        aria-label="Show quick rules"
-        title="Quick Rules"
+        aria-label={t("rules_header")}
+        title={t("rules_header")}
       >
         ?
       </button>

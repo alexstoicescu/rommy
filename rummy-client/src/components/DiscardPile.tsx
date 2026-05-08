@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { useTranslation } from "react-i18next";
 import type { Tile } from "../types/game";
 import { TileComponent } from "./TileComponent";
 import "./DiscardPile.css";
@@ -31,6 +32,7 @@ export function DiscardPile({
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: DISCARD_PILE_ID });
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const { t } = useTranslation();
 
   const lastIdx = tiles.length - 1;
   const interactive = !!canRupere && !locked;
@@ -51,7 +53,7 @@ export function DiscardPile({
       title={locked ? "Discard pile locked — first round is in progress" : undefined}
     >
       {tiles.length === 0 ? (
-        <div className="discard-pile__empty">Discard</div>
+        <div className="discard-pile__empty">{t("discard")}</div>
       ) : (
         <div
           className="discard-pile__fan"
