@@ -1,5 +1,33 @@
 # Rommy Changelog
 
+## [v1.6.0] - The "Persistence" Update
+
+ARCHITECTURE: Session Decoupling
+
+Migrated from volatile Socket ID tracking to persistent UUID Session Tokens stored via localStorage.
+
+NETWORKING: Reconnect Grace Period
+
+Players now have a 60-second window to refresh the page or regain WiFi without losing their seat at the table.
+
+FEATURE: Global Leaderboards
+
+Room state now tracks cumulative scores across multiple consecutive rounds.
+
+## [v1.5.0] - The "Diplomat" Update
+
+FEATURE: Multi-Language Support
+
+Integrated i18next for seamless language switching.
+
+Added en.json and ro.json dictionaries.
+
+Implemented a cyberpunk-themed language toggle in the HUD.
+
+UX: Dynamic String Loading
+
+Refactored static UI components to use reactive translation keys.
+
 ## [v1.4.4] - The "Acoustic Overdrive" Patch
 
 UX/AUDIO: Signal Amplification

@@ -93,7 +93,34 @@ function compareByRuns(a: Tile, b: Tile): number {
   return a.value - b.value;
 }
 
-const socket = io(import.meta.env.VITE_SOCKET_URL);
+const SESSION_STORAGE_KEY = "rommy_session_id";
+
+const STORED_SESSION_ID: string | undefined = (() => {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return localStorage.getItem(SESSION_STORAGE_KEY) ?? undefined;
+  } catch {
+    return undefined;
+  }
+})();
+
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  auth: { sessionId: STORED_SESSION_ID },
+});
+
+// On every connect/reconnect the server tells us which sessionId it
+// considers canonical. Persist it so the next page load can re-auth.
+socket.on("session_handshake", ({ sessionId }: { sessionId: string }) => {
+  try {
+    if (localStorage.getItem(SESSION_STORAGE_KEY) !== sessionId) {
+      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    }
+  } catch {
+    /* localStorage unavailable — fine, server still tracks it in-memory */
+  }
+  // Make sure subsequent reconnect attempts present the same id.
+  socket.auth = { sessionId };
+});
 
 interface LobbyPlayer {
   id: string;

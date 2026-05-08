@@ -1,6 +1,12 @@
 import { scoreMeldFinal, type Tile, type TileColor } from "./GameRules";
 
 export interface Player {
+  /**
+   * Stable identity (UUID for humans, "bot-<uuid>" for bots).
+   * Survives reconnects; the socketId field is the volatile one.
+   */
+  sessionId: string;
+  /** Current socket binding. Updated whenever a session reconnects. */
   socketId: string;
   name: string;
   hand: Tile[];

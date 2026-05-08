@@ -25,6 +25,12 @@ import {
   tryEtalare,
   tryNewMelds,
 } from "./Bot";
+import {
+  bindSocket,
+  createBotSession,
+  resolveSession,
+  type Session,
+} from "./SessionStore";
 
 const PORT = Number(process.env.PORT) || 10_000;
 const TURN_DURATION_MS = 120_000;
@@ -51,6 +57,18 @@ const io = new Server(httpServer, {
   cors: { origin: ALLOWED_ORIGINS, methods: ["GET", "POST"] },
   pingInterval: 10_000,
   pingTimeout: 20_000,
+});
+
+// Auth middleware: every incoming socket gets resolved against the
+// SessionStore. The client either passes back the sessionId we minted
+// for it last time (handshake.auth.sessionId) or — first visit — gets a
+// fresh one. Either way socket.data.session is the canonical record.
+io.use((socket, next) => {
+  const auth = socket.handshake.auth as { sessionId?: string } | undefined;
+  const session = resolveSession(auth?.sessionId);
+  bindSocket(session, socket.id);
+  (socket.data as { session: Session }).session = session;
+  next();
 });
 
 // =====================================================================
@@ -80,6 +98,17 @@ function getRoom(socketId: string): Room | null {
   const code = socketToRoom.get(socketId);
   if (!code) return null;
   return rooms.get(code) ?? null;
+}
+
+/**
+ * Find any room that already seats this session. Used on reconnect to
+ * rebind the Player record's socketId to the new live socket.
+ */
+function findRoomBySession(sessionId: string): Room | null {
+  for (const room of rooms.values()) {
+    if (room.players.some((p) => p.sessionId === sessionId)) return room;
+  }
+  return null;
 }
 
 function getActiveRoom(socketId: string): Room | null {
@@ -371,7 +400,50 @@ function runBotTurnInner(room: Room, bot: Player): void {
 // =====================================================================
 
 io.on("connection", (socket: Socket) => {
-  console.log(`User connected: ${socket.id}`);
+  const session = (socket.data as { session: Session }).session;
+  console.log(
+    `User connected: socket=${socket.id} session=${session.sessionId}`,
+  );
+
+  // Tell the client which sessionId it should persist. New clients store
+  // this in localStorage so future reconnects can reclaim the session.
+  socket.emit("session_handshake", { sessionId: session.sessionId });
+
+  // If this session was already seated in a room (i.e. they're
+  // reconnecting), rebind their Player record to the new socket.id and
+  // bring the rest of the system back into alignment.
+  const existingRoom = findRoomBySession(session.sessionId);
+  if (existingRoom) {
+    const player = existingRoom.players.find(
+      (p) => p.sessionId === session.sessionId,
+    );
+    if (player) {
+      // Migrate state keyed by the old socketId.
+      const oldSocketId = player.socketId;
+      if (oldSocketId !== socket.id) {
+        if (existingRoom.board[oldSocketId] !== undefined) {
+          existingRoom.board[socket.id] = existingRoom.board[oldSocketId];
+          delete existingRoom.board[oldSocketId];
+        }
+        if (existingRoom.currentTurn === oldSocketId) {
+          existingRoom.currentTurn = socket.id;
+        }
+        socketToRoom.delete(oldSocketId);
+      }
+      player.socketId = socket.id;
+      socket.join(existingRoom.id);
+      socketToRoom.set(socket.id, existingRoom.id);
+      console.log(
+        `Session ${session.sessionId} rebound to room ${existingRoom.id} (socket ${socket.id})`,
+      );
+      socket.emit("room_joined", { code: existingRoom.id });
+      socket.emit(
+        "game_state_update",
+        viewForSocket(existingRoom, socket.id),
+      );
+      broadcastRoomUpdate(existingRoom);
+    }
+  }
 
   function nextColorIndex(room: Room): number {
     // Pick the lowest unused 0..3 slot so colors stay stable as players
@@ -382,7 +454,9 @@ io.on("connection", (socket: Socket) => {
   }
 
   function attachToRoom(room: Room, name: string): void {
+    session.playerName = name;
     room.players.push({
+      sessionId: session.sessionId,
       socketId: socket.id,
       name,
       hand: [],
@@ -458,6 +532,8 @@ io.on("connection", (socket: Socket) => {
     }
     const botCount = room.players.filter((p) => p.isBot).length;
     const botSocketId = `bot-${room.id}-${Date.now()}-${botCount + 1}`;
+    const botName = `Rami ${botCount + 1}`;
+    const botSession = createBotSession(botName);
     const used = new Set(room.players.map((p) => p.colorIndex));
     let colorIndex = 0;
     for (let i = 0; i < 4; i++) {
@@ -467,8 +543,9 @@ io.on("connection", (socket: Socket) => {
       }
     }
     room.players.push({
+      sessionId: botSession.sessionId,
       socketId: botSocketId,
-      name: `Rami ${botCount + 1}`,
+      name: botName,
       hand: [],
       hasMeldedInitial: false,
       meldedScore: 0,
