@@ -234,14 +234,14 @@ function App() {
     const onJoinError = (payload: { reason: string }) => {
       const message =
         payload.reason === "no_such_room"
-          ? "No room with that code."
+          ? t("join_err_no_such_room")
           : payload.reason === "bad_code"
-            ? "Codes are 4 characters."
+            ? t("join_err_bad_code")
             : payload.reason === "room_full"
-              ? "That room is full."
+              ? t("join_err_room_full")
               : payload.reason === "game_in_progress"
-                ? "That room's game has already started."
-                : `Couldn't join (${payload.reason}).`;
+                ? t("join_err_game_in_progress")
+                : t("join_err_generic", { reason: payload.reason });
       setJoinError(message);
     };
     const onGameState = (state: GameStateUpdate) => {
@@ -277,13 +277,14 @@ function App() {
         lastAtuAnnouncedRef.current !== state.atuAwardedTo
       ) {
         lastAtuAnnouncedRef.current = state.atuAwardedTo;
-        const recipient =
-          state.atuAwardedTo === socket.id
-            ? "You"
-            : state.players.find((p) => p.socketId === state.atuAwardedTo)
-                ?.name ?? "A player";
-        const verb = state.atuAwardedTo === socket.id ? "claim" : "claims";
-        showToast(`${recipient} ${verb} the Atu — +50 bonus!`);
+        if (state.atuAwardedTo === socket.id) {
+          showToast(t("atu_claim_self"));
+        } else {
+          const name =
+            state.players.find((p) => p.socketId === state.atuAwardedTo)
+              ?.name ?? "—";
+          showToast(t("atu_claim_other", { name }));
+        }
       }
       if (!state.gameStarted) lastAtuAnnouncedRef.current = null;
       // A fresh round (gameStarted=true) clears any lingering modal.
@@ -671,22 +672,22 @@ function App() {
   const meldButton = (() => {
     if (draftMelds.length === 0) {
       return {
-        label: "Select Tiles",
+        label: t("meld_btn_select"),
         disabled: true,
         active: false,
         onClick: () => {},
-      } as const;
+      };
     }
     const allMeldsValid = draftMelds.every(
       (m) => isValidSuita(m) || isValidFormatie(m),
     );
     if (!allMeldsValid) {
       return {
-        label: "Invalid Meld",
+        label: t("meld_btn_invalid"),
         disabled: true,
         active: false,
         onClick: () => {},
-      } as const;
+      };
     }
     if (!hasMelded) {
       if (!canInitialMeld(draftMelds)) {
@@ -696,28 +697,23 @@ function App() {
         );
         const hasSuita = draftMelds.some(isValidSuita);
         const label = !hasSuita
-          ? "Need a Suita"
-          : `Not Enough Points (${total}/45)`;
-        return {
-          label,
-          disabled: true,
-          active: false,
-          onClick: () => {},
-        } as const;
+          ? t("meld_btn_need_suita")
+          : t("meld_btn_not_enough", { total });
+        return { label, disabled: true, active: false, onClick: () => {} };
       }
       return {
-        label: "Etalare",
+        label: t("meld_btn_etalare"),
         disabled: false,
         active: true,
         onClick: handleSubmitEtalare,
-      } as const;
+      };
     }
     return {
-      label: "Play New Meld",
+      label: t("meld_btn_play_new"),
       disabled: false,
       active: true,
       onClick: handlePlayNewMeld,
-    } as const;
+    };
   })();
   const localThemeColor = (() => {
     const me = gamePlayers.find((p) => p.socketId === socket.id);
@@ -774,10 +770,10 @@ function App() {
             <h1>Rommy</h1>
             <LanguageSwitcher />
             <span className="room-code">
-              Room <strong>{roomCode}</strong>
+              {t("header_room")} <strong>{roomCode}</strong>
             </span>
             <span className="room-count">
-              Players: {lobbyPlayers.length}/4
+              {t("header_players", { count: lobbyPlayers.length })}
             </span>
             {gameStarted &&
               (() => {
@@ -802,22 +798,22 @@ function App() {
             {inLobby && !gameStarted && (
               <>
                 <div className="lobby-panel">
-                  <h2>Lobby ({lobbyPlayers.length}/4)</h2>
+                  <h2>{t("lobby_title", { count: lobbyPlayers.length })}</h2>
                   <ul>
                     {lobbyPlayers.map((p) => (
                       <li key={p.id}>
                         {p.name}
-                        {p.id === socket.id ? " (you)" : ""}
+                        {p.id === socket.id ? t("lobby_you_suffix") : ""}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <button onClick={handleAddBot}>Add Bot</button>
+                <button onClick={handleAddBot}>{t("lobby_add_bot")}</button>
                 <button
                   onClick={handleStartGame}
                   disabled={lobbyPlayers.length < 2}
                 >
-                  Start Game
+                  {t("lobby_start_game")}
                 </button>
               </>
             )}
@@ -829,12 +825,14 @@ function App() {
                 );
                 const turnLabel = myTurn
                   ? t("turn_notification")
-                  : `${turnPlayer?.name ?? "—"}'s Turn`;
+                  : t("turn_others", { name: turnPlayer?.name ?? "—" });
                 const lowTime =
                   turnSecondsRemaining != null && turnSecondsRemaining <= 10;
                 const seconds =
                   turnSecondsRemaining != null
-                    ? ` (${turnSecondsRemaining}s remaining)`
+                    ? t("turn_seconds_remaining", {
+                        seconds: turnSecondsRemaining,
+                      })
                     : "";
                 return (
                   <span
@@ -855,8 +853,12 @@ function App() {
               <TileComponent tile={atu} />
               <span className="atu-slot__holder">
                 {atuAwardedTo === socket.id
-                  ? "You +50"
-                  : `${gamePlayers.find((p) => p.socketId === atuAwardedTo)?.name ?? "—"} +50`}
+                  ? t("atu_holder_self")
+                  : t("atu_holder_other", {
+                      name:
+                        gamePlayers.find((p) => p.socketId === atuAwardedTo)
+                          ?.name ?? "—",
+                    })}
               </span>
             </div>
           )}
@@ -902,18 +904,18 @@ function App() {
                   <button
                     className="undo-rupere-button"
                     onClick={handleUndoRupere}
-                    title="Return the Rupere tile(s) to the discard pile"
+                    title={t("meld_btn_undo_title")}
                   >
-                    Undo Pick
+                    {t("meld_btn_undo")}
                   </button>
                 )}
                 <button
                   className="end-turn-button"
                   onClick={handleEndTurn}
                   disabled={!hasDrawn || hand.length === 0}
-                  title="Discards your last tile to end the turn"
+                  title={t("meld_btn_end_turn_title")}
                 >
-                  End Turn (Discard)
+                  {t("meld_btn_end_turn")}
                 </button>
               </div>
             )}
@@ -923,25 +925,27 @@ function App() {
                   className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
                   onClick={() => setSortMode("groups")}
                 >
-                  Sort by Groups
+                  {t("sort_groups")}
                 </button>
                 <button
                   className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
                   onClick={() => setSortMode("runs")}
                 >
-                  Sort by Runs
+                  {t("sort_runs")}
                 </button>
                 {sortMode !== "none" && (
                   <button
                     className="rack-sort"
                     onClick={() => setSortMode("none")}
                   >
-                    Clear sort
+                    {t("sort_clear")}
                   </button>
                 )}
               </div>
               {gameStarted && (
-                <span className="rack-count">Cards: {hand.length}</span>
+                <span className="rack-count">
+                  {t("rack_count", { count: hand.length })}
+                </span>
               )}
             </div>
             <PlayerRack tiles={rackTiles} />
@@ -956,7 +960,7 @@ function App() {
 
       {isMyTurn && mustUseTileId && (
         <div className="rupere-banner" role="status">
-          ⚠ Meld the drawn card to receive the rest of the pile!
+          {t("rupere_banner")}
         </div>
       )}
 

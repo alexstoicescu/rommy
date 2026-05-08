@@ -1,4 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
+import { useTranslation } from "react-i18next";
 import type { Tile } from "../types/game";
 import { MeldComponent } from "./MeldComponent";
 import "./GameBoard.css";
@@ -32,15 +33,16 @@ export function GameBoard({
   meldPoints,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: NEW_MELD_ID });
+  const { t } = useTranslation();
 
   const meldedPlayers = players.filter((p) => p.hasMeldedInitial);
 
   return (
-    <div className="game-board" aria-label="Game board">
+    <div className="game-board" aria-label={t("board_aria")}>
       <div className="game-board__zones">
         {meldedPlayers.length === 0 && (
           <div className="game-board__empty-hint">
-            Awaiting the first Etalare…
+            {t("board_empty_hint")}
           </div>
         )}
         {meldedPlayers.map((p) => {
@@ -64,24 +66,30 @@ export function GameBoard({
                 className="player-zone__header"
                 style={{ color, borderBottomColor: `${color}55` }}
               >
-                <span>{isLocal ? "Your Melds" : `${p.name}'s Melds`}</span>
+                <span>
+                  {isLocal
+                    ? t("board_your_melds")
+                    : t("board_others_melds", { name: p.name })}
+                </span>
                 <span className="player-zone__stats">
-                  <span className="player-zone__points">Points: {points}</span>
+                  <span className="player-zone__points">
+                    {t("board_points", { points })}
+                  </span>
                   {!isLocal && (
                     <span className="player-zone__cards">
-                      Cards: {cards <= 3 ? cards : "3+"}
+                      {t("board_cards", { cards: cards <= 3 ? cards : "3+" })}
                     </span>
                   )}
                   {lowCards && (
                     <span className="player-zone__warn">
-                      ⚠️ {cards} TILES
+                      {t("board_warn", { cards })}
                     </span>
                   )}
                 </span>
               </div>
               <div className="player-zone__melds">
                 {melds.length === 0 ? (
-                  <div className="player-zone__empty">No melds yet</div>
+                  <div className="player-zone__empty">{t("board_no_melds")}</div>
                 ) : (
                   melds.map((tiles, i) => (
                     <MeldComponent
@@ -100,7 +108,7 @@ export function GameBoard({
         {draftMelds.length > 0 && (
           <div className="player-zone player-zone--draft">
             <div className="player-zone__header player-zone__header--draft">
-              Drafting (not yet committed)
+              {t("board_drafting")}
             </div>
             <div className="player-zone__melds">
               {draftMelds.map((tiles, i) => (
@@ -119,7 +127,7 @@ export function GameBoard({
         ref={setNodeRef}
         className={`game-board__new-meld${isOver ? " game-board__new-meld--over" : ""}`}
       >
-        Drop here to start a new meld
+        {t("board_drop_zone")}
       </div>
     </div>
   );

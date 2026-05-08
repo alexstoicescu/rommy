@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from "react-i18next";
 import type { Tile } from "../types/game";
 import { TileComponent } from "./TileComponent";
 import "./GameOverModal.css";
@@ -15,27 +16,31 @@ export function GameOverModal({
   closingTile,
   onPlayAgain,
 }: Props) {
-  // Sort by score descending (winner naturally rises to the top).
+  const { t } = useTranslation();
   const rows = Object.entries(scores).sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="game-over-overlay" role="dialog" aria-modal="true">
       <div className="game-over-modal">
-        <h2 className="game-over-title">Round Over</h2>
+        <h2 className="game-over-title">{t("game_over_title")}</h2>
         <p className="game-over-winner">
-          <strong>{winnerName}</strong> closed the round
+          <Trans
+            i18nKey="game_over_winner"
+            values={{ name: winnerName }}
+            components={{ strong: <strong /> }}
+          />
         </p>
 
         <div className="game-over-closing">
-          <span>Closing tile:</span>
+          <span>{t("game_over_closing")}</span>
           <TileComponent tile={closingTile} />
         </div>
 
         <table className="game-over-table">
           <thead>
             <tr>
-              <th>Player</th>
-              <th>Round Score</th>
+              <th>{t("game_over_player_col")}</th>
+              <th>{t("game_over_score_col")}</th>
             </tr>
           </thead>
           <tbody>
@@ -52,7 +57,7 @@ export function GameOverModal({
         </table>
 
         <button className="game-over-replay" onClick={onPlayAgain}>
-          Play Again
+          {t("game_over_replay")}
         </button>
       </div>
     </div>

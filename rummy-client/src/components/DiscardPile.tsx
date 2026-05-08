@@ -49,8 +49,8 @@ export function DiscardPile({
     <div
       ref={setNodeRef}
       className={containerCls}
-      aria-label="Discard pile"
-      title={locked ? "Discard pile locked — first round is in progress" : undefined}
+      aria-label={t("discard_aria_pile")}
+      title={locked ? t("discard_locked_title") : undefined}
     >
       {tiles.length === 0 ? (
         <div className="discard-pile__empty">{t("discard")}</div>
@@ -86,10 +86,10 @@ export function DiscardPile({
                 onClick={() => onRupere?.(tile.id)}
                 aria-label={
                   interactive
-                    ? `Rupere — take this tile and ${lastIdx - i} after it`
+                    ? t("discard_rupere_aria", { after: lastIdx - i })
                     : locked
-                      ? "Discard pile locked"
-                      : `Discarded tile ${i + 1}`
+                      ? t("discard_locked_aria")
+                      : t("discard_tile_aria", { n: i + 1 })
                 }
               >
                 <TileComponent tile={tile} />

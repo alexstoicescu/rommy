@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./Landing.css";
 
 interface RoomStatus {
@@ -26,6 +27,7 @@ export function Landing({
   onCheckRoom,
   roomStatus,
 }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialUsername);
   const [code, setCode] = useState("");
   const trimmedName = name.trim();
@@ -57,17 +59,17 @@ export function Landing({
     <div className="landing">
       <div className="landing__panel">
         <h1 className="landing__title">ROMMY</h1>
-        <p className="landing__subtitle">Romanian Rummy — neon edition</p>
+        <p className="landing__subtitle">{t("landing_subtitle")}</p>
 
         <label className="landing__label">
-          Username
+          {t("landing_username")}
           <input
             className="landing__input"
             type="text"
             maxLength={20}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder={t("landing_username_placeholder")}
             autoFocus
           />
         </label>
@@ -77,13 +79,13 @@ export function Landing({
           disabled={!canHost}
           onClick={() => canHost && onHost(trimmedName)}
         >
-          Host Private Game
+          {t("landing_host_btn")}
         </button>
 
-        <div className="landing__divider">— or —</div>
+        <div className="landing__divider">{t("landing_or")}</div>
 
         <label className="landing__label">
-          Room Code
+          {t("landing_room_code")}
           <input
             className="landing__input landing__input--code"
             type="text"
@@ -99,15 +101,13 @@ export function Landing({
         </label>
         {matchesProbed && (
           <div className="landing__status">
-            {probedMissing && "No room with that code."}
-            {probedFull && "Room Full (4/4 players)"}
-            {probedStarted &&
-              !probedFull &&
-              "Game already in progress for that room."}
+            {probedMissing && t("landing_status_no_room")}
+            {probedFull && t("landing_status_full")}
+            {probedStarted && !probedFull && t("landing_status_started")}
             {!probedFull &&
               !probedMissing &&
               !probedStarted &&
-              `Room found — ${roomStatus!.playerCount}/4 players`}
+              t("landing_status_found", { count: roomStatus!.playerCount })}
           </div>
         )}
         <button
@@ -115,7 +115,7 @@ export function Landing({
           disabled={!canJoin}
           onClick={handleJoin}
         >
-          {probedFull ? "Room Full" : "Join Game"}
+          {probedFull ? t("landing_room_full_btn") : t("landing_join_btn")}
         </button>
 
         <div className="landing__version">v1.0.1 - Fog of War</div>

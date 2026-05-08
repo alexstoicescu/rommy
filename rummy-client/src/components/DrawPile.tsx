@@ -27,7 +27,7 @@ export function DrawPile({ onClick, empty, disabled, count }: Props) {
         onClick={inactive ? undefined : onClick}
       />
       {typeof count === "number" && (
-        <span className="draw-pile__badge">{count} left</span>
+        <span className="draw-pile__badge">{t("draw_left", { count })}</span>
       )}
     </div>
   );

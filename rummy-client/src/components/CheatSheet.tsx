@@ -1,10 +1,12 @@
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import "./CheatSheet.css";
 
 interface Props {
   isModal?: boolean;
   onClose?: () => void;
 }
+
+const RICH = { strong: <strong />, em: <em />, code: <code /> };
 
 export function CheatSheet({ isModal, onClose }: Props) {
   const { t } = useTranslation();
@@ -17,7 +19,7 @@ export function CheatSheet({ isModal, onClose }: Props) {
         <button
           className="cheat-sheet__close"
           onClick={onClose}
-          aria-label="Close rules"
+          aria-label={t("rules_close_aria")}
         >
           ×
         </button>
@@ -26,54 +28,49 @@ export function CheatSheet({ isModal, onClose }: Props) {
       <h3 className="cheat-sheet__title">{t("rules_header")}</h3>
 
       <section className="cheat-sheet__section">
-        <h4>Etalare (Initial Meld)</h4>
+        <h4>{t("rules_etalare_h")}</h4>
         <p>
-          Requires <strong>more than 45 points</strong> and at least one
-          valid combination:
+          <Trans i18nKey="rules_etalare_lead" components={RICH} />
         </p>
         <ul>
           <li>
-            <em>Run (Suită)</em> — 3+ tiles of the same color in
-            consecutive order. e.g. <code>7-8-9</code> red.
+            <Trans i18nKey="rules_etalare_run" components={RICH} />
           </li>
           <li>
-            <em>Set (Formație)</em> — 3 or 4 tiles of the same value in
-            different colors. e.g. <code>5-5-5</code>.
+            <Trans i18nKey="rules_etalare_set" components={RICH} />
           </li>
         </ul>
       </section>
 
       <section className="cheat-sheet__section">
-        <h4>Tile Points</h4>
+        <h4>{t("rules_points_h")}</h4>
         <ul>
           <li>
-            <code>2-9</code> = 5 pts
+            <Trans i18nKey="rules_pt_2_9" components={RICH} />
           </li>
           <li>
-            <code>10-1</code> = 10 pts
+            <Trans i18nKey="rules_pt_10_1" components={RICH} />
           </li>
           <li>
-            <code>1</code> in a <code>1-2-3</code> run = 5 pts
+            <Trans i18nKey="rules_pt_one_run" components={RICH} />
           </li>
           <li>
-            <code>1</code> in a formation of ones (e.g.{" "}
-            <code>1-1-1</code>) = 25 pts
+            <Trans i18nKey="rules_pt_one_set" components={RICH} />
           </li>
-          <li>Joly (Joker) = 50 pts</li>
+          <li>{t("rules_pt_joker")}</li>
         </ul>
       </section>
 
       <section className="cheat-sheet__section">
-        <h4>Rupere (Pick from Discard)</h4>
+        <h4>{t("rules_rupere_h")}</h4>
         <p>
-          You may pick the last discarded tile <strong>only if</strong> you
-          immediately use it in a meld this turn.
+          <Trans i18nKey="rules_rupere_text" components={RICH} />
         </p>
       </section>
 
       <section className="cheat-sheet__section">
-        <h4>Winning</h4>
-        <p>You must discard your final tile to the table to close the game.</p>
+        <h4>{t("rules_winning_h")}</h4>
+        <p>{t("rules_winning_text")}</p>
       </section>
     </aside>
   );
