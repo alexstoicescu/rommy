@@ -30,16 +30,21 @@
   );
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
 }
 
+/* CRT terminal feel — a 1px text-shadow blurs the glyphs just enough
+   to suggest a phosphor display, contrasting with the crisp serif
+   numerals on the tiles. */
 .leaderboard__prompt {
   color: #00f2ff;
   font-weight: 700;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
 }
 
 .leaderboard__title {
   color: #00f2ff;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
 }
 
 .leaderboard__rows {

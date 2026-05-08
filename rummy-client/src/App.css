@@ -300,16 +300,18 @@
   );
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
 }
 
 .sidebar-lobby__prompt {
   color: #00f2ff;
   font-weight: 700;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
 }
 
 .sidebar-lobby__title {
   color: #00f2ff;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
 }
 
 .sidebar-lobby__list {

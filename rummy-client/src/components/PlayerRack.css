@@ -1,7 +1,8 @@
-/* Old-school wooden rack — warm grain, inset shadow for depth.
-   Integration with the neon arena comes from an outer warm-amber
-   box-shadow that backlights the rack as if it were sitting on a
-   lit pedestal. */
+/* Old-school wooden rack — varnished finish (top-down highlight
+   gradient over a grain texture) with a subtle box-shadow that
+   catches the active player's theme color, as if the lit table is
+   reflecting onto the rack from below. --theme-color is plumbed in
+   on the .app root by the parent stylesheet. */
 .player-rack {
   width: 100%;
   display: flex;
@@ -10,15 +11,18 @@
   justify-content: center;
   align-content: flex-start;
   gap: 6px 6px;
-  padding: 12px;
+  padding: 14px 12px;
   background:
+    /* varnish — a glossy top sheen fading into a darker bottom */
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.06) 0%,
-      rgba(0, 0, 0, 0) 18%,
-      rgba(0, 0, 0, 0) 78%,
-      rgba(0, 0, 0, 0.18) 100%
+      rgba(255, 240, 210, 0.18) 0%,
+      rgba(255, 240, 210, 0.04) 14%,
+      rgba(0, 0, 0, 0) 38%,
+      rgba(0, 0, 0, 0.18) 82%,
+      rgba(0, 0, 0, 0.32) 100%
     ),
+    /* grain */
     repeating-linear-gradient(
       90deg,
       #5a3a1b 0px,
@@ -32,19 +36,21 @@
   border: 1px solid #2a1a0c;
   border-radius: 8px;
   box-shadow:
-    /* warm amber backlight bleeds out behind the rack */
-    0 0 0 1px rgba(255, 170, 60, 0.25),
-    0 0 28px rgba(255, 150, 40, 0.35),
-    0 0 60px rgba(255, 120, 30, 0.18),
-    /* depth */
-    inset 0 0 14px rgba(0, 0, 0, 0.55),
-    inset 0 2px 0 rgba(255, 255, 255, 0.04);
+    /* theme-color glow rising from the table behind the rack */
+    0 -10px 20px -5px var(--theme-color, #ffe066),
+    /* warm amber pedestal backlight */
+    0 0 28px rgba(255, 150, 40, 0.28),
+    0 0 60px rgba(255, 120, 30, 0.14),
+    /* depth + glossy highlight */
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 14px rgba(0, 0, 0, 0.55);
   box-sizing: border-box;
   overflow: visible;
   /* Cap height so 30+ tiles still scroll instead of pushing the page. */
   max-height: 220px;
   overflow-y: auto;
   scrollbar-width: thin;
+  transition: box-shadow 240ms ease;
 }
 
 @keyframes tile-deal-in {

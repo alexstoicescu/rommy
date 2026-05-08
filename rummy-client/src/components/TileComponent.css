@@ -1,13 +1,12 @@
-/* Classic "old-school" tile face: clean cream background, classic
-   suit-colored numerals, no internal glow. Integration with the
-   neon arena comes from a single low-intensity colored outline that
-   matches the tile's suit. */
+/* Classic bakelite tile face with a "rim light" — the edges catch the
+   neon hue of the suit via inset shadows, but the number itself stays
+   crisp and unglowed. */
 .tile {
   --suit-color: #444;
   --suit-glow: rgba(0, 0, 0, 0.2);
   width: 44px;
   height: 64px;
-  border: 1px solid rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 6px;
   background: #fffdf6;
   display: flex;
@@ -17,61 +16,59 @@
   font-size: 22px;
   font-weight: 700;
   color: var(--suit-color);
+  /* Rim light: two inset shadows trace the inner edge with the suit
+     color, fading inward. Drop shadow underneath gives subtle weight.
+     No outer halo — the rim is the only neon contribution. */
   box-shadow:
-    0 0 0 1px var(--suit-glow),
-    0 0 6px var(--suit-glow),
-    0 2px 4px rgba(0, 0, 0, 0.4),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+    inset 0 0 0 1px var(--suit-glow),
+    inset 0 0 6px var(--suit-glow),
+    0 2px 4px rgba(0, 0, 0, 0.4);
   user-select: none;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-/* Suit palette — classic ink colors for the numeral, with the
-   matching neon outlining the tile in a low-intensity halo. */
+/* Suit palette — classic ink for the numeral, suit-colored rim glow. */
 .tile[data-color="red"] {
   --suit-color: #cc1a2c;
-  --suit-glow: rgba(255, 60, 90, 0.32);
+  --suit-glow: rgba(255, 60, 90, 0.55);
 }
 .tile[data-color="black"] {
   --suit-color: #111;
-  --suit-glow: rgba(160, 90, 220, 0.28);
+  --suit-glow: rgba(160, 90, 220, 0.5);
 }
 .tile[data-color="blue"] {
   --suit-color: #1f3aa8;
-  --suit-glow: rgba(80, 150, 255, 0.32);
+  --suit-glow: rgba(80, 150, 255, 0.55);
 }
 .tile[data-color="yellow"] {
   --suit-color: #b8860b;
-  --suit-glow: rgba(255, 200, 80, 0.34);
+  --suit-glow: rgba(255, 200, 80, 0.55);
 }
 
 .tile:hover,
 .tile.tile--selected {
   transform: translateY(-6px);
   box-shadow:
-    0 0 0 1px var(--suit-glow),
-    0 0 10px var(--suit-glow),
-    0 8px 14px rgba(0, 0, 0, 0.45),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+    inset 0 0 0 1px var(--suit-glow),
+    inset 0 0 8px var(--suit-glow),
+    0 8px 14px rgba(0, 0, 0, 0.45);
 }
 
 .tile--joker {
   --suit-color: #6b1bb3;
-  --suit-glow: rgba(160, 60, 220, 0.32);
+  --suit-glow: rgba(160, 60, 220, 0.55);
   font-size: 13px;
   font-style: italic;
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 
-/* Atu (Trump) tile — no pulse, no internal glow. Just a slightly
-   stronger suit-colored neon outline so it reads as marked without
-   distracting from the play area. */
+/* Atu (Trump) tile — slightly thicker rim glow so it reads as marked
+   without distracting motion or face glow. */
 .atu-slot .tile {
   animation: none;
   box-shadow:
-    0 0 0 1.5px var(--suit-glow),
-    0 0 8px var(--suit-glow),
-    0 2px 4px rgba(0, 0, 0, 0.4),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+    inset 0 0 0 1.5px var(--suit-glow),
+    inset 0 0 10px var(--suit-glow),
+    0 2px 4px rgba(0, 0, 0, 0.4);
 }

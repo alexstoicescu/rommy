@@ -24,19 +24,43 @@
   filter: grayscale(0.45);
 }
 
+/* Ghost slot — empty discard placeholder. Pulsing dashed neon outline
+   so the empty state still reads as a live drop target on a busy
+   green board. */
 .discard-pile__empty {
   width: 44px;
   height: 64px;
-  border: 2px dashed #888;
+  border: 2px dashed rgba(0, 242, 255, 0.65);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ccc;
-  font-size: 11px;
-  font-style: italic;
+  background: rgba(0, 242, 255, 0.04);
+  color: rgba(207, 226, 214, 0.7);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
+  animation: discard-ghost-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes discard-ghost-pulse {
+  0%, 100% {
+    border-color: rgba(0, 242, 255, 0.45);
+    box-shadow: 0 0 0 0 rgba(0, 242, 255, 0);
+  }
+  50% {
+    border-color: rgba(0, 242, 255, 0.85);
+    box-shadow: 0 0 14px rgba(0, 242, 255, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discard-pile__empty {
+    animation: none;
+    border-color: rgba(0, 242, 255, 0.65);
+  }
 }
 
 .discard-pile__fan {
@@ -54,6 +78,11 @@
   cursor: default;
   transition: transform 140ms ease, filter 140ms ease;
   position: relative;
+  /* Drop shadow under each placed tile so it has physical depth on
+     the green board. drop-shadow on the slot lets the tile's rounded
+     corners cast correctly without a separate offset element. */
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45))
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
   /* z-index per slot is set inline so the newest discard is always on
      top of older overlapping tiles. */
 }
