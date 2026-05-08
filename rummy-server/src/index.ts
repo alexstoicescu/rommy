@@ -35,6 +35,7 @@ import {
   resolveSession,
   type Session,
 } from "./SessionStore";
+import { MatchRecorder } from "./MatchRecorder";
 
 const RECONNECT_GRACE_MS = 60_000;
 const SCOREBOARD_DURATION_MS = 45_000;
@@ -71,6 +72,10 @@ function beginScramble(room: Room): void {
   room.hypeLevel = 0;
   room.hypePool = 0;
   room.hypeClimaxFired = false;
+  // New round = new tape. The recorder spans both the scramble (for
+  // hype credit) and the round itself. Sealed at finalizeRound.
+  room.recorder = new MatchRecorder();
+  room.recorder.record("scramble_start", room);
   console.log(
     `Scramble in ${room.id} (seed=${room.scrambleSeed}, players=${room.players.length})`,
   );
@@ -91,6 +96,7 @@ function beginScramble(room: Room): void {
       return;
     }
     dealRoom(room);
+    room.recorder?.record("deal", room);
     startTurnTimer(room);
     broadcastRoomUpdate(room);
     broadcastGameState(room);
@@ -328,6 +334,10 @@ function runAutoPass(room: Room): void {
   // Auto-discard the LAST tile in the hand (most recently drawn).
   const tile = player.hand.pop()!;
   room.discardPile.push(tile);
+  room.recorder?.record("auto_pass", room, {
+    actor: player.sessionId,
+    meta: { tileId: tile.id },
+  });
   if (player.hand.length === 0) {
     finalizeRound(room, player.socketId, tile);
     return;
@@ -340,16 +350,20 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
   const scoreMap = calculateFinalScores(room.players, winnerId, closingTile);
   const scoresByName: Record<string, number> = {};
   const globalScoresByName: Record<string, number> = {};
+  const finalScoresBySession: Record<string, number> = {};
+  const globalScoresBySession: Record<string, number> = {};
   const winner = room.players.find((p) => p.socketId === winnerId);
   for (const p of room.players) {
     const round = scoreMap[p.socketId] ?? 0;
     scoresByName[p.name] = round;
+    finalScoresBySession[p.sessionId] = round;
     // Continuous leaderboard: persist round delta into the session's
     // running global score. Bots accumulate too (so the leaderboard
     // makes sense even when a human is playing solo against Ramis).
     const sess = getSession(p.sessionId);
     if (sess) sess.globalScore += round;
     globalScoresByName[p.name] = sess?.globalScore ?? round;
+    globalScoresBySession[p.sessionId] = sess?.globalScore ?? round;
   }
   stopTurnTimer(room);
   room.gameStarted = false;
@@ -366,6 +380,27 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
     closingTile,
     nextDealAt: room.scoreboardEndsAt,
   });
+  // Seal the match tape (recorder spans scramble + round) and ship
+  // it to clients as a separate event so the After-Action Report
+  // can render without the GameOverModal blocking on it.
+  if (room.recorder && winner) {
+    room.recorder.record("finalize", room, {
+      actor: winner.sessionId,
+      meta: { closingTile },
+      roundScores: finalScoresBySession,
+    });
+    const tape = room.recorder.finalize(
+      room,
+      winner.sessionId,
+      closingTile,
+      finalScoresBySession,
+      globalScoresBySession,
+    );
+    io.to(room.id).emit("match_tape", tape);
+  }
+  // Free the recorder so its events array doesn't linger between
+  // rounds. A new recorder is created at the next beginScramble.
+  room.recorder = null;
   broadcastGameState(room);
 
   // 45-second pause, then auto-deal a fresh round. The pause can be
@@ -813,7 +848,12 @@ io.on("connection", (socket: Socket) => {
     if (!room || room.phase !== "scrambling") return;
     const v = Number(payload?.velocity);
     if (!Number.isFinite(v) || v <= 0) return;
-    room.hypePool += Math.min(v, HYPE_INPUT_CAP);
+    const capped = Math.min(v, HYPE_INPUT_CAP);
+    room.hypePool += capped;
+    // Per-player hype credit feeds the "Most Active Washer" stat in
+    // the After-Action Report.
+    const session = (socket.data as { session: Session }).session;
+    room.recorder?.addHype(session.sessionId, capped);
   });
 
   socket.on("draw_tile", () => {
@@ -832,8 +872,13 @@ io.on("connection", (socket: Socket) => {
       return;
     }
     const player = room.players.find((p) => p.socketId === socket.id)!;
-    player.hand.push(room.drawPile.shift()!);
+    const drawn = room.drawPile.shift()!;
+    player.hand.push(drawn);
     room.hasDrawn = true;
+    room.recorder?.record("draw", room, {
+      actor: player.sessionId,
+      meta: { tileId: drawn.id, source: "deck" },
+    });
     broadcastGameState(room);
   });
 
@@ -853,8 +898,13 @@ io.on("connection", (socket: Socket) => {
       return;
     }
     const player = room.players.find((p) => p.socketId === socket.id)!;
-    player.hand.push(room.discardPile.pop()!);
+    const taken = room.discardPile.pop()!;
+    player.hand.push(taken);
     room.hasDrawn = true;
+    room.recorder?.record("draw", room, {
+      actor: player.sessionId,
+      meta: { tileId: taken.id, source: "discard" },
+    });
     broadcastGameState(room);
   });
 
@@ -890,6 +940,10 @@ io.on("connection", (socket: Socket) => {
     }
     const [tile] = player.hand.splice(idx, 1);
     room.discardPile.push(tile);
+    room.recorder?.record("discard", room, {
+      actor: player.sessionId,
+      meta: { tileId: tile.id },
+    });
     if (player.hand.length === 0) {
       finalizeRound(room, socket.id, tile);
       return;
@@ -946,8 +1000,17 @@ io.on("connection", (socket: Socket) => {
     player.hand = player.hand.filter((t) => !seen.has(t.id));
     (room.board[socket.id] ??= []).push(...proposedMelds);
     player.hasMeldedInitial = true;
-    for (const meld of proposedMelds) player.meldedScore += scoreMeldFinal(meld);
+    let pointsAdded = 0;
+    for (const meld of proposedMelds) {
+      const pts = scoreMeldFinal(meld);
+      player.meldedScore += pts;
+      pointsAdded += pts;
+    }
     maybeRedeemRupereBonus(room, player);
+    room.recorder?.record("etalare", room, {
+      actor: player.sessionId,
+      meta: { tilesPlaced: seen.size, pointsAdded, meldCount: proposedMelds.length },
+    });
     socket.emit("etalare_success");
     broadcastGameState(room);
   });
@@ -994,8 +1057,17 @@ io.on("connection", (socket: Socket) => {
     }
     player.hand = player.hand.filter((t) => !seen.has(t.id));
     (room.board[socket.id] ??= []).push(...proposedMelds);
-    for (const meld of proposedMelds) player.meldedScore += scoreMeldFinal(meld);
+    let pointsAdded = 0;
+    for (const meld of proposedMelds) {
+      const pts = scoreMeldFinal(meld);
+      player.meldedScore += pts;
+      pointsAdded += pts;
+    }
     maybeRedeemRupereBonus(room, player);
+    room.recorder?.record("play_meld", room, {
+      actor: player.sessionId,
+      meta: { tilesPlaced: seen.size, pointsAdded, meldCount: proposedMelds.length },
+    });
     broadcastGameState(room);
   });
 
@@ -1057,8 +1129,13 @@ io.on("connection", (socket: Socket) => {
       const newS = scoreMeldFinal(chosen);
       player.hand.splice(tileIdx, 1);
       targetZone[meldIndex] = chosen;
-      player.meldedScore += newS - oldS;
+      const delta = newS - oldS;
+      player.meldedScore += delta;
       maybeRedeemRupereBonus(room, player);
+      room.recorder?.record("attach", room, {
+        actor: player.sessionId,
+        meta: { tileId, pointsAdded: delta, target: targetPlayerId },
+      });
       broadcastGameState(room);
     },
   );
@@ -1153,6 +1230,10 @@ io.on("connection", (socket: Socket) => {
     console.log(
       `Rupere in ${room.id}: ${player.name} took target ${tileId}, ${bonus.length} tile(s) staged [${bonus.map((t) => t.id).join(", ")}]`,
     );
+    room.recorder?.record("rupere", room, {
+      actor: player.sessionId,
+      meta: { tileId, takenCount: takenTiles.length },
+    });
     broadcastGameState(room);
   });
 
@@ -1187,6 +1268,10 @@ io.on("connection", (socket: Socket) => {
     console.log(
       `Undo Rupere in ${room.id}: ${player.name} returned ${undo.tiles.length} tile(s) to the discard pile`,
     );
+    room.recorder?.record("rupere_undo", room, {
+      actor: player.sessionId,
+      meta: { tileCount: undo.tiles.length },
+    });
     broadcastGameState(room);
   });
 

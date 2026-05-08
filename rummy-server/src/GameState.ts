@@ -1,5 +1,6 @@
 import { scoreMeldFinal, type Tile, type TileColor } from "./GameRules";
 import { getSession } from "./SessionStore";
+import type { MatchRecorder } from "./MatchRecorder";
 
 function getConnectionStatus(sessionId: string): "active" | "disconnected" {
   // Bot sessions and any oddball case both report active — the only
@@ -114,6 +115,12 @@ export interface Room {
   atu: Tile | null;
   /** SocketId of the player who first received (and was credited for) the Atu. */
   atuAwardedTo: string | null;
+  /**
+   * Per-round event log. Created at the start of each scramble and
+   * sealed at finalizeRound. Null between rounds. Carries the live
+   * MatchTape for the After-Action Report and replay scrubber.
+   */
+  recorder: MatchRecorder | null;
 }
 
 export const MAX_PLAYERS = 4;
@@ -143,6 +150,7 @@ export function createRoom(id: string): Room {
     firstDiscardTileId: null,
     atu: null,
     atuAwardedTo: null,
+    recorder: null,
   };
 }
 
