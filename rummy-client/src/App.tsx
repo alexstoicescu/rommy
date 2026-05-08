@@ -877,34 +877,23 @@ function App() {
               <span className="room-code">
                 {t("header_room")} <strong>{roomCode}</strong>
               </span>
+              <button
+                className="header-rules-btn"
+                onClick={() => setCheatSheetOpen(true)}
+                aria-label={t("rules_header")}
+                title={t("rules_header")}
+              >
+                <span aria-hidden="true">?</span>
+                <span className="header-rules-btn__label">
+                  {t("rules_header")}
+                </span>
+              </button>
               <LanguageSwitcher />
             </div>
           </div>
-          <div className="lobby-controls">
-            {inLobby && !gameStarted && (
-              <>
-                <div className="lobby-panel">
-                  <h2>{t("lobby_title", { count: lobbyPlayers.length })}</h2>
-                  <ul>
-                    {lobbyPlayers.map((p) => (
-                      <li key={p.id}>
-                        {p.name}
-                        {p.id === socket.id ? t("lobby_you_suffix") : ""}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <button onClick={handleAddBot}>{t("lobby_add_bot")}</button>
-                <button
-                  onClick={handleStartGame}
-                  disabled={lobbyPlayers.length < 2}
-                >
-                  {t("lobby_start_game")}
-                </button>
-              </>
-            )}
-            {gameStarted &&
-              (() => {
+          {gameStarted && (
+            <div className="app-header__status-row">
+              {(() => {
                 const myTurn = currentTurn === socket.id;
                 const turnPlayer = gamePlayers.find(
                   (p) => p.socketId === currentTurn,
@@ -929,7 +918,8 @@ function App() {
                   </span>
                 );
               })()}
-          </div>
+            </div>
+          )}
         </header>
 
         <div className="play-grid">
@@ -946,8 +936,42 @@ function App() {
                 isLocal: p.socketId === socket.id,
               }))}
             />
+            {inLobby && !gameStarted && (
+              <aside className="sidebar-lobby" aria-label={t("lobby_title", { count: lobbyPlayers.length })}>
+                <header className="sidebar-lobby__header">
+                  <span className="sidebar-lobby__prompt">$</span>
+                  <span className="sidebar-lobby__title">
+                    {t("lobby_title", { count: lobbyPlayers.length })}
+                  </span>
+                </header>
+                <ul className="sidebar-lobby__list">
+                  {lobbyPlayers.map((p) => (
+                    <li key={p.id}>
+                      {p.name}
+                      {p.id === socket.id ? t("lobby_you_suffix") : ""}
+                    </li>
+                  ))}
+                </ul>
+                <div className="sidebar-lobby__actions">
+                  <button
+                    className="sidebar-lobby__btn"
+                    onClick={handleAddBot}
+                  >
+                    {t("lobby_add_bot")}
+                  </button>
+                  <button
+                    className="sidebar-lobby__btn sidebar-lobby__btn--primary"
+                    onClick={handleStartGame}
+                    disabled={lobbyPlayers.length < 2}
+                  >
+                    {t("lobby_start_game")}
+                  </button>
+                </div>
+              </aside>
+            )}
           </div>
           <div className="central-pillar">
+            <div className="play-stage">
             {roomPhase !== "scrambling" && (
               <div className="dealer-area" aria-label="Dealer area">
                 {atu && (
@@ -982,17 +1006,6 @@ function App() {
                   canRupere={isMyTurn && !hasDrawn}
                   onRupere={handleRupere}
                 />
-                <button
-                  className="dealer-area__rules"
-                  onClick={() => setCheatSheetOpen(true)}
-                  aria-label={t("rules_header")}
-                  title={t("rules_header")}
-                >
-                  <span aria-hidden="true">?</span>
-                  <span className="dealer-area__rules-label">
-                    {t("rules_header")}
-                  </span>
-                </button>
               </div>
             )}
             {roomPhase === "scrambling" && scrambleSeed != null &&
@@ -1018,6 +1031,7 @@ function App() {
                 meldPoints={meldPoints}
               />
             )}
+            </div>
             {isMyTurn && (
               <div className="board-actions">
                 <button
@@ -1046,36 +1060,38 @@ function App() {
                 </button>
               </div>
             )}
-            <div className="rack-action-bar" role="toolbar">
-              <div className="rack-action-bar__sorts">
-                <button
-                  className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
-                  onClick={() => setSortMode("groups")}
-                >
-                  {t("sort_groups")}
-                </button>
-                <button
-                  className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
-                  onClick={() => setSortMode("runs")}
-                >
-                  {t("sort_runs")}
-                </button>
-                {sortMode !== "none" && (
+            <div className="player-console">
+              <div className="player-console__bar" role="toolbar">
+                <div className="player-console__sorts">
                   <button
-                    className="rack-sort rack-sort--clear"
-                    onClick={() => setSortMode("none")}
+                    className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
+                    onClick={() => setSortMode("groups")}
                   >
-                    {t("sort_clear")}
+                    {t("sort_groups")}
                   </button>
+                  <button
+                    className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
+                    onClick={() => setSortMode("runs")}
+                  >
+                    {t("sort_runs")}
+                  </button>
+                  {sortMode !== "none" && (
+                    <button
+                      className="rack-sort rack-sort--clear"
+                      onClick={() => setSortMode("none")}
+                    >
+                      {t("sort_clear")}
+                    </button>
+                  )}
+                </div>
+                {gameStarted && (
+                  <span className="rack-count">
+                    {t("rack_count", { count: hand.length })}
+                  </span>
                 )}
               </div>
-              {gameStarted && (
-                <span className="rack-count">
-                  {t("rack_count", { count: hand.length })}
-                </span>
-              )}
+              <PlayerRack tiles={rackTiles} />
             </div>
-            <PlayerRack tiles={rackTiles} />
           </div>
         </div>
       </div>

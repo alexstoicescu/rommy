@@ -73,7 +73,7 @@
     0 0 14px color-mix(in srgb, var(--theme-color, #ffe066) 40%, transparent);
 }
 
-.lobby-controls {
+.app-header__status-row {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -82,19 +82,27 @@
   flex-wrap: wrap;
 }
 
-.lobby-controls button {
-  padding: 6px 14px;
-  background: #2c5530;
-  color: #fff;
-  border: 1px solid #87b29c;
+.header-rules-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(0, 242, 255, 0.10);
+  color: #00f2ff;
+  border: 1px solid rgba(0, 242, 255, 0.5);
   border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 14px;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 
-.lobby-controls button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.header-rules-btn:hover {
+  background: rgba(0, 242, 255, 0.22);
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.4);
 }
 
 .lobby-status {
@@ -219,31 +227,107 @@
   background: #6e4a23;
 }
 
-.lobby-panel {
-  background: #14271d;
-  border: 1px solid #2c5530;
-  border-radius: 8px;
-  padding: 8px 14px;
-  min-width: 200px;
+/* Sidebar lobby — terminal block beneath the leaderboard. Matches the
+   leaderboard's neon/monospace aesthetic so the left rail reads as one
+   piece of player-management UI. */
+.sidebar-lobby {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 260px;
+  margin-left: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: rgba(2, 8, 14, 0.78);
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  border-radius: 6px;
+  box-shadow:
+    0 0 12px rgba(0, 242, 255, 0.15),
+    inset 0 0 16px rgba(0, 242, 255, 0.06);
+  color: #cfe2d6;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  overflow: hidden;
 }
 
-.lobby-panel h2 {
-  margin: 0 0 4px;
-  font-size: 14px;
-  letter-spacing: 1px;
+.sidebar-lobby__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(0, 242, 255, 0.22);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 242, 255, 0.10),
+    rgba(0, 242, 255, 0)
+  );
   text-transform: uppercase;
-  color: #87b29c;
+  font-size: 11px;
+  letter-spacing: 1.5px;
 }
 
-.lobby-panel ul {
+.sidebar-lobby__prompt {
+  color: #00f2ff;
+  font-weight: 700;
+}
+
+.sidebar-lobby__title {
+  color: #00f2ff;
+}
+
+.sidebar-lobby__list {
   list-style: none;
   margin: 0;
-  padding: 0;
-  font-size: 14px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.lobby-panel li {
+.sidebar-lobby__list li {
   padding: 2px 0;
+  color: #cfe2d6;
+}
+
+.sidebar-lobby__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(0, 242, 255, 0.18);
+}
+
+.sidebar-lobby__btn {
+  padding: 6px 10px;
+  background: rgba(0, 242, 255, 0.06);
+  color: #cfe2d6;
+  border: 1px solid rgba(0, 242, 255, 0.35);
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.sidebar-lobby__btn:hover:not(:disabled) {
+  background: rgba(0, 242, 255, 0.16);
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+}
+
+.sidebar-lobby__btn--primary {
+  background: rgba(255, 224, 102, 0.12);
+  color: #ffe066;
+  border-color: rgba(255, 224, 102, 0.55);
+}
+
+.sidebar-lobby__btn--primary:hover:not(:disabled) {
+  background: rgba(255, 224, 102, 0.22);
+  box-shadow: 0 0 12px rgba(255, 224, 102, 0.4);
+}
+
+.sidebar-lobby__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .turn-indicator {
@@ -407,7 +491,7 @@
 
 @media (max-width: 720px) {
   .app-header__brand { font-size: 18px; letter-spacing: 2px; }
-  .lobby-controls { flex-wrap: wrap; gap: 8px; }
+  .header-rules-btn__label { display: none; }
   .play-grid { padding: 8px 12px; }
   .dealer-area { gap: 10px; padding: 8px 10px; }
   .dealer-area__rules-label { display: none; }
@@ -500,72 +584,71 @@
   justify-content: stretch;
 }
 
-/* Dealer Area — anchored top of the play area. Hosts the Atu, draw and
-   discard piles, and the Rules trigger. Uses the same neon-floating
-   look as the green board so visually it reads as one unit. */
+/* Play stage — wraps the dealer-area + GameBoard with no internal
+   gap so the piles can overlap the board's top edge via negative
+   margin (the parent .central-pillar uses gap, which doesn't honor
+   negative margins; this nested block sidesteps that). */
+.play-stage {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+}
+
+/* Dealer Area — no longer a bounded box. The Atu / Draw / Discard
+   piles dock directly onto the top-center edge of the green play
+   board, overlapping the border for a unified "table" feel. */
 .dealer-area {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: 18px;
-  padding: 10px 16px;
-  background: rgba(13, 38, 26, 0.82);
-  border: 1px solid rgba(0, 255, 128, 0.35);
-  border-radius: 10px;
-  box-shadow:
-    0 0 18px rgba(0, 255, 128, 0.18),
-    inset 0 0 22px rgba(0, 0, 0, 0.45);
+  gap: 22px;
+  padding: 0;
+  margin: 0 auto -22px;
+  position: relative;
+  z-index: 2;
   flex-wrap: wrap;
 }
 
-.dealer-area__rules {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  padding: 6px 12px;
-  background: rgba(0, 242, 255, 0.10);
-  color: #00f2ff;
-  border: 1px solid rgba(0, 242, 255, 0.5);
-  border-radius: 6px;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 12px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-}
-
-.dealer-area__rules:hover {
-  background: rgba(0, 242, 255, 0.22);
-  box-shadow: 0 0 14px rgba(0, 242, 255, 0.4);
-}
-
-.dealer-area__rules-label {
-  font-weight: 700;
-}
-
-/* Player Console — full-width hand area + horizontal action bar. */
-.rack-action-bar {
+/* Player Console — sleek translucent dock with a glowing neon border
+   replacing the old wooden rack. Action bar pinned to the top-left;
+   tiles flow beneath it inside the same dock. */
+.player-console {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    180deg,
+    rgba(2, 8, 14, 0.78),
+    rgba(2, 8, 14, 0.92)
+  );
+  border: 1px solid rgba(0, 242, 255, 0.45);
+  border-radius: 10px;
+  box-shadow:
+    0 0 18px rgba(0, 242, 255, 0.22),
+    inset 0 0 22px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+}
+
+.player-console__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 6px 12px;
-  background: rgba(2, 8, 14, 0.6);
-  border: 1px solid rgba(0, 242, 255, 0.25);
-  border-radius: 8px;
-  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.4);
+  background: rgba(0, 242, 255, 0.06);
+  border-bottom: 1px solid rgba(0, 242, 255, 0.18);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   flex-wrap: wrap;
-  box-sizing: border-box;
 }
 
-.rack-action-bar__sorts {
+.player-console__sorts {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  /* Flush against the top-left of the player console. */
+  margin-right: auto;
 }
 
 .etalare-button {

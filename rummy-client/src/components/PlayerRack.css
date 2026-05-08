@@ -3,14 +3,17 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   box-sizing: border-box;
   align-content: flex-start;
   gap: 6px 6px;
-  padding: 12px;
-  background: #5a3a1b;
-  border-radius: 8px;
-  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4);
+  padding: 10px 12px;
+  /* Wooden rack styling lives on .player-console now (translucent dark
+     with a neon border). The rack itself is just a transparent flow
+     container so tiles look like they sit inside the dock. */
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
   overflow: visible;
   /* Cap height so 30+ tiles still scroll instead of pushing the page. */
   max-height: 220px;
