@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import "./LanguageSwitcher.css";
 
+/* Label standard (v2.6.x): text codes instead of flag glyphs.
+   "ENG" for English, "RO" for Romanian. */
 const OPTIONS = [
-  { code: "en", flag: "🇬🇧", label: "English" },
-  { code: "ro", flag: "🇷🇴", label: "Română" },
+  { code: "en", short: "ENG", label: "English" },
+  { code: "ro", short: "RO", label: "Română" },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -23,9 +25,7 @@ export function LanguageSwitcher() {
           aria-pressed={active.startsWith(opt.code)}
           onClick={() => void i18n.changeLanguage(opt.code)}
         >
-          <span className="lang-switch__flag" aria-hidden="true">
-            {opt.flag}
-          </span>
+          <span className="lang-switch__code">{opt.short}</span>
         </button>
       ))}
     </div>

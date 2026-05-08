@@ -1,5 +1,19 @@
 # Rommy Changelog
 
+# [v2.5.3] - The "Global Standard" Patch
+
+🌐 Localization Logic
+
+Contextual Translation: Fully replaced "Etalare" with "Meld" in all English UI contexts.
+
+Status Updates: Refined in-game status messages to match the active language's terminology.
+
+🎨 UI/UX Refinement
+
+ISO Update: Standardized language switcher labels to 'ENG' and 'RO'.
+
+Branding Consistency: Verified alignment and versioning on the landing portal.
+
 ## [v2.5.2] - The "Scale & Spacing" Patch
 
 🎨 UI/UX Refinement

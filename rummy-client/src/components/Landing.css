@@ -46,10 +46,11 @@
 }
 
 .landing__lang .lang-switch__btn {
-  padding: 1px 0;
-  width: 30px;
-  flex: 0 0 30px;
-  font-size: 16px;
+  padding: 2px 0;
+  width: 38px;
+  flex: 0 0 38px;
+  font-size: 10px;
+  letter-spacing: 1.2px;
 }
 
 .landing__title {

@@ -34,7 +34,7 @@
   "meld_btn_invalid": "Invalid Meld",
   "meld_btn_need_suita": "Need a Suita",
   "meld_btn_not_enough": "Not Enough Points ({{total}}/45)",
-  "meld_btn_etalare": "Etalare",
+  "meld_btn_etalare": "Meld",
   "meld_btn_play_new": "Play New Meld",
   "meld_btn_undo": "Undo Pick",
   "meld_btn_undo_title": "Return the Rupere tile(s) to the discard pile",
@@ -68,7 +68,7 @@
   "game_over_replay": "Play Again",
 
   "board_aria": "Game board",
-  "board_empty_hint": "Awaiting the first Etalare…",
+  "board_empty_hint": "Awaiting the first meld...",
   "board_your_melds": "Your Melds",
   "board_others_melds": "{{name}}'s Melds",
   "board_points": "Points: {{points}}",
@@ -85,7 +85,7 @@
   "discard_tile_aria": "Discarded tile {{n}}",
   "draw_left": "{{count}} left",
 
-  "rules_etalare_h": "Etalare (Initial Meld)",
+  "rules_etalare_h": "Initial Meld",
   "rules_etalare_lead": "Requires <strong>more than 45 points</strong> and at least one valid combination:",
   "rules_etalare_run": "<em>Run (Suită)</em> — 3+ tiles of the same color in consecutive order. e.g. <code>7-8-9</code> red.",
   "rules_etalare_set": "<em>Set (Formație)</em> — 3 or 4 tiles of the same value in different colors. e.g. <code>5-5-5</code>.",
