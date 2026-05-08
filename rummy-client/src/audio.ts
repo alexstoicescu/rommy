@@ -26,12 +26,6 @@ function getCtx(): AudioContext | null {
   return ctx;
 }
 
-function getMaster(): AudioNode | null {
-  const c = getCtx();
-  if (!c || !masterGain) return null;
-  return masterGain;
-}
-
 /**
  * Browsers block AudioContexts from starting before a user gesture.
  * Call this from any click handler (e.g. Start Game / Join Room) to
