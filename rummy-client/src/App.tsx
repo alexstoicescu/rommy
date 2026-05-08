@@ -26,6 +26,7 @@ import { GameOverModal } from "./components/GameOverModal";
 import { CheatSheet } from "./components/CheatSheet";
 import { Landing } from "./components/Landing";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
+import { ScramblePile } from "./components/ScramblePile";
 import { useTranslation } from "react-i18next";
 import {
   calculateMeldPoints,
@@ -149,6 +150,9 @@ interface GameStateUpdate {
   hasDrawn: boolean;
   turnEndsAt: number | null;
   mustUseTileId: string | null;
+  phase: "lobby" | "scrambling" | "playing" | "scoreboard";
+  scrambleEndsAt: number | null;
+  scrambleSeed: number | null;
   handCounts: Record<string, number>;
   meldPoints: Record<string, number>;
   players: Array<{
@@ -230,6 +234,14 @@ function App() {
   const [atu, setAtu] = useState<Tile | null>(null);
   const [atuAwardedTo, setAtuAwardedTo] = useState<string | null>(null);
   const lastAtuAnnouncedRef = useRef<string | null>(null);
+  const [roomPhase, setRoomPhase] = useState<
+    "lobby" | "scrambling" | "playing" | "scoreboard"
+  >("lobby");
+  const [scrambleEndsAt, setScrambleEndsAt] = useState<number | null>(null);
+  const [scrambleSeed, setScrambleSeed] = useState<number | null>(null);
+  const [peerCursors, setPeerCursors] = useState<
+    Map<string, { sessionId: string; x: number; y: number; ts: number }>
+  >(new Map());
 
   // Tiles in draftMelds also live in `hand` (server-authoritative). The
   // rack is hand minus whatever the player has staged in draft melds.
@@ -304,6 +316,11 @@ function App() {
       setGamePlayers(state.players);
       setAtu(state.atu);
       setAtuAwardedTo(state.atuAwardedTo);
+      setRoomPhase(state.phase);
+      setScrambleEndsAt(state.scrambleEndsAt);
+      setScrambleSeed(state.scrambleSeed);
+      // Drop stale peer cursors when leaving the scramble phase.
+      if (state.phase !== "scrambling") setPeerCursors(new Map());
       // Announce the Atu once per round, the first time we see it awarded.
       if (
         state.gameStarted &&
@@ -349,6 +366,18 @@ function App() {
       playWin();
     };
 
+    const onPeerCursor = (payload: {
+      sessionId: string;
+      x: number;
+      y: number;
+    }) => {
+      setPeerCursors((prev) => {
+        const next = new Map(prev);
+        next.set(payload.sessionId, { ...payload, ts: Date.now() });
+        return next;
+      });
+    };
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("room_update", onRoomUpdate);
@@ -360,7 +389,9 @@ function App() {
     socket.on("invalid_move", onInvalidMove);
     socket.on("etalare_success", onEtalareSuccess);
     socket.on("game_over", onGameOver);
+    socket.on("peer_cursor", onPeerCursor);
     return () => {
+      socket.off("peer_cursor", onPeerCursor);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("room_update", onRoomUpdate);
@@ -881,7 +912,7 @@ function App() {
           </div>
         </header>
 
-        <div className="piles-area">
+        {roomPhase !== "scrambling" && <div className="piles-area">
           {atu && (
             <div className="atu-slot" title={`${t("atu_label")} — +50`}>
               <span className="atu-slot__label">{t("atu_label")}</span>
@@ -908,19 +939,33 @@ function App() {
             canRupere={isMyTurn && !hasDrawn}
             onRupere={handleRupere}
           />
-        </div>
+        </div>}
 
         <div className="play-grid">
           <div className="central-pillar">
-            <GameBoard
-              board={board}
-              draftMelds={draftMelds}
-              players={gamePlayers}
-              themes={[...PLAYER_THEMES]}
-              localPlayerId={socket.id ?? ""}
-              handCounts={handCounts}
-              meldPoints={meldPoints}
-            />
+            {roomPhase === "scrambling" && scrambleSeed != null &&
+              scrambleEndsAt != null && (
+                <ScramblePile
+                  seed={scrambleSeed}
+                  endsAt={scrambleEndsAt}
+                  selfColor={localThemeColor}
+                  peers={Array.from(peerCursors.values())}
+                  onCursorMove={(x, y) =>
+                    socket.emit("cursor_move", { x, y })
+                  }
+                />
+              )}
+            {roomPhase !== "scrambling" && (
+              <GameBoard
+                board={board}
+                draftMelds={draftMelds}
+                players={gamePlayers}
+                themes={[...PLAYER_THEMES]}
+                localPlayerId={socket.id ?? ""}
+                handCounts={handCounts}
+                meldPoints={meldPoints}
+              />
+            )}
             {isMyTurn && (
               <div className="board-actions">
                 <button

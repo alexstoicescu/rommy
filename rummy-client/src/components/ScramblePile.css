@@ -1,0 +1,120 @@
+.scramble {
+  position: relative;
+  margin: 0 auto;
+  border: 2px solid #00f2ff;
+  border-radius: 12px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 242, 255, 0.06) 0%,
+    rgba(0, 0, 0, 0.5) 60%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.25), inset 0 0 40px rgba(0, 0, 0, 0.6);
+  cursor: crosshair;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.scramble__hud {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid #00f2ff;
+  border-radius: 6px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #cfe2d6;
+}
+
+.scramble__label {
+  color: #00f2ff;
+  font-weight: 600;
+}
+
+.scramble__countdown {
+  font-variant-numeric: tabular-nums;
+  color: #ffe066;
+}
+
+.scramble__tile {
+  position: absolute;
+  width: 36px;
+  height: 52px;
+  border-radius: 4px;
+  border: 1px solid #0a1a2e;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      #1a3a6b,
+      #1a3a6b 4px,
+      #224b8a 4px,
+      #224b8a 8px
+    );
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 2px #fffdf6;
+  transition: transform 0.16s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  will-change: transform;
+}
+
+.scramble__cursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.scramble__cursor--peer {
+  background: #ff007f;
+  box-shadow: 0 0 10px #ff007f;
+  transition: left 0.08s linear, top 0.08s linear;
+}
+
+.scramble__cursor--self {
+  /* background + boxShadow are inline (theme color). */
+  z-index: 6;
+}
+
+/* Last ~0.8s of the scramble: rapid jitter to suggest the pile is
+   collapsing into the draw deck. Brief enough that the keyframe loop
+   plays only a couple of times before unmount. */
+.scramble--ending .scramble__tile {
+  animation: scramble-glitch 0.12s steps(2) infinite;
+  transition: none;
+}
+
+@keyframes scramble-glitch {
+  0% {
+    filter: hue-rotate(0deg) saturate(1) brightness(1);
+  }
+  33% {
+    filter: hue-rotate(-25deg) saturate(2) brightness(1.4);
+    box-shadow:
+      -2px 0 0 rgba(255, 0, 127, 0.7),
+      2px 0 0 rgba(0, 242, 255, 0.7),
+      0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  66% {
+    filter: hue-rotate(20deg) saturate(1.5) brightness(0.8);
+    box-shadow:
+      2px 0 0 rgba(255, 0, 127, 0.7),
+      -2px 0 0 rgba(0, 242, 255, 0.7),
+      0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    filter: hue-rotate(0deg) saturate(1) brightness(1);
+  }
+}

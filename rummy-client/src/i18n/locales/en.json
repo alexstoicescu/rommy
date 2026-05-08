@@ -99,5 +99,8 @@
   "rules_rupere_text": "You may pick the last discarded tile <strong>only if</strong> you immediately use it in a meld this turn.",
   "rules_winning_h": "Winning",
   "rules_winning_text": "You must discard your final tile to the table to close the game.",
-  "rules_close_aria": "Close rules"
+  "rules_close_aria": "Close rules",
+
+  "scramble_label": "Scramble",
+  "scramble_countdown": "Dealing in {{seconds}}s"
 }

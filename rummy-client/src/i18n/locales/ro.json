@@ -99,5 +99,8 @@
   "rules_rupere_text": "Poți lua ultima placă aruncată <strong>doar dacă</strong> o folosești imediat într-o combinație în această tură.",
   "rules_winning_h": "Câștigarea partidei",
   "rules_winning_text": "Trebuie să arunci ultima placă pe masă pentru a închide partida.",
-  "rules_close_aria": "Închide regulile"
+  "rules_close_aria": "Închide regulile",
+
+  "scramble_label": "Amestec",
+  "scramble_countdown": "Se împart cărțile în {{seconds}}s"
 }
