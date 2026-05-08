@@ -848,10 +848,61 @@ function App() {
         className="app"
         style={{ ["--theme-color" as string]: localThemeColor }}
       >
-        <header className="app-header">
-          <div className="app-header__title-row">
-            <h1 className="app-header__brand">Rommy</h1>
-            <div className="app-header__meta">
+        <aside className="sidebar">
+          <h1 className="sidebar__brand">Rommy</h1>
+          <Leaderboard
+            themes={PLAYER_THEMES}
+            rows={gamePlayers.map((p) => ({
+              sessionId: p.sessionId,
+              name: p.name,
+              isBot: p.isBot,
+              colorIndex: p.colorIndex,
+              connectionStatus: p.connectionStatus,
+              score: globalScores[p.sessionId] ?? 0,
+              isLocal: p.socketId === socket.id,
+            }))}
+          />
+          {inLobby && !gameStarted && (
+            <aside
+              className="sidebar-lobby"
+              aria-label={t("lobby_title", { count: lobbyPlayers.length })}
+            >
+              <header className="sidebar-lobby__header">
+                <span className="sidebar-lobby__prompt">$</span>
+                <span className="sidebar-lobby__title">
+                  {t("lobby_title", { count: lobbyPlayers.length })}
+                </span>
+              </header>
+              <ul className="sidebar-lobby__list">
+                {lobbyPlayers.map((p) => (
+                  <li key={p.id}>
+                    {p.name}
+                    {p.id === socket.id ? t("lobby_you_suffix") : ""}
+                  </li>
+                ))}
+              </ul>
+              <div className="sidebar-lobby__actions">
+                <button
+                  className="sidebar-lobby__btn"
+                  onClick={handleAddBot}
+                >
+                  {t("lobby_add_bot")}
+                </button>
+                <button
+                  className="sidebar-lobby__btn sidebar-lobby__btn--primary"
+                  onClick={handleStartGame}
+                  disabled={lobbyPlayers.length < 2}
+                >
+                  {t("lobby_start_game")}
+                </button>
+              </div>
+            </aside>
+          )}
+        </aside>
+
+        <main className="arena">
+          <header className="arena__header">
+            <div className="arena__meta">
               {gameStarted &&
                 (() => {
                   const me = gamePlayers.find((p) => p.socketId === socket.id);
@@ -890,125 +941,40 @@ function App() {
               </button>
               <LanguageSwitcher />
             </div>
-          </div>
-          {gameStarted && (
-            <div className="app-header__status-row">
-              {(() => {
-                const myTurn = currentTurn === socket.id;
-                const turnPlayer = gamePlayers.find(
-                  (p) => p.socketId === currentTurn,
-                );
-                const turnLabel = myTurn
-                  ? t("turn_notification")
-                  : t("turn_others", { name: turnPlayer?.name ?? "—" });
-                const lowTime =
-                  turnSecondsRemaining != null && turnSecondsRemaining <= 10;
-                const seconds =
-                  turnSecondsRemaining != null
-                    ? t("turn_seconds_remaining", {
-                        seconds: turnSecondsRemaining,
-                      })
-                    : "";
-                return (
-                  <span
-                    className={`turn-indicator${myTurn ? " turn-indicator--mine" : ""}${lowTime ? " turn-indicator--low" : ""}`}
-                  >
-                    {turnLabel}
-                    {seconds}
-                  </span>
-                );
-              })()}
-            </div>
-          )}
-        </header>
-
-        <div className="play-grid">
-          <div className="play-grid__sidecar play-grid__sidecar--left">
-            <Leaderboard
-              themes={PLAYER_THEMES}
-              rows={gamePlayers.map((p) => ({
-                sessionId: p.sessionId,
-                name: p.name,
-                isBot: p.isBot,
-                colorIndex: p.colorIndex,
-                connectionStatus: p.connectionStatus,
-                score: globalScores[p.sessionId] ?? 0,
-                isLocal: p.socketId === socket.id,
-              }))}
-            />
-            {inLobby && !gameStarted && (
-              <aside className="sidebar-lobby" aria-label={t("lobby_title", { count: lobbyPlayers.length })}>
-                <header className="sidebar-lobby__header">
-                  <span className="sidebar-lobby__prompt">$</span>
-                  <span className="sidebar-lobby__title">
-                    {t("lobby_title", { count: lobbyPlayers.length })}
-                  </span>
-                </header>
-                <ul className="sidebar-lobby__list">
-                  {lobbyPlayers.map((p) => (
-                    <li key={p.id}>
-                      {p.name}
-                      {p.id === socket.id ? t("lobby_you_suffix") : ""}
-                    </li>
-                  ))}
-                </ul>
-                <div className="sidebar-lobby__actions">
-                  <button
-                    className="sidebar-lobby__btn"
-                    onClick={handleAddBot}
-                  >
-                    {t("lobby_add_bot")}
-                  </button>
-                  <button
-                    className="sidebar-lobby__btn sidebar-lobby__btn--primary"
-                    onClick={handleStartGame}
-                    disabled={lobbyPlayers.length < 2}
-                  >
-                    {t("lobby_start_game")}
-                  </button>
-                </div>
-              </aside>
-            )}
-          </div>
-          <div className="central-pillar">
-            <div className="play-stage">
-            {roomPhase !== "scrambling" && (
-              <div className="dealer-area" aria-label="Dealer area">
-                {atu && (
-                  <div
-                    className="atu-slot"
-                    title={`${t("atu_label")} — +50`}
-                  >
-                    <span className="atu-slot__label">{t("atu_label")}</span>
-                    <TileComponent tile={atu} />
-                    {atuAwardedTo && (
-                      <span className="atu-slot__holder">
-                        {atuAwardedTo === socket.id
-                          ? t("atu_holder_self")
-                          : t("atu_holder_other", {
-                              name:
-                                gamePlayers.find(
-                                  (p) => p.socketId === atuAwardedTo,
-                                )?.name ?? "—",
-                            })}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <DrawPile
-                  onClick={drawFromDeck}
-                  empty={drawPileCount === 0}
-                  disabled={hasDrawn}
-                  count={drawPileCount}
-                />
-                <DiscardPile
-                  tiles={discardPile}
-                  canRupere={isMyTurn && !hasDrawn}
-                  onRupere={handleRupere}
-                />
+            {gameStarted && (
+              <div className="arena__status">
+                {(() => {
+                  const myTurn = currentTurn === socket.id;
+                  const turnPlayer = gamePlayers.find(
+                    (p) => p.socketId === currentTurn,
+                  );
+                  const turnLabel = myTurn
+                    ? t("turn_notification")
+                    : t("turn_others", { name: turnPlayer?.name ?? "—" });
+                  const lowTime =
+                    turnSecondsRemaining != null && turnSecondsRemaining <= 10;
+                  const seconds =
+                    turnSecondsRemaining != null
+                      ? t("turn_seconds_remaining", {
+                          seconds: turnSecondsRemaining,
+                        })
+                      : "";
+                  return (
+                    <span
+                      className={`turn-indicator${myTurn ? " turn-indicator--mine" : ""}${lowTime ? " turn-indicator--low" : ""}`}
+                    >
+                      {turnLabel}
+                      {seconds}
+                    </span>
+                  );
+                })()}
               </div>
             )}
-            {roomPhase === "scrambling" && scrambleSeed != null &&
+          </header>
+
+          <div className="arena__board">
+            {roomPhase === "scrambling" &&
+              scrambleSeed != null &&
               scrambleEndsAt != null && (
                 <ScramblePile
                   seed={scrambleSeed}
@@ -1021,79 +987,116 @@ function App() {
                 />
               )}
             {roomPhase !== "scrambling" && (
-              <GameBoard
-                board={board}
-                draftMelds={draftMelds}
-                players={gamePlayers}
-                themes={[...PLAYER_THEMES]}
-                localPlayerId={socket.id ?? ""}
-                handCounts={handCounts}
-                meldPoints={meldPoints}
-              />
-            )}
-            </div>
-            {isMyTurn && (
-              <div className="board-actions">
-                <button
-                  className={`etalare-button${meldButton.active ? " etalare-button--active" : " etalare-button--idle"}`}
-                  onClick={meldButton.onClick}
-                  disabled={meldButton.disabled}
-                >
-                  {meldButton.label}
-                </button>
-                {mustUseTileId && (
-                  <button
-                    className="undo-rupere-button"
-                    onClick={handleUndoRupere}
-                    title={t("meld_btn_undo_title")}
-                  >
-                    {t("meld_btn_undo")}
-                  </button>
-                )}
-                <button
-                  className="end-turn-button"
-                  onClick={handleEndTurn}
-                  disabled={!hasDrawn || hand.length === 0}
-                  title={t("meld_btn_end_turn_title")}
-                >
-                  {t("meld_btn_end_turn")}
-                </button>
-              </div>
-            )}
-            <div className="player-console">
-              <div className="player-console__bar" role="toolbar">
-                <div className="player-console__sorts">
-                  <button
-                    className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
-                    onClick={() => setSortMode("groups")}
-                  >
-                    {t("sort_groups")}
-                  </button>
-                  <button
-                    className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
-                    onClick={() => setSortMode("runs")}
-                  >
-                    {t("sort_runs")}
-                  </button>
-                  {sortMode !== "none" && (
-                    <button
-                      className="rack-sort rack-sort--clear"
-                      onClick={() => setSortMode("none")}
+              <>
+                <div className="dealer-area" aria-label="Dealer area">
+                  {atu && (
+                    <div
+                      className="atu-slot"
+                      title={`${t("atu_label")} — +50`}
                     >
-                      {t("sort_clear")}
-                    </button>
+                      <span className="atu-slot__label">{t("atu_label")}</span>
+                      <TileComponent tile={atu} />
+                      {atuAwardedTo && (
+                        <span className="atu-slot__holder">
+                          {atuAwardedTo === socket.id
+                            ? t("atu_holder_self")
+                            : t("atu_holder_other", {
+                                name:
+                                  gamePlayers.find(
+                                    (p) => p.socketId === atuAwardedTo,
+                                  )?.name ?? "—",
+                              })}
+                        </span>
+                      )}
+                    </div>
                   )}
+                  <DrawPile
+                    onClick={drawFromDeck}
+                    empty={drawPileCount === 0}
+                    disabled={hasDrawn}
+                    count={drawPileCount}
+                  />
+                  <DiscardPile
+                    tiles={discardPile}
+                    canRupere={isMyTurn && !hasDrawn}
+                    onRupere={handleRupere}
+                  />
                 </div>
-                {gameStarted && (
-                  <span className="rack-count">
-                    {t("rack_count", { count: hand.length })}
-                  </span>
+                <GameBoard
+                  board={board}
+                  draftMelds={draftMelds}
+                  players={gamePlayers}
+                  themes={[...PLAYER_THEMES]}
+                  localPlayerId={socket.id ?? ""}
+                  handCounts={handCounts}
+                  meldPoints={meldPoints}
+                />
+              </>
+            )}
+          </div>
+
+          {isMyTurn && (
+            <div className="board-actions">
+              <button
+                className={`etalare-button${meldButton.active ? " etalare-button--active" : " etalare-button--idle"}`}
+                onClick={meldButton.onClick}
+                disabled={meldButton.disabled}
+              >
+                {meldButton.label}
+              </button>
+              {mustUseTileId && (
+                <button
+                  className="undo-rupere-button"
+                  onClick={handleUndoRupere}
+                  title={t("meld_btn_undo_title")}
+                >
+                  {t("meld_btn_undo")}
+                </button>
+              )}
+              <button
+                className="end-turn-button"
+                onClick={handleEndTurn}
+                disabled={!hasDrawn || hand.length === 0}
+                title={t("meld_btn_end_turn_title")}
+              >
+                {t("meld_btn_end_turn")}
+              </button>
+            </div>
+          )}
+
+          <div className="player-console">
+            <div className="player-console__bar" role="toolbar">
+              <div className="player-console__sorts">
+                <button
+                  className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
+                  onClick={() => setSortMode("groups")}
+                >
+                  {t("sort_groups")}
+                </button>
+                <button
+                  className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
+                  onClick={() => setSortMode("runs")}
+                >
+                  {t("sort_runs")}
+                </button>
+                {sortMode !== "none" && (
+                  <button
+                    className="rack-sort rack-sort--clear"
+                    onClick={() => setSortMode("none")}
+                  >
+                    {t("sort_clear")}
+                  </button>
                 )}
               </div>
-              <PlayerRack tiles={rackTiles} />
+              {gameStarted && (
+                <span className="rack-count">
+                  {t("rack_count", { count: hand.length })}
+                </span>
+              )}
             </div>
+            <PlayerRack tiles={rackTiles} />
           </div>
-        </div>
+        </main>
       </div>
 
       <DragOverlay>

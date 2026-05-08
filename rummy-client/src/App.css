@@ -3,13 +3,18 @@
    radial vignette. The local player's theme color is plumbed in via
    the `--theme-color` custom property (set inline on .app).
    ──────────────────────────────────────────────────────────────── */
+/* Immersive Arena macro grid: a fixed-width sidebar on the left and a
+   flex column that fills every remaining pixel on the right. The whole
+   shell is locked to the viewport (height: 100vh; overflow: hidden) so
+   the green play area can flex-grow without pushing the page taller
+   than the screen. */
 .app {
   --theme-color: #ffe066;
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  overflow: hidden;
   color: #f5f5f5;
   font-family: system-ui, sans-serif;
   background-color: #0d0221;
@@ -23,6 +28,89 @@
     44px 44px;
   position: relative;
   isolation: isolate;
+}
+
+/* ── Sidebar (left, 320px) ─────────────────────────────────────────── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 14px;
+  background: rgba(13, 2, 33, 0.78);
+  border-right: 1px solid rgba(188, 19, 254, 0.4);
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.sidebar__brand {
+  margin: 0 0 4px;
+  font-size: 26px;
+  letter-spacing: 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--theme-color, #ffe066);
+  text-shadow:
+    0 0 6px var(--theme-color, #ffe066),
+    0 0 14px color-mix(in srgb, var(--theme-color, #ffe066) 40%, transparent);
+  text-align: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(188, 19, 254, 0.3);
+}
+
+/* The leaderboard + sidebar-lobby drop their own max-width / margin
+   inside the 320px rail and span its full width. */
+.sidebar > .leaderboard,
+.sidebar > .sidebar-lobby {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  position: static;
+}
+
+/* ── Arena (right, 1fr) ───────────────────────────────────────────── */
+.arena {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.arena__header {
+  flex: none;
+  padding: 10px 24px;
+  background: rgba(13, 2, 33, 0.7);
+  border-bottom: 1px solid rgba(188, 19, 254, 0.35);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.arena__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.arena__status {
+  display: flex;
+  justify-content: center;
+}
+
+/* The Arena Board — flex-grow:1 so it eats every pixel between the
+   header and the player console. position:relative anchors the
+   absolutely-positioned dealer-area. */
+.arena__board {
+  flex: 1 1 auto;
+  position: relative;
+  display: flex;
+  min-height: 0;
+  padding: 16px 24px 0;
+  box-sizing: border-box;
 }
 
 /* CRT scanlines + slow flicker, painted above everything but
@@ -47,39 +135,6 @@
 @keyframes crt-flicker {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.9; }
-}
-
-.app-header {
-  width: 100%;
-  padding: 12px 24px;
-  background: rgba(13, 2, 33, 0.75);
-  border-bottom: 1px solid rgba(188, 19, 254, 0.4);
-  backdrop-filter: blur(4px);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  box-sizing: border-box;
-}
-
-.app-header__brand {
-  margin: 0;
-  font-size: 24px;
-  letter-spacing: 3px;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  color: var(--theme-color, #ffe066);
-  text-shadow:
-    0 0 6px var(--theme-color, #ffe066),
-    0 0 14px color-mix(in srgb, var(--theme-color, #ffe066) 40%, transparent);
-}
-
-.app-header__status-row {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
 }
 
 .header-rules-btn {
@@ -111,22 +166,6 @@
   font-style: italic;
 }
 
-.app-header__title-row {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.app-header__meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
 
 /* HUD typography — terminal monospace + a subtle neon glow keyed off
    the local player's theme color. */
@@ -473,37 +512,30 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Responsive collapse: below 1100px the leaderboard sidebar tucks
-   above the central pillar so the board reclaims the full width. */
+/* Responsive collapse: below 1100px the sidebar shrinks to a thinner
+   rail (still visible) and below 720px we drop chrome but keep the
+   100vh grid intact — the arena always owns the rest of the screen. */
 @media (max-width: 1100px) {
-  .play-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .app {
+    grid-template-columns: 240px 1fr;
   }
-  .central-pillar {
-    grid-column: 1;
+  .sidebar {
+    padding: 12px 8px;
   }
-  .play-grid__sidecar--left {
-    grid-column: 1;
-    justify-content: stretch;
+  .sidebar__brand {
+    font-size: 20px;
+    letter-spacing: 3px;
   }
 }
 
 @media (max-width: 720px) {
-  .app-header__brand { font-size: 18px; letter-spacing: 2px; }
+  .app {
+    grid-template-columns: 200px 1fr;
+  }
   .header-rules-btn__label { display: none; }
-  .play-grid { padding: 8px 12px; }
-  .dealer-area { gap: 10px; padding: 8px 10px; }
-  .dealer-area__rules-label { display: none; }
-}
-
-.piles-area {
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  padding: 16px 24px 0;
-  justify-content: center;
-  align-items: flex-start;
+  .arena__header { padding: 8px 12px; }
+  .arena__board { padding: 12px 12px 0; }
+  .player-console { min-height: 148px; }
 }
 
 .atu-slot {
@@ -534,87 +566,32 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Command Center grid: narrow leaderboard sidebar | wide play area.
-   The right column (permanent rules sidecar) was removed in v1.7.x —
-   rules now live in a blurred modal, opened from the dealer-area button. */
-.play-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 1640px;
-  margin: 0 auto;
-  padding: 16px 24px;
-  box-sizing: border-box;
-  align-items: start;
-  position: relative;
-  min-height: 0;
-}
-
-/* The Central Pillar — every primary gameplay element stacks here.
-   It owns its own column and never overflows. */
-.central-pillar {
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 1rem;
-  min-width: 0;
-}
-
-.central-pillar > .game-board {
-  width: 100%;
-  min-height: 56vh;
-  /* Neon floating board */
-  box-shadow:
-    0 10px 30px rgba(0, 255, 128, 0.15),
-    0 0 20px rgba(0, 255, 128, 0.2);
-}
-
-.play-grid__sidecar {
-  width: 100%;
-  align-self: start;
-  min-width: 0;
-}
-
-.play-grid__sidecar--left {
-  grid-column: 1;
-  display: flex;
-  justify-content: stretch;
-}
-
-/* Play stage — wraps the dealer-area + GameBoard with no internal
-   gap so the piles can overlap the board's top edge via negative
-   margin (the parent .central-pillar uses gap, which doesn't honor
-   negative margins; this nested block sidesteps that). */
-.play-stage {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  position: relative;
-}
-
-/* Dealer Area — no longer a bounded box. The Atu / Draw / Discard
-   piles dock directly onto the top-center edge of the green play
-   board, overlapping the border for a unified "table" feel. */
+/* Dealer Area — anchored to the very top edge of the green play
+   board. position: absolute pulls it out of the flex flow so the
+   GameBoard underneath can claim the full arena__board height. The
+   transform pushes it up by half its own height so the piles
+   visually straddle the top border. */
 .dealer-area {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   gap: 22px;
-  padding: 0;
-  margin: 0 auto -22px;
-  position: relative;
-  z-index: 2;
+  z-index: 4;
   flex-wrap: wrap;
 }
 
-/* Player Console — sleek translucent dock with a glowing neon border
-   replacing the old wooden rack. Action bar pinned to the top-left;
-   tiles flow beneath it inside the same dock. */
+/* Player Console — full-width digital dock at the bottom of the
+   arena, sized to comfortably hold the new glowing data-chip tiles. */
 .player-console {
+  flex: none;
   width: 100%;
+  min-height: 168px;
+  margin: 12px 0 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   background: linear-gradient(
@@ -622,12 +599,12 @@
     rgba(2, 8, 14, 0.78),
     rgba(2, 8, 14, 0.92)
   );
-  border: 1px solid rgba(0, 242, 255, 0.45);
-  border-radius: 10px;
+  border-top: 1px solid rgba(0, 242, 255, 0.45);
   box-shadow:
-    0 0 18px rgba(0, 242, 255, 0.22),
+    0 -4px 18px rgba(0, 242, 255, 0.18),
     inset 0 0 22px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  box-sizing: border-box;
   overflow: hidden;
 }
 

@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## [v2.2.0] - The "Immersive Arena" Layout
+
+CSS Architecture: Migrated to a strict 100vh Grid (320px 1fr), eliminating dead space and maximizing viewport utility.
+
+Dynamic Scaling: Applied flex-grow properties to the main play area, allowing the board to dynamically expand to fill modern high-res displays.
+
+Component Anchoring: Refactored the deck placement, using absolute positioning to dock the draw/discard piles directly onto the board's top geometry.
+
 ## [v2.1.0] - The "Neon Tactician" Update
 
 UI/UX Architecture

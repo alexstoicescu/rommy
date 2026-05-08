@@ -1,15 +1,23 @@
 .game-board {
-  flex: 1;
-  min-height: 320px;
-  margin: 16px 0;
-  padding: 16px;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  /* Top padding bumped so the absolutely-positioned dealer-area
+     (which straddles the top border) doesn't overlap the player
+     zones — the lower ~half of the atu-slot dips into the table. */
+  padding: 70px 16px 16px;
   border: 2px solid #2c5530;
   border-radius: 12px;
   background: #0f5132;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.45),
+    0 0 24px rgba(0, 255, 128, 0.18);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
 }
 
 .game-board__zones {
