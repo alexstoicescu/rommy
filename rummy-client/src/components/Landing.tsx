@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { getSignatureId } from "../identity";
 import "./Landing.css";
 
 interface RoomStatus {
@@ -31,6 +32,60 @@ export function Landing({
   const { t } = useTranslation();
   const [name, setName] = useState(initialUsername);
   const [code, setCode] = useState("");
+  // Export Link button state — "idle" / "ok" / "fail" with a 1.5s
+  // auto-revert. The setTimeout is cleaned in the effect cleanup so
+  // unmounting the modal mid-flash never leaks the timer.
+  const [exportFlash, setExportFlash] = useState<"idle" | "ok" | "fail">(
+    "idle",
+  );
+  const flashTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current != null) {
+        window.clearTimeout(flashTimerRef.current);
+      }
+    };
+  }, []);
+  const handleExport = async () => {
+    const sig = getSignatureId();
+    if (!sig) {
+      setExportFlash("fail");
+      return;
+    }
+    let copied = false;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(sig);
+        copied = true;
+      }
+    } catch {
+      copied = false;
+    }
+    if (!copied) {
+      // Last-resort fallback for browsers blocking the async API.
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = sig;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+    setExportFlash(copied ? "ok" : "fail");
+    if (flashTimerRef.current != null) {
+      window.clearTimeout(flashTimerRef.current);
+    }
+    flashTimerRef.current = window.setTimeout(() => {
+      setExportFlash("idle");
+      flashTimerRef.current = null;
+    }, 1500);
+  };
   const trimmedName = name.trim();
   const trimmedCode = code.trim().toUpperCase();
   const codeReady = trimmedCode.length === 4;
@@ -122,7 +177,20 @@ export function Landing({
           {probedFull ? t("landing_room_full_btn") : t("landing_join_btn")}
         </button>
 
-        <div className="landing__version">v2.7.0 - THE INTELLIGENCE UPDATE</div>
+        <button
+          type="button"
+          className={`landing__export landing__export--${exportFlash}`}
+          onClick={handleExport}
+          title={t("landing_export_title")}
+        >
+          {exportFlash === "ok"
+            ? t("landing_export_done")
+            : exportFlash === "fail"
+              ? t("landing_export_fail")
+              : t("landing_export_btn")}
+        </button>
+
+        <div className="landing__version">v2.8.0 - THE LEDGER UPDATE</div>
       </div>
     </div>
   );

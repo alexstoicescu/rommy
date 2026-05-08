@@ -99,6 +99,22 @@
   letter-spacing: 1px;
 }
 
+/* ELO chip — small monospace badge after the alias. The lightning
+   glyph (U+26A1) reads as "ranked" without taking column space. */
+.leaderboard__elo {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 4px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: #ffe066;
+  background: rgba(255, 224, 102, 0.08);
+  border: 1px solid rgba(255, 224, 102, 0.35);
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 1px rgba(255, 224, 102, 0.4);
+}
+
 .leaderboard__score {
   color: #ffe066;
   font-weight: 700;

@@ -107,6 +107,13 @@
 
   "leaderboard_title": "Leaderboard",
   "leaderboard_empty": "(no players yet)",
+  "leaderboard_elo_tooltip": "Syndicate Reputation rating",
+  "landing_export_btn": "EXPORT IDENTITY",
+  "landing_export_done": "COPIED ✓",
+  "landing_export_fail": "COPY FAILED",
+  "landing_export_title": "Copy your signature ID — paste it on another device to transfer your reputation",
+  "aar_elo": "ELO",
+  "aar_col_elo": "Δ ELO",
 
   "aar_title": "After-Action Report",
   "aar_mvp": "MVP",

@@ -8,6 +8,8 @@ interface Row {
   colorIndex: number;
   connectionStatus: "active" | "disconnected";
   score: number;
+  /** Persistent Syndicate Ledger ELO. 1200 default for new / bots. */
+  eloScore: number;
   isLocal: boolean;
 }
 
@@ -42,6 +44,11 @@ export function Leaderboard({ rows, themes }: Props) {
               <span className="leaderboard__name" title={r.name}>
                 {r.name}
                 {r.isBot && <span className="leaderboard__tag"> [BOT]</span>}
+                {!r.isBot && (
+                  <span className="leaderboard__elo" title={t("leaderboard_elo_tooltip")}>
+                    ⚡{r.eloScore}
+                  </span>
+                )}
               </span>
               <span className="leaderboard__score">{r.score}</span>
             </li>

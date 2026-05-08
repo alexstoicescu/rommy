@@ -110,8 +110,18 @@ const STORED_SESSION_ID: string | undefined = (() => {
   }
 })();
 
+// Syndicate Reputation Ledger identity. Generated on first load and
+// persisted to localStorage; exportable so the alias + ELO can move
+// across devices. See identity.ts for details.
+import { getAlias, getSignatureId, setAlias } from "./identity";
+const STORED_SIGNATURE_ID = getSignatureId();
+
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  auth: { sessionId: STORED_SESSION_ID },
+  auth: {
+    sessionId: STORED_SESSION_ID,
+    signatureId: STORED_SIGNATURE_ID,
+    alias: getAlias() || undefined,
+  },
 });
 
 // On every connect/reconnect the server tells us which sessionId it
@@ -173,6 +183,7 @@ interface GameStateUpdate {
     colorIndex: number;
     bonusPoints: number;
     connectionStatus: "active" | "disconnected";
+    eloScore: number;
   }>;
   atu: Tile | null;
   atuAwardedTo: string | null;
@@ -237,6 +248,7 @@ function App() {
       colorIndex: number;
       bonusPoints: number;
       connectionStatus: "active" | "disconnected";
+      eloScore: number;
     }>
   >([]);
   const [atu, setAtu] = useState<Tile | null>(null);
@@ -513,6 +525,21 @@ function App() {
     } catch {
       /* ignore */
     }
+    // Mirror the alias into the Syndicate Ledger storage and refresh
+    // socket.auth so future reconnects re-bind with the new alias.
+    setAlias(name);
+    socket.auth = {
+      sessionId:
+        (() => {
+          try {
+            return localStorage.getItem(SESSION_STORAGE_KEY) ?? undefined;
+          } catch {
+            return undefined;
+          }
+        })(),
+      signatureId: STORED_SIGNATURE_ID,
+      alias: name,
+    };
   };
   const handleHostGame = (name: string) => {
     unlockAudio();
@@ -925,6 +952,7 @@ function App() {
               colorIndex: p.colorIndex,
               connectionStatus: p.connectionStatus,
               score: globalScores[p.sessionId] ?? 0,
+              eloScore: p.eloScore,
               isLocal: p.socketId === socket.id,
             }))}
           />

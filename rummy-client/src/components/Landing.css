@@ -159,6 +159,42 @@
   color: #cfe2d6;
 }
 
+/* Identity export — small terminal pill that copies the persistent
+   signatureId to the clipboard. Flash variants give a quick
+   "Copied!" / "Failed" tell. */
+.landing__export {
+  margin-top: 4px;
+  align-self: center;
+  padding: 4px 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: rgba(64, 192, 255, 0.08);
+  color: rgba(64, 192, 255, 0.85);
+  border: 1px solid rgba(64, 192, 255, 0.45);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.landing__export:hover {
+  background: rgba(64, 192, 255, 0.18);
+  box-shadow: 0 0 10px rgba(64, 192, 255, 0.35);
+}
+
+.landing__export--ok {
+  color: #50e68c;
+  border-color: rgba(80, 230, 140, 0.55);
+  background: rgba(80, 230, 140, 0.12);
+}
+
+.landing__export--fail {
+  color: #ff8198;
+  border-color: rgba(255, 77, 109, 0.55);
+  background: rgba(255, 77, 109, 0.12);
+}
+
 .landing__version {
   margin-top: 6px;
   text-align: center;

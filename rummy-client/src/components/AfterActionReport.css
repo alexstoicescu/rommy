@@ -130,6 +130,69 @@
   color: rgba(207, 226, 214, 0.7);
 }
 
+/* MVP-card ELO badge — prominent +/- block. */
+.aar__elo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 224, 102, 0.45);
+  background: rgba(255, 224, 102, 0.08);
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  align-self: flex-start;
+}
+
+.aar__elo-badge--up {
+  border-color: rgba(80, 230, 140, 0.55);
+  background: rgba(80, 230, 140, 0.1);
+  color: #50e68c;
+  text-shadow: 0 0 1px #50e68c, 0 0 6px rgba(80, 230, 140, 0.4);
+}
+
+.aar__elo-badge--down {
+  border-color: rgba(255, 77, 109, 0.55);
+  background: rgba(255, 77, 109, 0.1);
+  color: #ff8198;
+  text-shadow: 0 0 1px #ff8198, 0 0 6px rgba(255, 77, 109, 0.35);
+}
+
+.aar__elo-label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  opacity: 0.7;
+}
+
+.aar__elo-delta {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.aar__elo-after {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* Compact +/- delta in the fortune table. */
+.aar__delta {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: rgba(207, 226, 214, 0.55);
+}
+
+.aar__delta--up {
+  color: #50e68c;
+  text-shadow: 0 0 4px rgba(80, 230, 140, 0.4);
+}
+
+.aar__delta--down {
+  color: #ff8198;
+  text-shadow: 0 0 4px rgba(255, 77, 109, 0.35);
+}
+
 /* Chart */
 .aar__chart-wrap {
   flex: 1;

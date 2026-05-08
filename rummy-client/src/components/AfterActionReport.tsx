@@ -65,6 +65,30 @@ export function AfterActionReport({
             <div className="aar__card-stat">
               {t("aar_mvp_score", { score: analytics.mvp.score })}
             </div>
+            {(() => {
+              const delta = tape.eloDeltas[analytics.mvp.sessionId] ?? 0;
+              const after = tape.eloAfter[analytics.mvp.sessionId];
+              if (delta === 0 && after == null) return null;
+              const cls =
+                delta > 0
+                  ? "aar__elo-badge aar__elo-badge--up"
+                  : delta < 0
+                    ? "aar__elo-badge aar__elo-badge--down"
+                    : "aar__elo-badge";
+              const sign = delta > 0 ? "+" : "";
+              return (
+                <div className={cls}>
+                  <span className="aar__elo-label">{t("aar_elo")}</span>
+                  <span className="aar__elo-delta">
+                    {sign}
+                    {delta}
+                  </span>
+                  {after != null && (
+                    <span className="aar__elo-after">→ {after}</span>
+                  )}
+                </div>
+              );
+            })()}
             <div className="aar__card-foot">
               <span>{t("game_over_closing")}</span>
               <TileComponent tile={tape.closingTile} />
@@ -93,17 +117,32 @@ export function AfterActionReport({
                   <th>{t("aar_col_drawn")}</th>
                   <th>{t("aar_col_melded")}</th>
                   <th>{t("aar_col_factor")}</th>
+                  <th>{t("aar_col_elo")}</th>
                 </tr>
               </thead>
               <tbody>
                 {analytics.fortune.map((row) => {
                   const c = themes[row.colorIndex % themes.length];
+                  const delta = tape.eloDeltas[row.sessionId] ?? 0;
+                  const dCls =
+                    delta > 0
+                      ? "aar__delta aar__delta--up"
+                      : delta < 0
+                        ? "aar__delta aar__delta--down"
+                        : "aar__delta";
+                  const sign = delta > 0 ? "+" : "";
                   return (
                     <tr key={row.sessionId}>
                       <td style={{ color: c }}>{row.name}</td>
                       <td>{row.drawn}</td>
                       <td>{row.melded}</td>
                       <td className="aar__table-value">{row.factor}%</td>
+                      <td>
+                        <span className={dCls}>
+                          {sign}
+                          {delta}
+                        </span>
+                      </td>
                     </tr>
                   );
                 })}

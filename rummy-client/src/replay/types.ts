@@ -54,6 +54,10 @@ export interface MatchTape {
   hypeContrib: Record<string, number>;
   finalScores: Record<string, number>;
   globalScores: Record<string, number>;
+  /** sessionId -> signed ELO delta this round. */
+  eloDeltas: Record<string, number>;
+  /** sessionId -> ELO after the round (1200 for bots / unranked). */
+  eloAfter: Record<string, number>;
   winnerSessionId: string;
   closingTile: Tile;
 }
