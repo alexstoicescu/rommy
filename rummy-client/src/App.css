@@ -3,6 +3,24 @@
    radial vignette. The local player's theme color is plumbed in via
    the `--theme-color` custom property (set inline on .app).
    ──────────────────────────────────────────────────────────────── */
+/* z-index stacking strategy (v2.8.2 audit):
+ *   1200  — CheatSheet modal panel (rules popup)
+ *   1100  — Replay scrubber, CheatSheet overlay, gameplay toast
+ *   1050  — Rupere banner (in-game)
+ *   1000  — After-Action Report, GameOverModal
+ *    800  — Landing modal
+ *     50  — CRT scanlines (pointer-events disabled)
+ *     11  — Scramble hype meter
+ *     10  — Scramble HUD
+ *      6  — Scramble local cursor
+ *      5  — Scramble peer cursor
+ *      2  — Landing language toggle
+ *
+ * Header / arena / sidebar / tiles all sit at the auto stacking
+ * order (no explicit z-index) — they don't overlap by layout, so
+ * adding z-index would only create unnecessary stacking contexts.
+ */
+
 /* Immersive Arena macro grid: a fixed-width sidebar on the left and a
    flex column that fills every remaining pixel on the right. The whole
    shell is locked to the viewport (height: 100vh; overflow: hidden) so
@@ -198,6 +216,11 @@
   flex: 1 1 auto;
   display: flex;
   min-height: 0;
+  /* min-width: 0 + overflow: hidden together prevent horizontal
+     scroll-jitter when the GameBoard inside grows wider than the
+     arena column (e.g. wide discard fans). */
+  min-width: 0;
+  overflow: hidden;
   padding: 16px 24px 0;
   box-sizing: border-box;
 }
