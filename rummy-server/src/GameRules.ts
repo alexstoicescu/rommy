@@ -167,18 +167,31 @@ function formatieTilePoints(setValue: number): number {
 export function calculateMeldPoints(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const reified = reifySuita(meld)!;
-    return reified.reduce(
-      (sum, t, i) =>
-        sum +
-        (t.isJoker ? 50 : suitaTilePoints(t.effective, i, reified.length)),
-      0,
-    );
+    let sum = 0;
+    for (let i = 0; i < meld.length; i++) {
+      // Strict override: a Joker is always +50, regardless of the rung
+      // it stands in for. Check tile.isJoker BEFORE deriving any
+      // positional/contextual value.
+      if (meld[i].isJoker) {
+        sum += 50;
+        continue;
+      }
+      sum += suitaTilePoints(reified[i].effective, i, reified.length);
+    }
+    return sum;
   }
   if (isValidFormatie(meld)) {
     const real = meld.filter((t) => !t.isJoker);
-    const jokers = meld.length - real.length;
     const setValue = real[0].value;
-    return real.length * formatieTilePoints(setValue) + jokers * 50;
+    let sum = 0;
+    for (const tile of meld) {
+      if (tile.isJoker) {
+        sum += 50;
+        continue;
+      }
+      sum += formatieTilePoints(setValue);
+    }
+    return sum;
   }
   return 0;
 }
@@ -236,7 +249,8 @@ export function canInitialMeld(melds: Tile[][]): boolean {
 //    Closing:  "1" = 25 in every context (set, run, hand)
 //
 //  Joly (Joker):
-//    - On the board → inherits the value of the rung/value it replaces.
+//    - On the board → flat 50 (strict override, never inherits the
+//      rung/value it replaces). Mirrors the Etalare rule.
 //    - In hand at close → 25 (penalty; nothing to inherit).
 
 /**
@@ -267,15 +281,28 @@ export function scoreTileFinal(tile: Tile): number {
 export function scoreMeldFinal(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const reified = reifySuita(meld)!;
-    return reified.reduce(
-      (sum, t) => sum + scoreEffectiveValue(t.effective),
-      0,
-    );
+    let sum = 0;
+    for (let i = 0; i < meld.length; i++) {
+      if (meld[i].isJoker) {
+        sum += 50;
+        continue;
+      }
+      sum += scoreEffectiveValue(reified[i].effective);
+    }
+    return sum;
   }
   if (isValidFormatie(meld)) {
     const real = meld.filter((t) => !t.isJoker);
     const setValue = real[0].value;
-    return meld.length * scoreEffectiveValue(setValue);
+    let sum = 0;
+    for (const tile of meld) {
+      if (tile.isJoker) {
+        sum += 50;
+        continue;
+      }
+      sum += scoreEffectiveValue(setValue);
+    }
+    return sum;
   }
   return 0;
 }
@@ -295,6 +322,8 @@ export interface ScoringPlayer {
    * etalare / play_new_meld / attach_tile.
    */
   meldedScore: number;
+  /** Round-specific extras (e.g. +50 for receiving the Atu). */
+  bonusPoints: number;
 }
 
 /**
@@ -317,26 +346,24 @@ export function calculateFinalScores(
   const out: Record<string, number> = {};
 
   for (const player of players) {
+    let score: number;
     if (player.socketId === winnerId) {
       const base = closingTile.isJoker ? 400 : 200;
-      let score = base + player.meldedScore;
+      score = base + player.meldedScore;
       if (!closingTile.isJoker && closingTile.value === 1) {
         score *= 2;
       }
-      out[player.socketId] = score;
-      continue;
+    } else if (!player.hasMeldedInitial) {
+      score = -100;
+    } else {
+      const handSum = player.hand.reduce(
+        (sum, t) => sum + scoreTileFinal(t),
+        0,
+      );
+      score = player.meldedScore - handSum;
     }
-
-    if (!player.hasMeldedInitial) {
-      out[player.socketId] = -100;
-      continue;
-    }
-
-    const handSum = player.hand.reduce(
-      (sum, t) => sum + scoreTileFinal(t),
-      0,
-    );
-    out[player.socketId] = player.meldedScore - handSum;
+    // Add the round's bonus points (currently just the Atu +50) on top.
+    out[player.socketId] = score + player.bonusPoints;
   }
 
   return out;

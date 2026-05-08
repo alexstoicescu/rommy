@@ -390,6 +390,7 @@ io.on("connection", (socket: Socket) => {
       meldedScore: 0,
       isBot: false,
       colorIndex: nextColorIndex(room),
+      bonusPoints: 0,
     });
     socket.join(room.id);
     socketToRoom.set(socket.id, room.id);
@@ -473,6 +474,7 @@ io.on("connection", (socket: Socket) => {
       meldedScore: 0,
       isBot: true,
       colorIndex,
+      bonusPoints: 0,
     });
     console.log(`Bot added to ${room.id}: ${botSocketId}`);
     broadcastRoomUpdate(room);

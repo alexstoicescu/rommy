@@ -95,17 +95,29 @@ function formatieTilePoints(setValue: number): number {
 export function calculateMeldPoints(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const r = reifySuita(meld)!;
-    return r.reduce(
-      (s, t, i) =>
-        s +
-        (meld[i].isJoker ? 50 : suitaTilePoints(t.effective, i, r.length)),
-      0,
-    );
+    let sum = 0;
+    for (let i = 0; i < meld.length; i++) {
+      // Strict override: Joker is always +50, never the rung it replaces.
+      if (meld[i].isJoker) {
+        sum += 50;
+        continue;
+      }
+      sum += suitaTilePoints(r[i].effective, i, r.length);
+    }
+    return sum;
   }
   if (isValidFormatie(meld)) {
     const real = meld.filter((t) => !t.isJoker);
-    const jokers = meld.length - real.length;
-    return real.length * formatieTilePoints(real[0].value) + jokers * 50;
+    const setValue = real[0].value;
+    let sum = 0;
+    for (const tile of meld) {
+      if (tile.isJoker) {
+        sum += 50;
+        continue;
+      }
+      sum += formatieTilePoints(setValue);
+    }
+    return sum;
   }
   return 0;
 }

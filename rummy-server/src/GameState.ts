@@ -11,6 +11,8 @@ export interface Player {
   isBot: boolean;
   /** 0..3 — index into the client's PLAYER_THEMES palette. */
   colorIndex: number;
+  /** Atu / one-shot bonuses awarded this round, added on top of meldedScore at finalize. */
+  bonusPoints: number;
 }
 
 export interface Room {
@@ -56,6 +58,14 @@ export interface Room {
    * discard). It can never be Rupered.
    */
   firstDiscardTileId: string | null;
+  /**
+   * The "Atu" trump tile for this round — the very first tile pulled
+   * from the shuffled deck before anyone is dealt. Visible to all
+   * players. Whoever first holds it earns +50 bonus points.
+   */
+  atu: Tile | null;
+  /** SocketId of the player who first received (and was credited for) the Atu. */
+  atuAwardedTo: string | null;
 }
 
 export const MAX_PLAYERS = 4;
@@ -75,6 +85,8 @@ export function createRoom(id: string): Room {
     lastRupere: null,
     pendingRupereBonusCards: [],
     firstDiscardTileId: null,
+    atu: null,
+    atuAwardedTo: null,
   };
 }
 
@@ -125,11 +137,18 @@ export function dealRoom(room: Room): void {
   const deck = generateDeck();
   let cursor = 0;
 
+  // Atu = the very first tile of the shuffled deck. It physically
+  // ends up in player 0's hand (they're dealt the first 15 tiles)
+  // and that player is permanently credited the +50 bonus.
+  room.atu = deck[0] ?? null;
+  room.atuAwardedTo = room.players[0]?.socketId ?? null;
+
   room.players.forEach((player, idx) => {
     const handSize = idx === 0 ? 15 : 14;
     player.hand = deck.slice(cursor, cursor + handSize);
     player.hasMeldedInitial = false;
     player.meldedScore = 0;
+    player.bonusPoints = idx === 0 && room.atu ? 50 : 0;
     cursor += handSize;
   });
 
@@ -161,6 +180,7 @@ export interface PublicRoomView {
     hasMeldedInitial: boolean;
     isBot: boolean;
     colorIndex: number;
+    bonusPoints: number;
   }>;
   board: Record<string, Tile[][]>;
   drawPileCount: number;
@@ -174,6 +194,10 @@ export interface PublicRoomView {
   handCounts: Record<string, number>;
   /** socketId -> closing-time point total of that player's zone. */
   meldPoints: Record<string, number>;
+  /** The Atu trump tile for this round (visible to everyone), or null pre-deal. */
+  atu: Tile | null;
+  /** SocketId of the player who was awarded the +50 Atu bonus. */
+  atuAwardedTo: string | null;
 }
 
 export function publicView(room: Room): PublicRoomView {
@@ -196,6 +220,7 @@ export function publicView(room: Room): PublicRoomView {
       hasMeldedInitial: p.hasMeldedInitial,
       isBot: p.isBot,
       colorIndex: p.colorIndex,
+      bonusPoints: p.bonusPoints,
     })),
     board: room.board,
     drawPileCount: room.drawPile.length,
@@ -207,6 +232,8 @@ export function publicView(room: Room): PublicRoomView {
     mustUseTileId: room.mustUseTileId,
     handCounts,
     meldPoints,
+    atu: room.atu,
+    atuAwardedTo: room.atuAwardedTo,
   };
 }
 

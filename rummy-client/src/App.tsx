@@ -123,7 +123,10 @@ interface GameStateUpdate {
     hasMeldedInitial: boolean;
     isBot: boolean;
     colorIndex: number;
+    bonusPoints: number;
   }>;
+  atu: Tile | null;
+  atuAwardedTo: string | null;
 }
 
 function App() {
@@ -181,8 +184,12 @@ function App() {
       hasMeldedInitial: boolean;
       isBot: boolean;
       colorIndex: number;
+      bonusPoints: number;
     }>
   >([]);
+  const [atu, setAtu] = useState<Tile | null>(null);
+  const [atuAwardedTo, setAtuAwardedTo] = useState<string | null>(null);
+  const lastAtuAnnouncedRef = useRef<string | null>(null);
 
   // Tiles in draftMelds also live in `hand` (server-authoritative). The
   // rack is hand minus whatever the player has staged in draft melds.
@@ -255,6 +262,25 @@ function App() {
       setMustUseTileId(state.mustUseTileId);
       setTurnEndsAt(state.turnEndsAt);
       setGamePlayers(state.players);
+      setAtu(state.atu);
+      setAtuAwardedTo(state.atuAwardedTo);
+      // Announce the Atu once per round, the first time we see it awarded.
+      if (
+        state.gameStarted &&
+        state.atu &&
+        state.atuAwardedTo &&
+        lastAtuAnnouncedRef.current !== state.atuAwardedTo
+      ) {
+        lastAtuAnnouncedRef.current = state.atuAwardedTo;
+        const recipient =
+          state.atuAwardedTo === socket.id
+            ? "You"
+            : state.players.find((p) => p.socketId === state.atuAwardedTo)
+                ?.name ?? "A player";
+        const verb = state.atuAwardedTo === socket.id ? "claim" : "claims";
+        showToast(`${recipient} ${verb} the Atu — +50 bonus!`);
+      }
+      if (!state.gameStarted) lastAtuAnnouncedRef.current = null;
       // A fresh round (gameStarted=true) clears any lingering modal.
       if (state.gameStarted) setGameOver(null);
       // Drop any drafts whose tiles are no longer in our hand (the
@@ -801,6 +827,17 @@ function App() {
         </header>
 
         <div className="piles-area">
+          {atu && (
+            <div className="atu-slot" title="Atu (Trump) — +50 to its holder">
+              <span className="atu-slot__label">Atu</span>
+              <TileComponent tile={atu} />
+              <span className="atu-slot__holder">
+                {atuAwardedTo === socket.id
+                  ? "You +50"
+                  : `${gamePlayers.find((p) => p.socketId === atuAwardedTo)?.name ?? "—"} +50`}
+              </span>
+            </div>
+          )}
           <DrawPile
             onClick={drawFromDeck}
             empty={drawPileCount === 0}

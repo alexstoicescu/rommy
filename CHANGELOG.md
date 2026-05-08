@@ -1,5 +1,51 @@
 # Rommy Changelog
 
+## [v1.4.3] - The "Absolute Joly" Hotfix
+
+SCORING BUGFIX: Strict Joker Point Evaluation
+
+Fixed an edge-case logic flaw where the Joker would inherit contextual point values (e.g., scoring 25 points when substituting a '1' in a group).
+
+Enforced a strict type-check intercept: The scoring engine now guarantees Jokers always evaluate to exactly 50 points before any positional logic is applied.
+
+## [v1.4.2] - The "Audit" Patch
+
+BUGFIX: Point Weight Recalibration
+
+Fixed an issue where the '1' tile was universally awarding 25 points. It now dynamically scores 5, 10, or 25 points based on its structural position (Start of Run, End of Run, or Group).
+
+Enforced the Joker (Joly) 50-point override during Etalare calculation, stripping its inherited substitute value.
+
+## [v1.4.0] - The "Atu" Update
+
+FEATURE: The Atu Protocol
+
+The first tile of the deck is now globally designated as the 'Atu' (Trump) for the match.
+
+Added a dedicated Atu display slot to the main game board HUD.
+
+SCORING: Atu Bonus
+
+The player who receives the Atu is automatically awarded a guaranteed 50-point bonus to their score tally.
+
+Added global toast notifications to announce when the Atu is claimed.
+
+## [v1.3.1] - The "Joly Protocol" Hotfix
+
+SCORING BUGFIX: Joker Etalare Weight
+
+Rewrote the initial meld (Etalare) calculation engine.
+
+Jokers (Joly) are now correctly valued at a flat 50 points during meld calculation, rather than inheriting the face value of their substituted tile.
+
+Impact: Any valid formation containing a Joker now automatically satisfies the 45-point Etalare threshold.
+
+## [v1.2.3] - The "High-Roller" Patch
+
+CONTENT: Rulebook Calibration
+
+Updated the Quick Rules HUD to include the critical high-value scoring rule: Tiles of '1' used in a tertiary set (1-1-1) are valued at 25 points each.
+
 ## [v1.2.2] - The "Deep Breath" Patch
 
 BALANCING: Turn Timer Adjustment
