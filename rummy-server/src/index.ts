@@ -107,6 +107,13 @@ function beginScramble(room: Room): void {
       return;
     }
     dealRoom(room);
+    // Freeze the starting roster + per-human ELO ratings the moment
+    // the deal lands. This snapshot is what drives the True-Human
+    // pairwise calc at finalizeRound, regardless of who disconnects
+    // mid-round.
+    room.recorder?.captureStartingRoster(room, (sigId) =>
+      sigId ? eloLedger.get(sigId).eloScore : 1200,
+    );
     room.recorder?.record("deal", room);
     startTurnTimer(room);
     broadcastRoomUpdate(room);
@@ -389,33 +396,74 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
     globalScoresBySession[p.sessionId] = sess?.globalScore ?? round;
   }
 
-  // === Syndicate Reputation Ledger update ===
-  // Pairwise ELO across the table. Bots get a synthetic id so the
-  // pairing math has someone to compute against, but their delta is
-  // discarded (no persistent ledger entry for bots).
-  const eloSeats: EloSeat[] = room.players.map((p) => {
-    const synthBotId = `bot::${p.sessionId}`;
-    const sigId = p.signatureId ?? synthBotId;
-    const rating = p.isBot ? 1200 : eloLedger.get(sigId).eloScore;
+  // === Syndicate Reputation Ledger update — True-Human standard (v2.8.1) ===
+  //
+  // Bots are NEUTRAL OBSTACLES. They neither give nor take ELO; they
+  // can win the round, but their presence is invisible to the rating
+  // engine. Pairwise deltas are computed only across the STARTING
+  // human roster (frozen at deal time, see captureStartingRoster).
+  // That means:
+  //   - Solo human vs bots         -> no opponents, all deltas = 0.
+  //   - Mixed table (humans+bots)  -> humans calculate among
+  //                                   themselves only; bots stay at
+  //                                   eloAfter = 1200, eloAffected = false.
+  //   - All humans                 -> standard pairwise across the
+  //                                   table.
+  //
+  // Mid-round disconnect handling: a human evicted between deal and
+  // finalize is still in startingHumans (snapshot is frozen). Their
+  // score for ELO purposes = scoreMap entry if still seated, else
+  // -100 forfeit (mirroring the no-meld penalty in the round itself).
+  const startingHumans = room.recorder?.startingHumans ?? [];
+  const eloSeats: EloSeat[] = startingHumans.map((h) => {
+    const stillSeated = room.players.find((p) => p.sessionId === h.sessionId);
+    const score = stillSeated ? (scoreMap[stillSeated.socketId] ?? 0) : -100;
     return {
-      signatureId: sigId,
-      rating,
-      isBot: p.isBot,
-      score: scoreMap[p.socketId] ?? 0,
+      signatureId: h.signatureId,
+      rating: h.startRating,
+      isBot: false,
+      score,
     };
   });
   const deltaBySig = computeEloDeltas(eloSeats);
+  const eloCalculated = startingHumans.length >= 2;
+  // Apply deltas to the ledger for every starting human (even ones
+  // who disconnected — their forfeit-penalty score still costs them).
+  if (eloCalculated) {
+    for (const seat of eloSeats) {
+      const delta = deltaBySig.get(seat.signatureId) ?? 0;
+      eloLedger.applyDelta(seat.signatureId, delta);
+    }
+  }
+  // Determine match type from the starting roster (NOT the finalize
+  // roster — a bot could have been auto-removed mid-round).
+  const startingHadBots =
+    room.recorder?.startingPlayers.some((p) => p.isBot) ?? false;
+  const matchType: "ranked" | "social" = startingHadBots ? "social" : "ranked";
+  // Build broadcast records keyed by sessionId for everyone currently
+  // in the room (departed humans aren't subscribed anyway).
   const eloDeltasBySession: Record<string, number> = {};
   const eloAfterBySession: Record<string, number> = {};
+  const eloAffectedBySession: Record<string, boolean> = {};
   for (const p of room.players) {
-    const sigId = p.signatureId ?? `bot::${p.sessionId}`;
-    const delta = deltaBySig.get(sigId) ?? 0;
-    eloDeltasBySession[p.sessionId] = delta;
-    if (!p.isBot && p.signatureId) {
-      const updated = eloLedger.applyDelta(p.signatureId, delta);
-      eloAfterBySession[p.sessionId] = updated.eloScore;
-    } else {
+    if (p.isBot || !p.signatureId) {
+      eloDeltasBySession[p.sessionId] = 0;
       eloAfterBySession[p.sessionId] = 1200;
+      eloAffectedBySession[p.sessionId] = false;
+      continue;
+    }
+    const wasStarting = startingHumans.some(
+      (h) => h.sessionId === p.sessionId,
+    );
+    if (eloCalculated && wasStarting) {
+      const delta = deltaBySig.get(p.signatureId) ?? 0;
+      eloDeltasBySession[p.sessionId] = delta;
+      eloAfterBySession[p.sessionId] = eloLedger.get(p.signatureId).eloScore;
+      eloAffectedBySession[p.sessionId] = true;
+    } else {
+      eloDeltasBySession[p.sessionId] = 0;
+      eloAfterBySession[p.sessionId] = eloLedger.get(p.signatureId).eloScore;
+      eloAffectedBySession[p.sessionId] = false;
     }
   }
   stopTurnTimer(room);
@@ -434,6 +482,8 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
     nextDealAt: room.scoreboardEndsAt,
     eloDeltas: eloDeltasBySession,
     eloAfter: eloAfterBySession,
+    eloAffected: eloAffectedBySession,
+    matchType,
   });
   // Seal the match tape (recorder spans scramble + round) and ship
   // it to clients as a separate event so the After-Action Report
@@ -455,6 +505,8 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
     // without a second round-trip to the server.
     tape.eloDeltas = eloDeltasBySession;
     tape.eloAfter = eloAfterBySession;
+    tape.eloAffected = eloAffectedBySession;
+    tape.matchType = matchType;
     io.to(room.id).emit("match_tape", tape);
   }
   // Free the recorder so its events array doesn't linger between

@@ -1,11 +1,21 @@
-// Pairwise Elo updater for multi-player rounds. The classic Elo
-// formula handles 1-on-1; for a 3-4 player table we do the standard
-// sum-of-pairs treatment: each player's delta is the sum of their
-// pairwise deltas against every other seat.
+// True-Human pairwise Elo (v2.8.1).
 //
-// Score-by-rank mapping: anyone who scored higher than another seat
-// counts as a 1 vs them, lower = 0, equal = 0.5. That preserves
-// transitivity and gives the round winner the strongest pull.
+// Refactor from v2.8.0: bots are now NEUTRAL OBSTACLES. They take a
+// seat at the table, can win the round (and "steal" wins from
+// humans), but they neither gain nor lose ELO and their presence
+// does not contribute to the human pairing math at all.
+//
+// The engine therefore only computes deltas between human seats.
+// Specifically:
+//   - 0 humans    -> empty delta map.
+//   - 1 human     -> single zero entry (solo-vs-bots produces no
+//                    rating change by spec).
+//   - 2+ humans   -> full pairwise deltas at K=32 across the human
+//                    seats only. Their relative scores drive
+//                    pairwise outcomes (1 / 0.5 / 0).
+//
+// K-factor: a flat 32 across human pairs. The 25% bot reduction
+// from v2.8.0 is gone — bots aren't pair participants anymore.
 
 export interface EloSeat {
   /** Stable identity. For bots use a synthetic id (`bot-<sid>`). */
@@ -17,34 +27,33 @@ export interface EloSeat {
 }
 
 const K_BASE = 32;
-const BOT_K_FACTOR = 0.25;
 
 export function expectedScore(self: number, opp: number): number {
   return 1 / (1 + Math.pow(10, (opp - self) / 400));
 }
 
 /**
- * Run pairwise updates and return integer deltas keyed by signatureId.
- * Bots are included in the pairing math (they need a rating to compute
- * expected outcomes) but the K-factor for any pair touching a bot is
- * reduced to 25% per the v2.8 spec — wins against bots are worth less,
- * losses against bots also hurt less, keeping the system stable.
+ * Compute integer deltas keyed by signatureId. Bots are admitted to
+ * the seat list (so callers can pass the full table) but excluded
+ * from every pair, guaranteeing no ELO change for or because of bots.
  */
 export function computeEloDeltas(seats: EloSeat[]): Map<string, number> {
   const deltas = new Map<string, number>();
   for (const s of seats) deltas.set(s.signatureId, 0);
-  for (let i = 0; i < seats.length; i++) {
-    for (let j = i + 1; j < seats.length; j++) {
-      const a = seats[i];
-      const b = seats[j];
-      const k = a.isBot || b.isBot ? K_BASE * BOT_K_FACTOR : K_BASE;
+  const humans = seats.filter((s) => !s.isBot);
+  // Solo vs bots, or a degenerate 0-human room, produces no ratings.
+  if (humans.length < 2) return deltas;
+  for (let i = 0; i < humans.length; i++) {
+    for (let j = i + 1; j < humans.length; j++) {
+      const a = humans[i];
+      const b = humans[j];
       const ea = expectedScore(a.rating, b.rating);
       let actualA: number;
       if (a.score > b.score) actualA = 1;
       else if (a.score < b.score) actualA = 0;
       else actualA = 0.5;
-      const dA = k * (actualA - ea);
-      const dB = k * (1 - actualA - (1 - ea));
+      const dA = K_BASE * (actualA - ea);
+      const dB = K_BASE * (1 - actualA - (1 - ea));
       deltas.set(a.signatureId, (deltas.get(a.signatureId) ?? 0) + dA);
       deltas.set(b.signatureId, (deltas.get(b.signatureId) ?? 0) + dB);
     }

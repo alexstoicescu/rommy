@@ -115,6 +115,39 @@
   text-shadow: 0 0 1px rgba(255, 224, 102, 0.4);
 }
 
+/* Rank Tier badge — sits flush after the ELO chip. Tinted per tier
+   so the rail reads at a glance. */
+.leaderboard__tier {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  font-weight: 600;
+}
+
+.leaderboard__tier--initiate {
+  color: rgba(207, 226, 214, 0.6);
+}
+
+.leaderboard__tier--street {
+  color: #87b29c;
+}
+
+.leaderboard__tier--operator {
+  color: #00f2ff;
+  text-shadow: 0 0 4px rgba(0, 242, 255, 0.4);
+}
+
+.leaderboard__tier--elite {
+  color: #ff66ff;
+  background: rgba(255, 102, 255, 0.08);
+  text-shadow: 0 0 4px rgba(255, 102, 255, 0.45);
+}
+
 .leaderboard__score {
   color: #ffe066;
   font-weight: 700;

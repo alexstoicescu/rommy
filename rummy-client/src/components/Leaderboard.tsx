@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { tierForElo, tierLabelKey } from "../replay/rankTier";
 import "./Leaderboard.css";
 
 interface Row {
@@ -45,9 +46,24 @@ export function Leaderboard({ rows, themes }: Props) {
                 {r.name}
                 {r.isBot && <span className="leaderboard__tag"> [BOT]</span>}
                 {!r.isBot && (
-                  <span className="leaderboard__elo" title={t("leaderboard_elo_tooltip")}>
-                    ⚡{r.eloScore}
-                  </span>
+                  <>
+                    <span
+                      className="leaderboard__elo"
+                      title={t("leaderboard_elo_tooltip")}
+                    >
+                      ⚡{r.eloScore}
+                    </span>
+                    {(() => {
+                      const tier = tierForElo(r.eloScore);
+                      return (
+                        <span
+                          className={`leaderboard__tier leaderboard__tier--${tier}`}
+                        >
+                          {t(tierLabelKey(tier))}
+                        </span>
+                      );
+                    })()}
+                  </>
                 )}
               </span>
               <span className="leaderboard__score">{r.score}</span>

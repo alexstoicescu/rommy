@@ -59,16 +59,31 @@ export interface MatchEvent {
 
 export interface MatchTapePlayer {
   sessionId: string;
+  signatureId: string | null;
   name: string;
   isBot: boolean;
   colorIndex: number;
+}
+
+export type MatchType = "ranked" | "social";
+
+export interface StartingHuman {
+  sessionId: string;
+  signatureId: string;
+  name: string;
+  /** ELO at the moment the round was dealt — frozen per spec so a
+   *  mid-round disconnect can't change another player's calculation. */
+  startRating: number;
 }
 
 export interface MatchTape {
   roomId: string;
   startedAt: number;
   endedAt: number;
+  /** Roster as of finalizeRound (post any mid-round evictions). */
   players: MatchTapePlayer[];
+  /** Roster captured at deal time — drives ELO regardless of who left. */
+  startingPlayers: MatchTapePlayer[];
   atu: Tile | null;
   events: MatchEvent[];
   /** sessionId -> total px-traveled velocity contributed during scramble. */
@@ -77,10 +92,18 @@ export interface MatchTape {
   finalScores: Record<string, number>;
   /** sessionId -> cumulative globalScore including this round. */
   globalScores: Record<string, number>;
-  /** sessionId -> ELO delta applied this round (signed). */
+  /** sessionId -> ELO delta applied this round (signed). 0 if unaffected. */
   eloDeltas: Record<string, number>;
   /** sessionId -> post-update ELO. 1200 for bots / unknown. */
   eloAfter: Record<string, number>;
+  /**
+   * sessionId -> whether ELO was actually computed for this seat.
+   * False for bots and for any human in a Ghost-Bot scenario where
+   * the calculation was skipped (solo-vs-bots, etc.).
+   */
+  eloAffected: Record<string, boolean>;
+  /** "ranked" if all starting players were human, else "social". */
+  matchType: MatchType;
   winnerSessionId: string;
   closingTile: Tile;
 }
@@ -89,9 +112,41 @@ export class MatchRecorder {
   events: MatchEvent[] = [];
   hypeContrib: Map<string, number> = new Map();
   startedAt: number;
+  /** Roster snapshotted at deal time — frozen for the rest of the
+   *  round so disconnects don't change ELO eligibility. */
+  startingPlayers: MatchTapePlayer[] = [];
+  startingHumans: StartingHuman[] = [];
 
   constructor(startedAt: number = Date.now()) {
     this.startedAt = startedAt;
+  }
+
+  /**
+   * Snapshot the deal-time roster. Called from index.ts immediately
+   * after dealRoom, before any per-event records. Captures each
+   * human's pre-match ELO so the calculation at finalize uses ratings
+   * from the moment the round began rather than any concurrent
+   * mutation.
+   */
+  captureStartingRoster(
+    room: Room,
+    getRating: (signatureId: string | null) => number,
+  ): void {
+    this.startingPlayers = room.players.map((p) => ({
+      sessionId: p.sessionId,
+      signatureId: p.signatureId,
+      name: p.name,
+      isBot: p.isBot,
+      colorIndex: p.colorIndex,
+    }));
+    this.startingHumans = room.players
+      .filter((p) => !p.isBot && p.signatureId)
+      .map((p) => ({
+        sessionId: p.sessionId,
+        signatureId: p.signatureId as string,
+        name: p.name,
+        startRating: getRating(p.signatureId),
+      }));
   }
 
   record(
@@ -163,10 +218,12 @@ export class MatchRecorder {
       endedAt: Date.now(),
       players: room.players.map((p) => ({
         sessionId: p.sessionId,
+        signatureId: p.signatureId,
         name: p.name,
         isBot: p.isBot,
         colorIndex: p.colorIndex,
       })),
+      startingPlayers: this.startingPlayers,
       atu: room.atu,
       events: this.events,
       hypeContrib: Object.fromEntries(this.hypeContrib),
@@ -174,6 +231,12 @@ export class MatchRecorder {
       globalScores,
       eloDeltas: {},
       eloAfter: {},
+      eloAffected: {},
+      // Default to "ranked"; index.ts overwrites with the correct
+      // value after inspecting the starting roster for bots.
+      matchType: this.startingPlayers.some((p) => p.isBot)
+        ? "social"
+        : "ranked",
       winnerSessionId,
       closingTile,
     };

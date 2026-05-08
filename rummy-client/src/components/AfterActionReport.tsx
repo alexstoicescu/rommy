@@ -43,12 +43,32 @@ export function AfterActionReport({
   const mvpColor =
     themes[analytics.mvp.colorIndex % themes.length] ?? "#ffe066";
 
+  const matchType = tape.matchType ?? "ranked";
+  const isSocial = matchType === "social";
+
   return (
-    <div className="aar" role="dialog" aria-modal="true">
+    <div
+      className={`aar aar--${matchType}`}
+      role="dialog"
+      aria-modal="true"
+    >
+      {isSocial && (
+        <div className="aar__watermark" aria-hidden="true">
+          {t("aar_watermark_social")}
+        </div>
+      )}
       <div className="aar__shell">
         <header className="aar__title-row">
           <span className="aar__prompt">$</span>
           <h2 className="aar__title">{t("aar_title")}</h2>
+          <span
+            className={`aar__match-type aar__match-type--${matchType}`}
+            title={
+              isSocial ? t("aar_social_tooltip") : t("aar_ranked_tooltip")
+            }
+          >
+            {t(isSocial ? "aar_match_type_social" : "aar_match_type_ranked")}
+          </span>
           <span className="aar__countdown">
             {t("game_over_next_round_in", { seconds: secondsLeft })}
           </span>
@@ -66,15 +86,26 @@ export function AfterActionReport({
               {t("aar_mvp_score", { score: analytics.mvp.score })}
             </div>
             {(() => {
-              const delta = tape.eloDeltas[analytics.mvp.sessionId] ?? 0;
-              const after = tape.eloAfter[analytics.mvp.sessionId];
-              if (delta === 0 && after == null) return null;
+              const sid = analytics.mvp.sessionId;
+              const delta = tape.eloDeltas[sid] ?? 0;
+              const after = tape.eloAfter[sid];
+              const affected = tape.eloAffected?.[sid] ?? delta !== 0;
+              if (!affected) {
+                return (
+                  <div className="aar__elo-badge aar__elo-badge--null">
+                    <span className="aar__elo-label">{t("aar_elo")}</span>
+                    <span className="aar__elo-null">
+                      {t("aar_elo_unaffected")}
+                    </span>
+                  </div>
+                );
+              }
               const cls =
                 delta > 0
                   ? "aar__elo-badge aar__elo-badge--up"
                   : delta < 0
                     ? "aar__elo-badge aar__elo-badge--down"
-                    : "aar__elo-badge";
+                    : "aar__elo-badge aar__elo-badge--null";
               const sign = delta > 0 ? "+" : "";
               return (
                 <div className={cls}>
@@ -124,12 +155,15 @@ export function AfterActionReport({
                 {analytics.fortune.map((row) => {
                   const c = themes[row.colorIndex % themes.length];
                   const delta = tape.eloDeltas[row.sessionId] ?? 0;
-                  const dCls =
-                    delta > 0
+                  const affected =
+                    tape.eloAffected?.[row.sessionId] ?? delta !== 0;
+                  const dCls = !affected
+                    ? "aar__delta aar__delta--null"
+                    : delta > 0
                       ? "aar__delta aar__delta--up"
                       : delta < 0
                         ? "aar__delta aar__delta--down"
-                        : "aar__delta";
+                        : "aar__delta aar__delta--null";
                   const sign = delta > 0 ? "+" : "";
                   return (
                     <tr key={row.sessionId}>
@@ -138,10 +172,19 @@ export function AfterActionReport({
                       <td>{row.melded}</td>
                       <td className="aar__table-value">{row.factor}%</td>
                       <td>
-                        <span className={dCls}>
-                          {sign}
-                          {delta}
-                        </span>
+                        {!affected ? (
+                          <span
+                            className={dCls}
+                            title={t("aar_elo_unaffected_tooltip")}
+                          >
+                            —
+                          </span>
+                        ) : (
+                          <span className={dCls}>
+                            {sign}
+                            {delta}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   );

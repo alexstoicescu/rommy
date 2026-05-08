@@ -190,7 +190,7 @@ export function Landing({
               : t("landing_export_btn")}
         </button>
 
-        <div className="landing__version">v2.8.0 - THE LEDGER UPDATE</div>
+        <div className="landing__version">v2.8.1 - THE LEDGER UPDATE</div>
       </div>
     </div>
   );

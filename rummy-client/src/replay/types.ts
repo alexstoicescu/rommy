@@ -39,10 +39,13 @@ export interface MatchEvent {
 
 export interface MatchTapePlayer {
   sessionId: string;
+  signatureId: string | null;
   name: string;
   isBot: boolean;
   colorIndex: number;
 }
+
+export type MatchType = "ranked" | "social";
 
 export interface MatchTape {
   roomId: string;
@@ -58,6 +61,12 @@ export interface MatchTape {
   eloDeltas: Record<string, number>;
   /** sessionId -> ELO after the round (1200 for bots / unranked). */
   eloAfter: Record<string, number>;
+  /** sessionId -> whether ELO was actually computed for this seat. */
+  eloAffected: Record<string, boolean>;
+  /** Roster captured at deal time (frozen). */
+  startingPlayers: MatchTapePlayer[];
+  /** "ranked" if all starting players were human, else "social". */
+  matchType: MatchType;
   winnerSessionId: string;
   closingTile: Tile;
 }

@@ -1,5 +1,23 @@
 # Rommy Changelog
 
+## [v2.8.1] - The "True Reputation" Patch
+
+⚙️ Reputation Ledger Refinement
+
+Human-Centric Math: Refactored the Elo engine to strictly ignore bot outcomes. Human reputation is now calculated solely against other human signatures.
+
+Match Tiering: Introduced RANKED (Pure Human) and SOCIAL (Bot-assisted) game states.
+
+Tier Architecture: Established a new hierarchy of reputation titles: Street, Operator, and Syndicate Elite.
+
+🎨 UI/UX Integrity
+
+Status Watermarking: Added clear visual indicators for unranked matches on the After Action Report.
+
+Dynamic Rating Colors: Integrated suit-reactive color coding for Elo changes (Gain: Cyan, Loss: Magenta, Neutral: Gray).
+
+Neural Link Guard: Hardened the signature_id persistence to prevent identity loss during major ranking updates.
+
 ## [v2.8.0] - The "Syndicate Ledger" Update
 
 ⚙️ Reputation Architecture
