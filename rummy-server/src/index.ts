@@ -37,7 +37,7 @@ import {
 } from "./SessionStore";
 
 const RECONNECT_GRACE_MS = 60_000;
-const SCOREBOARD_DURATION_MS = 15_000;
+const SCOREBOARD_DURATION_MS = 45_000;
 const SCRAMBLE_DURATION_MS = 10_000;
 
 const scoreboardTimers = new Map<string, NodeJS.Timeout>();
@@ -324,28 +324,47 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
   });
   broadcastGameState(room);
 
-  // 15-second pause, then auto-deal a fresh round. If the room has been
-  // emptied during the pause (everyone evicted), bail out cleanly.
+  // 45-second pause, then auto-deal a fresh round. The pause can be
+  // short-circuited by every connected human clicking "Ready for Next
+  // Round" — see endIntermission().
+  room.readyForNext.clear();
   const prior = scoreboardTimers.get(room.id);
   if (prior) clearTimeout(prior);
   const handle = setTimeout(() => {
     scoreboardTimers.delete(room.id);
-    if (!rooms.has(room.id)) return;
-    if (room.players.length < 2) {
-      // Not enough seats to start a round — drop back to lobby and let
-      // the host re-press Start when more players arrive.
-      room.phase = "lobby";
-      room.scoreboardEndsAt = null;
-      broadcastRoomUpdate(room);
-      broadcastGameState(room);
-      return;
-    }
-    // Run the next round through the scramble phase too, so every deal
-    // — first or Nth — gets the same pre-game tactile shuffle.
-    room.scoreboardEndsAt = null;
-    beginScramble(room);
+    endIntermission(room);
   }, SCOREBOARD_DURATION_MS);
   scoreboardTimers.set(room.id, handle);
+}
+
+/**
+ * Tear down the scoreboard phase and either start the next round
+ * (via the scramble pipeline) or drop the room back to lobby if it's
+ * been thinned out. Safe to call from either the timeout or the
+ * "everyone is ready" early-out.
+ */
+function endIntermission(room: Room): void {
+  if (!rooms.has(room.id)) return;
+  if (room.phase !== "scoreboard") return;
+  const prior = scoreboardTimers.get(room.id);
+  if (prior) {
+    clearTimeout(prior);
+    scoreboardTimers.delete(room.id);
+  }
+  if (room.players.length < 2) {
+    // Not enough seats to start a round — drop back to lobby and let
+    // the host re-press Start when more players arrive.
+    room.phase = "lobby";
+    room.scoreboardEndsAt = null;
+    room.readyForNext.clear();
+    broadcastRoomUpdate(room);
+    broadcastGameState(room);
+    return;
+  }
+  // Run the next round through the scramble phase too, so every deal
+  // — first or Nth — gets the same pre-game tactile shuffle.
+  room.scoreboardEndsAt = null;
+  beginScramble(room);
 }
 
 // =====================================================================
@@ -681,6 +700,32 @@ io.on("connection", (socket: Socket) => {
       return;
     }
     beginScramble(room);
+  });
+
+  // Ready-up override during the 45-second scoreboard intermission.
+  // The deal fires early the moment every connected, non-bot session
+  // has clicked the button.
+  socket.on("ready_up", () => {
+    const room = getRoom(socket.id);
+    if (!room || room.phase !== "scoreboard") return;
+    const sessionForSocket = (socket.data as { session: Session }).session;
+    if (!room.players.some((p) => p.sessionId === sessionForSocket.sessionId)) {
+      return;
+    }
+    room.readyForNext.add(sessionForSocket.sessionId);
+    const requiredHumans = room.players.filter(
+      (p) => !p.isBot && getSession(p.sessionId)?.connectionStatus === "active",
+    );
+    const everyoneReady =
+      requiredHumans.length > 0 &&
+      requiredHumans.every((p) => room.readyForNext.has(p.sessionId));
+    broadcastGameState(room);
+    if (everyoneReady) {
+      console.log(
+        `Intermission short-circuit in ${room.id}: all ${requiredHumans.length} humans ready`,
+      );
+      endIntermission(room);
+    }
   });
 
   // Cursor relay for the scramble phase. The server is fan-out only;

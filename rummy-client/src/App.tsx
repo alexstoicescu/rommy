@@ -26,6 +26,7 @@ import { GameOverModal } from "./components/GameOverModal";
 import { CheatSheet } from "./components/CheatSheet";
 import { Landing } from "./components/Landing";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
+import { Leaderboard } from "./components/Leaderboard";
 import { ScramblePile } from "./components/ScramblePile";
 import { useTranslation } from "react-i18next";
 import {
@@ -132,8 +133,6 @@ interface LobbyPlayer {
 interface GameOverPayload {
   winnerName: string;
   scores: Record<string, number>;
-  /** Cumulative session-level totals after this round's deltas applied. */
-  globalScores: Record<string, number>;
   closingTile: Tile;
   /** Epoch-ms when the auto-deal will fire. */
   nextDealAt: number;
@@ -153,6 +152,11 @@ interface GameStateUpdate {
   phase: "lobby" | "scrambling" | "playing" | "scoreboard";
   scrambleEndsAt: number | null;
   scrambleSeed: number | null;
+  scoreboardEndsAt: number | null;
+  /** SessionIds that have clicked Ready during the current intermission. */
+  readyForNext: string[];
+  /** SessionId -> cumulative score across rounds played in this room. */
+  globalScores: Record<string, number>;
   handCounts: Record<string, number>;
   meldPoints: Record<string, number>;
   players: Array<{
@@ -239,6 +243,9 @@ function App() {
   >("lobby");
   const [scrambleEndsAt, setScrambleEndsAt] = useState<number | null>(null);
   const [scrambleSeed, setScrambleSeed] = useState<number | null>(null);
+  const [scoreboardEndsAt, setScoreboardEndsAt] = useState<number | null>(null);
+  const [readyForNext, setReadyForNext] = useState<string[]>([]);
+  const [globalScores, setGlobalScores] = useState<Record<string, number>>({});
   const [peerCursors, setPeerCursors] = useState<
     Map<string, { sessionId: string; x: number; y: number; ts: number }>
   >(new Map());
@@ -319,6 +326,9 @@ function App() {
       setRoomPhase(state.phase);
       setScrambleEndsAt(state.scrambleEndsAt);
       setScrambleSeed(state.scrambleSeed);
+      setScoreboardEndsAt(state.scoreboardEndsAt);
+      setReadyForNext(state.readyForNext);
+      setGlobalScores(state.globalScores);
       // Drop stale peer cursors when leaving the scramble phase.
       if (state.phase !== "scrambling") setPeerCursors(new Map());
       // Announce the Atu once per round, the first time we see it awarded.
@@ -339,8 +349,11 @@ function App() {
         }
       }
       if (!state.gameStarted) lastAtuAnnouncedRef.current = null;
-      // A fresh round (gameStarted=true) clears any lingering modal.
-      if (state.gameStarted) setGameOver(null);
+      // A fresh round (or the scramble that precedes it) clears the
+      // intermission modal — otherwise it would overlay the scramble UI.
+      if (state.phase === "scrambling" || state.gameStarted) {
+        setGameOver(null);
+      }
       // Drop any drafts whose tiles are no longer in our hand (the
       // server has either committed them to the board or they were
       // re-allocated for some other reason).
@@ -944,6 +957,20 @@ function App() {
         </div>}
 
         <div className="play-grid">
+          <div className="play-grid__sidecar play-grid__sidecar--left">
+            <Leaderboard
+              themes={PLAYER_THEMES}
+              rows={gamePlayers.map((p) => ({
+                sessionId: p.sessionId,
+                name: p.name,
+                isBot: p.isBot,
+                colorIndex: p.colorIndex,
+                connectionStatus: p.connectionStatus,
+                score: globalScores[p.sessionId] ?? 0,
+                isLocal: p.socketId === socket.id,
+              }))}
+            />
+          </div>
           <div className="central-pillar">
             {roomPhase === "scrambling" && scrambleSeed != null &&
               scrambleEndsAt != null && (
@@ -1065,16 +1092,40 @@ function App() {
         </>
       )}
 
-      {gameOver && (
-        <GameOverModal
-          winnerName={gameOver.winnerName}
-          scores={gameOver.scores}
-          globalScores={gameOver.globalScores}
-          closingTile={gameOver.closingTile}
-          nextDealAt={gameOver.nextDealAt}
-          onPlayAgain={handlePlayAgain}
-        />
-      )}
+      {gameOver &&
+        (() => {
+          const mySession =
+            gamePlayers.find((p) => p.socketId === socket.id)?.sessionId ?? "";
+          const ready = mySession ? readyForNext.includes(mySession) : false;
+          // Connected humans = total expected to ready up. Bots are not
+          // counted; disconnected humans are not gating the early-out.
+          const total = gamePlayers.filter(
+            (p) => !p.isBot && p.connectionStatus === "active",
+          ).length;
+          // readyForNext from the server is the authoritative count.
+          const expectedSet = new Set(
+            gamePlayers
+              .filter(
+                (p) => !p.isBot && p.connectionStatus === "active",
+              )
+              .map((p) => p.sessionId),
+          );
+          const count = readyForNext.filter((s) => expectedSet.has(s)).length;
+          const dealAt = scoreboardEndsAt ?? gameOver.nextDealAt;
+          return (
+            <GameOverModal
+              winnerName={gameOver.winnerName}
+              scores={gameOver.scores}
+              closingTile={gameOver.closingTile}
+              nextDealAt={dealAt}
+              ready={ready}
+              readyCount={count}
+              readyTotal={total}
+              onReady={() => socket.emit("ready_up")}
+              onPlayAgain={handlePlayAgain}
+            />
+          );
+        })()}
     </DndContext>
   );
 }

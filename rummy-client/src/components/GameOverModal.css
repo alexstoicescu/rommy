@@ -83,6 +83,47 @@
   font-variant-numeric: tabular-nums;
 }
 
+.game-over-ready {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  margin-bottom: 6px;
+  background: rgba(0, 242, 255, 0.18);
+  color: #00f2ff;
+  border: 1px solid #00f2ff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.game-over-ready:hover:not(:disabled) {
+  background: rgba(0, 242, 255, 0.32);
+  box-shadow: 0 0 16px rgba(0, 242, 255, 0.4);
+}
+
+.game-over-ready--done,
+.game-over-ready:disabled {
+  background: rgba(0, 242, 255, 0.08);
+  color: rgba(0, 242, 255, 0.55);
+  cursor: default;
+}
+
+.game-over-ready-status {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(0, 242, 255, 0.7);
+  margin-bottom: 14px;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
 .game-over-replay {
   display: block;
   width: 100%;

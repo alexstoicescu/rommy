@@ -1,5 +1,27 @@
 # Rommy Changelog
 
+## [v1.8.0] - The "HUD & Pacing" Update
+
+UX: Persistent Leaderboard
+
+Relocated global standings to a permanent dock on the left side of the game board.
+
+GAME LOOP: Intermission Pacing
+
+Extended post-game break from 15s to 45s.
+
+Introduced a unanimous "Ready Up" bypass to instantly start the next round.
+
+## [v1.7.1] - The "Fair Deal" Hotfix
+
+LOGIC: Deterministic Dealing Fixed
+
+Replaced biased shuffling with a strict Fisher-Yates algorithm.
+
+Extracted the Atu tile prior to hand distribution to prevent host advantage.
+
+Enforced strict 15/14 tile distribution for the opening round.
+
 ## [v1.7.0] - The "Tactile Wash" Update
 
 UX: Collaborative Scramble

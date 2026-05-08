@@ -7,18 +7,26 @@ import "./GameOverModal.css";
 interface Props {
   winnerName: string;
   scores: Record<string, number>;
-  globalScores: Record<string, number>;
   closingTile: Tile;
   nextDealAt: number;
+  /** True once the local player has clicked Ready (button locks). */
+  ready: boolean;
+  /** How many connected humans have readied + total expected. */
+  readyCount: number;
+  readyTotal: number;
+  onReady: () => void;
   onPlayAgain: () => void;
 }
 
 export function GameOverModal({
   winnerName,
   scores,
-  globalScores,
   closingTile,
   nextDealAt,
+  ready,
+  readyCount,
+  readyTotal,
+  onReady,
   onPlayAgain,
 }: Props) {
   const { t } = useTranslation();
@@ -29,14 +37,11 @@ export function GameOverModal({
   }, []);
   const secondsLeft = Math.max(0, Math.ceil((nextDealAt - now) / 1000));
 
-  // Sort by cumulative leaderboard so the overall standings are obvious.
+  // Round-only delta table; cumulative standings live in the persistent
+  // left-docked Leaderboard now.
   const rows = Object.entries(scores)
-    .map(([name, round]) => ({
-      name,
-      round,
-      total: globalScores[name] ?? round,
-    }))
-    .sort((a, b) => b.total - a.total);
+    .map(([name, round]) => ({ name, round }))
+    .sort((a, b) => b.round - a.round);
 
   return (
     <div className="game-over-overlay" role="dialog" aria-modal="true">
@@ -60,7 +65,6 @@ export function GameOverModal({
             <tr>
               <th>{t("game_over_player_col")}</th>
               <th>{t("game_over_score_col")}</th>
-              <th>{t("game_over_total_col")}</th>
             </tr>
           </thead>
           <tbody>
@@ -71,9 +75,6 @@ export function GameOverModal({
               >
                 <td>{r.name}</td>
                 <td>{r.round}</td>
-                <td>
-                  <strong>{r.total}</strong>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -81,6 +82,17 @@ export function GameOverModal({
 
         <div className="game-over-countdown" role="status">
           {t("game_over_next_round_in", { seconds: secondsLeft })}
+        </div>
+
+        <button
+          className={`game-over-ready${ready ? " game-over-ready--done" : ""}`}
+          onClick={onReady}
+          disabled={ready}
+        >
+          {ready ? t("ready_btn_done") : t("ready_btn")}
+        </button>
+        <div className="game-over-ready-status">
+          {t("ready_status", { count: readyCount, total: readyTotal })}
         </div>
 
         <button className="game-over-replay" onClick={onPlayAgain}>

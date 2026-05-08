@@ -102,5 +102,11 @@
   "rules_close_aria": "Close rules",
 
   "scramble_label": "Scramble",
-  "scramble_countdown": "Dealing in {{seconds}}s"
+  "scramble_countdown": "Dealing in {{seconds}}s",
+
+  "leaderboard_title": "Leaderboard",
+  "leaderboard_empty": "(no players yet)",
+  "ready_btn": "Ready for Next Round",
+  "ready_btn_done": "Ready ✓",
+  "ready_status": "{{count}}/{{total}} ready"
 }

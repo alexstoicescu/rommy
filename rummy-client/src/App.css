@@ -403,6 +403,10 @@
   .central-pillar {
     grid-column: 1;
   }
+  .play-grid__sidecar--left {
+    grid-column: 1;
+    justify-content: stretch;
+  }
 }
 
 @media (max-width: 720px) {
@@ -492,6 +496,19 @@
   max-width: 320px;
   justify-self: center;
   flex: none;
+}
+
+.play-grid__sidecar {
+  width: 100%;
+  align-self: start;
+  padding-top: 8px;
+  min-width: 0;
+}
+
+.play-grid__sidecar--left {
+  grid-column: 1;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .etalare-button {

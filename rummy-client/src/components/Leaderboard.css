@@ -1,0 +1,118 @@
+.leaderboard {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  max-width: 260px;
+  margin-left: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: rgba(2, 8, 14, 0.78);
+  border: 1px solid rgba(0, 242, 255, 0.55);
+  border-radius: 6px;
+  box-shadow:
+    0 0 14px rgba(0, 242, 255, 0.18),
+    inset 0 0 18px rgba(0, 242, 255, 0.08);
+  color: #cfe2d6;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+}
+
+.leaderboard__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(0, 242, 255, 0.25);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 242, 255, 0.12),
+    rgba(0, 242, 255, 0)
+  );
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.leaderboard__prompt {
+  color: #00f2ff;
+  font-weight: 700;
+}
+
+.leaderboard__title {
+  color: #00f2ff;
+}
+
+.leaderboard__rows {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboard__row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-left: 2px solid transparent;
+  font-variant-numeric: tabular-nums;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.leaderboard__row:hover {
+  background: rgba(0, 242, 255, 0.05);
+}
+
+.leaderboard__row--self {
+  border-left-color: var(--row-color, #00f2ff);
+  background: rgba(0, 242, 255, 0.08);
+}
+
+.leaderboard__row--offline {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.leaderboard__rank {
+  color: rgba(0, 242, 255, 0.6);
+  font-size: 11px;
+}
+
+.leaderboard__name {
+  color: var(--row-color, #cfe2d6);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard__tag {
+  color: rgba(207, 226, 214, 0.45);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.leaderboard__score {
+  color: #ffe066;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.leaderboard__empty {
+  list-style: none;
+  padding: 8px 10px;
+  color: rgba(207, 226, 214, 0.45);
+  font-style: italic;
+}
+
+/* Below 1100px (ie. when the play-grid collapses), tuck the leaderboard
+   under the header instead of stealing column width. */
+@media (max-width: 1100px) {
+  .leaderboard {
+    max-width: 100%;
+    margin: 0;
+    position: static;
+  }
+}

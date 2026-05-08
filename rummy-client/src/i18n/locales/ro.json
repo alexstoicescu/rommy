@@ -102,5 +102,11 @@
   "rules_close_aria": "Închide regulile",
 
   "scramble_label": "Amestec",
-  "scramble_countdown": "Se împart cărțile în {{seconds}}s"
+  "scramble_countdown": "Se împart cărțile în {{seconds}}s",
+
+  "leaderboard_title": "Clasament",
+  "leaderboard_empty": "(niciun jucător încă)",
+  "ready_btn": "Gata pentru runda următoare",
+  "ready_btn_done": "Gata ✓",
+  "ready_status": "{{count}}/{{total}} gata"
 }

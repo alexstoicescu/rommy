@@ -50,6 +50,12 @@ export interface Room {
   scrambleEndsAt: number | null;
   scrambleSeed: number | null;
   /**
+   * SessionIds of players who have clicked "Ready for Next Round" during
+   * the scoreboard phase. When every connected human is in this set the
+   * server skips the rest of the timer and deals immediately.
+   */
+  readyForNext: Set<string>;
+  /**
    * Per-player meld zones, keyed by `socketId`. Every meld lives in
    * exactly one zone — the zone owned by the player who first placed
    * it via Etalare or `play_new_meld`. Other players may attach tiles
@@ -109,6 +115,7 @@ export function createRoom(id: string): Room {
     scoreboardEndsAt: null,
     scrambleEndsAt: null,
     scrambleSeed: null,
+    readyForNext: new Set<string>(),
     board: {},
     drawPile: [],
     discardPile: [],
@@ -211,6 +218,7 @@ export function dealRoom(room: Room): void {
   room.scoreboardEndsAt = null;
   room.scrambleEndsAt = null;
   room.scrambleSeed = null;
+  room.readyForNext.clear();
   // First player was dealt 15 tiles — they "skip" the draw step and
   // begin in a state where they can only discard.
   room.hasDrawn = true;
@@ -253,6 +261,8 @@ export interface PublicRoomView {
   scoreboardEndsAt: number | null;
   scrambleEndsAt: number | null;
   scrambleSeed: number | null;
+  /** SessionIds that have clicked "Ready for Next Round" this intermission. */
+  readyForNext: string[];
   /** SessionId -> cumulative score across rounds in this room. */
   globalScores: Record<string, number>;
 }
@@ -297,6 +307,7 @@ export function publicView(room: Room): PublicRoomView {
     scoreboardEndsAt: room.scoreboardEndsAt,
     scrambleEndsAt: room.scrambleEndsAt,
     scrambleSeed: room.scrambleSeed,
+    readyForNext: Array.from(room.readyForNext),
     globalScores: Object.fromEntries(
       room.players.map((p) => [
         p.sessionId,
