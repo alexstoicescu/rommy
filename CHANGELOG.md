@@ -1,5 +1,33 @@
 # Rommy Changelog
 
+## [v2.3.0] - The "Control & Exit" Update
+
+⚙️ Audio Management
+
+Local Volume Control: Integrated a persistent volume slider in the left sidebar.
+
+UX Centralization: Aligned audio controls with the leaderboard for a unified "Management" panel.
+
+Persistence: Volume settings are now saved to localStorage, preventing audio resets between rounds.
+
+🚪 Session Control
+
+Manual Quit Feature: Implemented an "Exit Terminal" action to break session persistence.
+
+State Clearing: The quit action now wipes local session tokens and informs the server to purge the player from the active room, solving the "reconnection loop" during development.
+
+## [v2.2.2] - The "Atmospheric Polish" Update
+
+Visual Refinements
+
+Materiality: Added varnish-effect gradients to the wooden racks for improved texture depth.
+
+Atmospheric Lighting: Implemented "rim-lighting" on tiles via inset shadows, replacing flat outer glows for a more realistic tabletop feel.
+
+Spatial Depth: Added dynamic drop shadows to tiles on the board and within the discard zone to ground them in the 3D space.
+
+CRT Typography: Applied subtle glow and spacing adjustments to UI headers to reinforce the "Terminal" aesthetic without sacrificing legibility.
+
 ## [v2.1.1] - The "Classic Wood" Rollback
 
 VISUAL: Aesthetic Rollback

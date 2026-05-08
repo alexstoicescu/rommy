@@ -28,6 +28,7 @@ import { Landing } from "./components/Landing";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { Leaderboard } from "./components/Leaderboard";
 import { ScramblePile } from "./components/ScramblePile";
+import { VolumeSlider } from "./components/VolumeSlider";
 import { useTranslation } from "react-i18next";
 import {
   calculateMeldPoints,
@@ -492,6 +493,26 @@ function App() {
     socket.emit("restart_game");
     setGameOver(null);
   };
+  const handleQuit = () => {
+    // Tell the server first so the room evicts us before the socket
+    // tears down. Then clear the persistent session id so we come back
+    // as a fresh player on next visit, and bounce to the landing.
+    try {
+      socket.emit("player_quit");
+    } catch {
+      /* ignore — we're leaving anyway */
+    }
+    try {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    socket.disconnect();
+    // Hard reload so all in-memory React state (including the lazy
+    // module-scoped socket and AudioContext) is rebuilt for a clean
+    // landing-page session.
+    window.location.reload();
+  };
   const handleEndTurn = () => {
     if (!hasDrawn || hand.length === 0) return;
     const last = hand[hand.length - 1];
@@ -862,6 +883,7 @@ function App() {
               isLocal: p.socketId === socket.id,
             }))}
           />
+          <VolumeSlider />
           {inLobby && !gameStarted && (
             <aside
               className="sidebar-lobby"
@@ -898,6 +920,14 @@ function App() {
               </div>
             </aside>
           )}
+          <button
+            className="sidebar__exit"
+            onClick={handleQuit}
+            aria-label={t("exit_terminal")}
+            title={t("exit_terminal")}
+          >
+            {t("exit_terminal")}
+          </button>
         </aside>
 
         <main className="arena">

@@ -106,6 +106,8 @@
 
   "leaderboard_title": "Clasament",
   "leaderboard_empty": "(niciun jucător încă)",
+  "volume_label": "Volum",
+  "exit_terminal": "Părăsește terminalul",
   "ready_btn": "Gata pentru runda următoare",
   "ready_btn_done": "Gata ✓",
   "ready_status": "{{count}}/{{total}} gata"

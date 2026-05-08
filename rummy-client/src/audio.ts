@@ -7,7 +7,50 @@ let masterGain: GainNode | null = null;
 
 // 200-300% boost. Voice envelopes peak at ~0.18 so 2.5x keeps headroom
 // before clipping while clearly raising perceived loudness.
-const MASTER_GAIN = 2.5;
+const BASE_GAIN = 2.5;
+
+const VOLUME_STORAGE_KEY = "rommy_volume";
+
+function readStoredVolume(): number {
+  if (typeof window === "undefined") return 1;
+  try {
+    const raw = window.localStorage.getItem(VOLUME_STORAGE_KEY);
+    if (raw == null) return 1;
+    const v = parseFloat(raw);
+    if (!Number.isFinite(v)) return 1;
+    return Math.max(0, Math.min(1, v));
+  } catch {
+    return 1;
+  }
+}
+
+let userVolume = readStoredVolume();
+
+export function getVolume(): number {
+  return userVolume;
+}
+
+/**
+ * Set the user-facing master volume (0..1). Multiplied with BASE_GAIN
+ * inside the master GainNode so SFX inherit the boost. Persists to
+ * localStorage so the level survives a reload. Safe to call before
+ * the AudioContext exists — the saved value is applied when the
+ * context is finally created.
+ */
+export function setVolume(v: number): void {
+  const clamped = Math.max(0, Math.min(1, v));
+  userVolume = clamped;
+  if (masterGain && ctx) {
+    masterGain.gain.setTargetAtTime(BASE_GAIN * clamped, ctx.currentTime, 0.01);
+  }
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(VOLUME_STORAGE_KEY, String(clamped));
+    } catch {
+      /* localStorage unavailable — value still lives in-memory */
+    }
+  }
+}
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -19,7 +62,7 @@ function getCtx(): AudioContext | null {
     if (!AC) return null;
     ctx = new AC();
     masterGain = ctx.createGain();
-    masterGain.gain.value = MASTER_GAIN;
+    masterGain.gain.value = BASE_GAIN * userVolume;
     masterGain.connect(ctx.destination);
   }
   if (ctx.state === "suspended") void ctx.resume();

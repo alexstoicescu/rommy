@@ -1,0 +1,122 @@
+/* Sidebar volume slider — matches the leaderboard's terminal block so
+   the left rail reads as one cohesive panel stack. */
+.volume-slider {
+  width: 100%;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: rgba(2, 8, 14, 0.78);
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  border-radius: 6px;
+  box-shadow:
+    0 0 12px rgba(0, 242, 255, 0.15),
+    inset 0 0 16px rgba(0, 242, 255, 0.05);
+  color: #cfe2d6;
+  padding: 6px 10px 10px;
+  box-sizing: border-box;
+}
+
+.volume-slider__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.volume-slider__prompt {
+  color: #00f2ff;
+  font-weight: 700;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
+}
+
+.volume-slider__title {
+  color: #00f2ff;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
+}
+
+.volume-slider__value {
+  margin-left: auto;
+  color: #ffe066;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+/* Neon-styled range input — fill on the left with cyan glow, an
+   empty cyan-tinged track on the right, and a glowing thumb. */
+.volume-slider__input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+
+.volume-slider__input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(
+    to right,
+    #00f2ff 0%,
+    #00f2ff var(--fill, 100%),
+    rgba(0, 242, 255, 0.18) var(--fill, 100%),
+    rgba(0, 242, 255, 0.18) 100%
+  );
+  box-shadow: 0 0 6px rgba(0, 242, 255, 0.45);
+}
+
+.volume-slider__input::-moz-range-track {
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(0, 242, 255, 0.18);
+}
+
+.volume-slider__input::-moz-range-progress {
+  height: 4px;
+  border-radius: 4px;
+  background: #00f2ff;
+  box-shadow: 0 0 6px rgba(0, 242, 255, 0.55);
+}
+
+.volume-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #08161c;
+  border: 2px solid #00f2ff;
+  box-shadow:
+    0 0 6px #00f2ff,
+    0 0 14px rgba(0, 242, 255, 0.45);
+  margin-top: -5px; /* (track 4px - thumb 14px) / 2 */
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.volume-slider__input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #08161c;
+  border: 2px solid #00f2ff;
+  box-shadow:
+    0 0 6px #00f2ff,
+    0 0 14px rgba(0, 242, 255, 0.45);
+  cursor: pointer;
+}
+
+.volume-slider__input:hover::-webkit-slider-thumb,
+.volume-slider__input:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow:
+    0 0 10px #00f2ff,
+    0 0 22px rgba(0, 242, 255, 0.65);
+}
+
+.volume-slider__input:focus-visible {
+  outline: none;
+}

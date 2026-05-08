@@ -106,6 +106,8 @@
 
   "leaderboard_title": "Leaderboard",
   "leaderboard_empty": "(no players yet)",
+  "volume_label": "Volume",
+  "exit_terminal": "Exit Terminal",
   "ready_btn": "Ready for Next Round",
   "ready_btn_done": "Ready ✓",
   "ready_status": "{{count}}/{{total}} ready"
