@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## [v1.4.4] - The "Acoustic Overdrive" Patch
+
+UX/AUDIO: Signal Amplification
+
+Upgraded the audio playback engine to utilize the Web Audio API.
+
+Implemented a Gain Node to overdrive the 'My Turn' notification sound, artificially boosting the decibel output to ensure it cuts through background noise.
+
 ## [v1.4.3] - The "Absolute Joly" Hotfix
 
 SCORING BUGFIX: Strict Joker Point Evaluation

@@ -3,6 +3,11 @@
 // feel without any sample assets.
 
 let ctx: AudioContext | null = null;
+let masterGain: GainNode | null = null;
+
+// 200-300% boost. Voice envelopes peak at ~0.18 so 2.5x keeps headroom
+// before clipping while clearly raising perceived loudness.
+const MASTER_GAIN = 2.5;
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -13,9 +18,29 @@ function getCtx(): AudioContext | null {
         .webkitAudioContext;
     if (!AC) return null;
     ctx = new AC();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = MASTER_GAIN;
+    masterGain.connect(ctx.destination);
   }
   if (ctx.state === "suspended") void ctx.resume();
   return ctx;
+}
+
+function getMaster(): AudioNode | null {
+  const c = getCtx();
+  if (!c || !masterGain) return null;
+  return masterGain;
+}
+
+/**
+ * Browsers block AudioContexts from starting before a user gesture.
+ * Call this from any click handler (e.g. Start Game / Join Room) to
+ * guarantee the context is live by the time real sounds need to play.
+ */
+export function unlockAudio(): void {
+  const c = getCtx();
+  if (!c) return;
+  if (c.state === "suspended") void c.resume();
 }
 
 interface VoiceOpts {
@@ -82,7 +107,9 @@ function voice(c: AudioContext, opts: VoiceOpts): void {
   osc1.connect(filter);
   osc2.connect(filter);
   filter.connect(gain);
-  gain.connect(c.destination);
+  // Route through the master gain node (which lifts everything 2.5x)
+  // before hitting the destination.
+  gain.connect(masterGain ?? c.destination);
 
   osc1.start(t0);
   osc2.start(t0);
@@ -184,5 +211,36 @@ export function playTick(): void {
     detuneCents: 0,
     attack: 0.001,
     release: 0.05,
+  });
+}
+
+/**
+ * "It's your turn" notification — bright two-note chime, deliberately
+ * louder (peak 1.0 pre-master, then 2.5x via master gain) so it cuts
+ * through whatever the user is doing in another tab.
+ */
+export function playYourTurn(): void {
+  const c = getCtx();
+  if (!c) return;
+  voice(c, {
+    freq: 880, // A5
+    duration: 0.18,
+    type: "triangle",
+    peak: 1.0,
+    detuneCents: 6,
+    attack: 0.005,
+    release: 0.16,
+    filter: { startHz: 2000, endHz: 4000, q: 4 },
+  });
+  voice(c, {
+    freq: 1318.5, // E6
+    duration: 0.28,
+    type: "triangle",
+    peak: 1.0,
+    detuneCents: 6,
+    attack: 0.005,
+    release: 0.26,
+    filter: { startHz: 2400, endHz: 4500, q: 4 },
+    startAt: 0.12,
   });
 }

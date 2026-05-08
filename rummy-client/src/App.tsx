@@ -37,6 +37,8 @@ import {
   playMeld,
   playTick,
   playWin,
+  playYourTurn,
+  unlockAudio,
 } from "./audio";
 import "./App.css";
 
@@ -346,6 +348,17 @@ function App() {
     return Math.max(0, Math.ceil((turnEndsAt - now) / 1000));
   }, [turnEndsAt, now]);
 
+  // "Your turn" chime — fire once each time currentTurn flips to us.
+  const prevTurnRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevTurnRef.current;
+    prevTurnRef.current = currentTurn;
+    if (!gameStarted) return;
+    if (currentTurn === socket.id && prev !== socket.id) {
+      playYourTurn();
+    }
+  }, [currentTurn, gameStarted]);
+
   // Tick warning sound once per second when under 10s remaining.
   const lastTickedSecondRef = useRef<number | null>(null);
   useEffect(() => {
@@ -369,11 +382,13 @@ function App() {
     }
   };
   const handleHostGame = (name: string) => {
+    unlockAudio();
     setJoinError(null);
     persistUsername(name);
     socket.emit("create_room", { name });
   };
   const handleJoinRoom = (name: string, code: string) => {
+    unlockAudio();
     setJoinError(null);
     persistUsername(name);
     socket.emit("join_room", { name, code });
@@ -381,7 +396,10 @@ function App() {
   const handleCheckRoom = (code: string) => {
     socket.emit("check_room", { code });
   };
-  const handleStartGame = () => socket.emit("start_game");
+  const handleStartGame = () => {
+    unlockAudio();
+    socket.emit("start_game");
+  };
   const handleAddBot = () => socket.emit("add_bot");
   const handlePlayAgain = () => {
     socket.emit("restart_game");
