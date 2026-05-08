@@ -1,5 +1,46 @@
 # Rommy Changelog
 
+## [v2.0.0] - The "Command Center" Update
+
+Overview
+This release overhauls the frontend architecture, moving away from absolute positioning and floating elements to a rigid, responsive CSS Grid. We also shipped critical backend patches for deck randomization, session pacing, and audio scoping. The terminal aesthetic remains, but the UX is now built for 2026 standards.
+
+🎨 UI/UX Overhaul
+
+Grid Architecture: Implemented a three-column "Bento" layout for strict visual hierarchy.
+
+Persistent HUD: Docked the global leaderboard permanently on the left side of the screen for live tactical visibility.
+
+Decluttered Viewport: Converted the static "Reguli Rapide" text block into a sleek, blurred modal overlay triggered by a UI icon.
+
+Expanded Player Console: Stretched the bottom hand area full-width and anchored the sorting controls directly above the tiles for faster interaction.
+
+Clean Meta-Bar: Consolidated room codes, language toggles, and player counts into a top-right administrative header.
+
+⚙️ Core Engine & Pacing
+
+Tactical Intermission: Extended the post-game scoreboard phase from 15 to 45 seconds.
+
+Ready-Up Bypass: Added a unanimous vote button to instantly skip the intermission and deal the next round.
+
+Audio Scoping: Restricted the 10-second turn alarm to play strictly on the active player's local client, silencing it for spectators and waiting players.
+
+🐛 Critical Bug Fixes
+
+True Randomization: Replaced biased .sort() methods with a strict Fisher-Yates algorithm for deck shuffling.
+
+Host Advantage Fix: Extracted the "Atu" tile prior to the deal sequence, ensuring Player 1 no longer mathematically swallows the trump card.
+
+Rupere Validation Logic: Decoupled discard draw rules. Players can now temporarily stage the discard tile pre-Etalare, and freely draw it post-Etalare to build on the public board.
+
+Twin Tile Resolution: Assigned globally unique UUIDs to all 106 tiles to prevent the system from flagging duplicate cards as the 50-point Atu.
+
+## [v1.8.1] - The "Quiet Room" Hotfix
+
+UX: Audio Targeting
+
+Restricted the 10-second turn warning alarm so it only plays locally for the active player. Spectators and waiting players will no longer hear it.
+
 ## [v1.8.0] - The "HUD & Pacing" Update
 
 UX: Persistent Leaderboard

@@ -51,21 +51,26 @@
 
 .app-header {
   width: 100%;
-  padding: 16px 24px;
+  padding: 12px 24px;
   background: rgba(13, 2, 33, 0.75);
   border-bottom: 1px solid rgba(188, 19, 254, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
   box-sizing: border-box;
 }
 
-.app-header h1 {
+.app-header__brand {
   margin: 0;
-  font-size: 28px;
-  letter-spacing: 2px;
+  font-size: 24px;
+  letter-spacing: 3px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--theme-color, #ffe066);
+  text-shadow:
+    0 0 6px var(--theme-color, #ffe066),
+    0 0 14px color-mix(in srgb, var(--theme-color, #ffe066) 40%, transparent);
 }
 
 .lobby-controls {
@@ -101,10 +106,18 @@
 .app-header__title-row {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.app-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* HUD typography — terminal monospace + a subtle neon glow keyed off
@@ -341,23 +354,6 @@
   to   { transform: translate(-50%, 0);     opacity: 1; }
 }
 
-.rack-controls {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-  flex-wrap: wrap;
-  box-sizing: border-box;
-}
-
-.rack-controls__sorts {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .rack-sort {
   padding: 4px 10px;
   background: #2c5530;
@@ -393,12 +389,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Responsive cloaking: below 1400px the inline cheat-sheet hides and
-   the play-grid collapses to a single column so the board reclaims
-   the full width. The toggleable modal (FAB) covers the same range. */
-@media (max-width: 1400px) {
+/* Responsive collapse: below 1100px the leaderboard sidebar tucks
+   above the central pillar so the board reclaims the full width. */
+@media (max-width: 1100px) {
   .play-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
   .central-pillar {
     grid-column: 1;
@@ -410,10 +406,11 @@
 }
 
 @media (max-width: 720px) {
-  .app-header h1 { font-size: 20px; }
+  .app-header__brand { font-size: 18px; letter-spacing: 2px; }
   .lobby-controls { flex-wrap: wrap; gap: 8px; }
-  .piles-area { padding-top: 12px; }
-  .play-grid { padding: 0 12px; }
+  .play-grid { padding: 8px 12px; }
+  .dealer-area { gap: 10px; padding: 8px 10px; }
+  .dealer-area__rules-label { display: none; }
 }
 
 .piles-area {
@@ -453,24 +450,26 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Master grid: empty counterweight | central pillar | rules sidecar.
-   align-items: start keeps the rules from stretching vertically;
-   margin-top on the cheat-sheet makes its top edge align with the
-   board's. */
+/* Command Center grid: narrow leaderboard sidebar | wide play area.
+   The right column (permanent rules sidecar) was removed in v1.7.x —
+   rules now live in a blurred modal, opened from the dealer-area button. */
 .play-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr minmax(600px, 1100px) 1fr;
-  gap: 2rem;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 1.5rem;
   width: 100%;
-  padding: 0 2rem;
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: 16px 24px;
   box-sizing: border-box;
-  align-items: center;
+  align-items: start;
   position: relative;
   min-height: 0;
 }
 
-/* The Central Pillar — every primary gameplay element stacks here. */
+/* The Central Pillar — every primary gameplay element stacks here.
+   It owns its own column and never overflows. */
 .central-pillar {
   grid-column: 2;
   display: flex;
@@ -482,33 +481,91 @@
 
 .central-pillar > .game-board {
   width: 100%;
-  min-height: 60vh;
+  min-height: 56vh;
   /* Neon floating board */
-  transform: translateY(-4px);
   box-shadow:
     0 10px 30px rgba(0, 255, 128, 0.15),
     0 0 20px rgba(0, 255, 128, 0.2);
 }
 
-.play-grid > .cheat-sheet {
-  grid-column: 3;
-  width: 100%;
-  max-width: 320px;
-  justify-self: center;
-  flex: none;
-}
-
 .play-grid__sidecar {
   width: 100%;
   align-self: start;
-  padding-top: 8px;
   min-width: 0;
 }
 
 .play-grid__sidecar--left {
   grid-column: 1;
   display: flex;
-  justify-content: flex-end;
+  justify-content: stretch;
+}
+
+/* Dealer Area — anchored top of the play area. Hosts the Atu, draw and
+   discard piles, and the Rules trigger. Uses the same neon-floating
+   look as the green board so visually it reads as one unit. */
+.dealer-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 10px 16px;
+  background: rgba(13, 38, 26, 0.82);
+  border: 1px solid rgba(0, 255, 128, 0.35);
+  border-radius: 10px;
+  box-shadow:
+    0 0 18px rgba(0, 255, 128, 0.18),
+    inset 0 0 22px rgba(0, 0, 0, 0.45);
+  flex-wrap: wrap;
+}
+
+.dealer-area__rules {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 6px 12px;
+  background: rgba(0, 242, 255, 0.10);
+  color: #00f2ff;
+  border: 1px solid rgba(0, 242, 255, 0.5);
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.dealer-area__rules:hover {
+  background: rgba(0, 242, 255, 0.22);
+  box-shadow: 0 0 14px rgba(0, 242, 255, 0.4);
+}
+
+.dealer-area__rules-label {
+  font-weight: 700;
+}
+
+/* Player Console — full-width hand area + horizontal action bar. */
+.rack-action-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  background: rgba(2, 8, 14, 0.6);
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  border-radius: 8px;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.4);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+}
+
+.rack-action-bar__sorts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .etalare-button {

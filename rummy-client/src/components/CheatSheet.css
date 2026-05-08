@@ -115,43 +115,23 @@
   background: rgba(255, 102, 255, 0.18);
 }
 
-/* Floating "?" button on narrow screens */
-.cheat-sheet-fab {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(13, 2, 33, 0.85);
-  border: 1.5px solid #ff66ff;
-  color: #ff66ff;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 900;
-  box-shadow:
-    0 0 10px rgba(255, 102, 255, 0.55),
-    inset 0 0 10px rgba(255, 102, 255, 0.18);
-  text-shadow: 0 0 6px rgba(255, 102, 255, 0.7);
+/* Rules now live exclusively in the modal — there's no inline mount,
+   so we hide any stray non-modal instance and skip the floating FAB. */
+.cheat-sheet:not(.cheat-sheet--modal) {
   display: none;
-}
-
-@media (max-width: 1400px) {
-  .cheat-sheet:not(.cheat-sheet--modal) {
-    display: none;
-  }
-  .cheat-sheet-fab {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
 }
 
 .cheat-sheet--modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 1100;
+  animation: cheat-sheet-fade-in 0.18s ease-out;
+}
+
+@keyframes cheat-sheet-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

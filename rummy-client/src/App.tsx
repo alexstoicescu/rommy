@@ -850,32 +850,35 @@ function App() {
       >
         <header className="app-header">
           <div className="app-header__title-row">
-            <h1>Rommy</h1>
-            <LanguageSwitcher />
-            <span className="room-code">
-              {t("header_room")} <strong>{roomCode}</strong>
-            </span>
-            <span className="room-count">
-              {t("header_players", { count: lobbyPlayers.length })}
-            </span>
-            {gameStarted &&
-              (() => {
-                const me = gamePlayers.find((p) => p.socketId === socket.id);
-                if (!me) return null;
-                const color = PLAYER_THEMES[me.colorIndex % PLAYER_THEMES.length];
-                return (
-                  <span
-                    className="player-tag"
-                    style={{
-                      color,
-                      borderColor: color,
-                      boxShadow: `0 0 8px ${color}55`,
-                    }}
-                  >
-                    {me.name}
-                  </span>
-                );
-              })()}
+            <h1 className="app-header__brand">Rommy</h1>
+            <div className="app-header__meta">
+              {gameStarted &&
+                (() => {
+                  const me = gamePlayers.find((p) => p.socketId === socket.id);
+                  if (!me) return null;
+                  const color =
+                    PLAYER_THEMES[me.colorIndex % PLAYER_THEMES.length];
+                  return (
+                    <span
+                      className="player-tag"
+                      style={{
+                        color,
+                        borderColor: color,
+                        boxShadow: `0 0 8px ${color}55`,
+                      }}
+                    >
+                      {me.name}
+                    </span>
+                  );
+                })()}
+              <span className="room-count">
+                {t("header_players", { count: lobbyPlayers.length })}
+              </span>
+              <span className="room-code">
+                {t("header_room")} <strong>{roomCode}</strong>
+              </span>
+              <LanguageSwitcher />
+            </div>
           </div>
           <div className="lobby-controls">
             {inLobby && !gameStarted && (
@@ -929,37 +932,6 @@ function App() {
           </div>
         </header>
 
-        {roomPhase !== "scrambling" && <div className="piles-area">
-          {atu && (
-            <div className="atu-slot" title={`${t("atu_label")} — +50`}>
-              <span className="atu-slot__label">{t("atu_label")}</span>
-              <TileComponent tile={atu} />
-              {atuAwardedTo && (
-                <span className="atu-slot__holder">
-                  {atuAwardedTo === socket.id
-                    ? t("atu_holder_self")
-                    : t("atu_holder_other", {
-                        name:
-                          gamePlayers.find((p) => p.socketId === atuAwardedTo)
-                            ?.name ?? "—",
-                      })}
-                </span>
-              )}
-            </div>
-          )}
-          <DrawPile
-            onClick={drawFromDeck}
-            empty={drawPileCount === 0}
-            disabled={hasDrawn}
-            count={drawPileCount}
-          />
-          <DiscardPile
-            tiles={discardPile}
-            canRupere={isMyTurn && !hasDrawn}
-            onRupere={handleRupere}
-          />
-        </div>}
-
         <div className="play-grid">
           <div className="play-grid__sidecar play-grid__sidecar--left">
             <Leaderboard
@@ -976,6 +948,53 @@ function App() {
             />
           </div>
           <div className="central-pillar">
+            {roomPhase !== "scrambling" && (
+              <div className="dealer-area" aria-label="Dealer area">
+                {atu && (
+                  <div
+                    className="atu-slot"
+                    title={`${t("atu_label")} — +50`}
+                  >
+                    <span className="atu-slot__label">{t("atu_label")}</span>
+                    <TileComponent tile={atu} />
+                    {atuAwardedTo && (
+                      <span className="atu-slot__holder">
+                        {atuAwardedTo === socket.id
+                          ? t("atu_holder_self")
+                          : t("atu_holder_other", {
+                              name:
+                                gamePlayers.find(
+                                  (p) => p.socketId === atuAwardedTo,
+                                )?.name ?? "—",
+                            })}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <DrawPile
+                  onClick={drawFromDeck}
+                  empty={drawPileCount === 0}
+                  disabled={hasDrawn}
+                  count={drawPileCount}
+                />
+                <DiscardPile
+                  tiles={discardPile}
+                  canRupere={isMyTurn && !hasDrawn}
+                  onRupere={handleRupere}
+                />
+                <button
+                  className="dealer-area__rules"
+                  onClick={() => setCheatSheetOpen(true)}
+                  aria-label={t("rules_header")}
+                  title={t("rules_header")}
+                >
+                  <span aria-hidden="true">?</span>
+                  <span className="dealer-area__rules-label">
+                    {t("rules_header")}
+                  </span>
+                </button>
+              </div>
+            )}
             {roomPhase === "scrambling" && scrambleSeed != null &&
               scrambleEndsAt != null && (
                 <ScramblePile
@@ -1027,8 +1046,8 @@ function App() {
                 </button>
               </div>
             )}
-            <div className="rack-controls">
-              <div className="rack-controls__sorts">
+            <div className="rack-action-bar" role="toolbar">
+              <div className="rack-action-bar__sorts">
                 <button
                   className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
                   onClick={() => setSortMode("groups")}
@@ -1043,7 +1062,7 @@ function App() {
                 </button>
                 {sortMode !== "none" && (
                   <button
-                    className="rack-sort"
+                    className="rack-sort rack-sort--clear"
                     onClick={() => setSortMode("none")}
                   >
                     {t("sort_clear")}
@@ -1058,7 +1077,6 @@ function App() {
             </div>
             <PlayerRack tiles={rackTiles} />
           </div>
-          <CheatSheet />
         </div>
       </div>
 
@@ -1078,14 +1096,6 @@ function App() {
         </div>
       )}
 
-      <button
-        className="cheat-sheet-fab"
-        onClick={() => setCheatSheetOpen(true)}
-        aria-label={t("rules_header")}
-        title={t("rules_header")}
-      >
-        ?
-      </button>
       {cheatSheetOpen && (
         <>
           <div
