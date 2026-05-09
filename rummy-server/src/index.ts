@@ -14,6 +14,15 @@ import {
 import { EloLedger } from "./EloLedger";
 import { computeEloDeltas, type EloSeat } from "./EloEngine";
 import {
+  addTileWithSlot,
+  placeTileAtSlot,
+  reconcileHandLayout,
+  removeTileFromHand,
+  removeTilesFromHand,
+  sortHand,
+  type HandSortMode,
+} from "./HandGrid";
+import {
   canInitialMeld,
   calculateFinalScores,
   isValidFormatie,
@@ -260,6 +269,10 @@ function getActiveRoom(socketId: string): Room | null {
 // =====================================================================
 
 function broadcastGameState(room: Room): void {
+  // Belt-and-braces: every player's handLayout is reconciled before
+  // the snapshot leaves the server, so any handler that forgets to
+  // sync slots can't ship a corrupt view. Cheap (O(handSize)).
+  for (const p of room.players) reconcileHandLayout(p);
   for (const p of room.players) {
     if (p.isBot) continue;
     io.to(p.socketId).emit("game_state_update", viewForSocket(room, p.socketId));
@@ -340,7 +353,7 @@ function runAutoPass(room: Room): void {
   if (room.lastRupere && room.lastRupere.playerId === player.socketId) {
     const targetId = room.lastRupere.tiles[0]?.id;
     if (targetId && player.hand.some((t) => t.id === targetId)) {
-      player.hand = player.hand.filter((t) => t.id !== targetId);
+      removeTileFromHand(player, targetId);
       room.discardPile.splice(
         room.lastRupere.pickIdx,
         0,
@@ -353,7 +366,7 @@ function runAutoPass(room: Room): void {
   }
   if (!room.hasDrawn && room.drawPile.length > 0) {
     const tile = room.drawPile.shift()!;
-    player.hand.push(tile);
+    addTileWithSlot(player, tile);
     room.hasDrawn = true;
   }
   if (player.hand.length === 0) {
@@ -363,6 +376,7 @@ function runAutoPass(room: Room): void {
   }
   // Auto-discard the LAST tile in the hand (most recently drawn).
   const tile = player.hand.pop()!;
+  delete player.handLayout[tile.id];
   room.discardPile.push(tile);
   room.recorder?.record("auto_pass", room, {
     actor: player.sessionId,
@@ -577,7 +591,9 @@ function maybeRedeemRupereBonus(room: Room, player: Player): boolean {
     console.log(
       `Rupere bonus delivered to ${player.name}: ${room.pendingRupereBonusCards.length} tile(s) [${room.pendingRupereBonusCards.map((t) => t.id).join(", ")}]`,
     );
-    player.hand.push(...room.pendingRupereBonusCards);
+    for (const bonusTile of room.pendingRupereBonusCards) {
+      addTileWithSlot(player, bonusTile);
+    }
     room.pendingRupereBonusCards = [];
   }
   room.mustUseTileId = null;
@@ -782,6 +798,7 @@ io.on("connection", (socket: Socket) => {
       isBot: false,
       colorIndex: nextColorIndex(room),
       bonusPoints: 0,
+      handLayout: {},
     });
     socket.join(room.id);
     socketToRoom.set(socket.id, room.id);
@@ -870,6 +887,7 @@ io.on("connection", (socket: Socket) => {
       isBot: true,
       colorIndex,
       bonusPoints: 0,
+      handLayout: {},
     });
     console.log(`Bot added to ${room.id}: ${botSocketId}`);
     broadcastRoomUpdate(room);
@@ -898,6 +916,45 @@ io.on("connection", (socket: Socket) => {
       return;
     }
     beginScramble(room);
+  });
+
+  // === Tactical Spatial Rack (v2.9) — slot manipulation events ===
+  // place_tile_at_slot drives the drag/drop / shift / swap behavior.
+  // sort_hand resets to a clean top-row arrangement by mode.
+  socket.on(
+    "place_tile_at_slot",
+    (payload: { tileId?: string; targetSlot?: number }) => {
+      const room = getActiveRoom(socket.id);
+      if (!room) return;
+      const player = room.players.find((p) => p.socketId === socket.id);
+      if (!player) return;
+      const tileId = String(payload?.tileId ?? "");
+      const targetSlot = Number(payload?.targetSlot);
+      if (!tileId || !Number.isFinite(targetSlot)) return;
+      // Defensive reconcile so any orphaned entries are cleaned up
+      // before we mutate. Cheap (O(handSize)).
+      reconcileHandLayout(player);
+      const ok = placeTileAtSlot(player, tileId, Math.floor(targetSlot));
+      if (!ok) {
+        socket.emit("action_error", { reason: "invalid_slot_move" });
+        return;
+      }
+      reconcileHandLayout(player);
+      // Only the moving player needs the layout update — opponents
+      // don't see the rack. But broadcastGameState is the cheap
+      // path that's already wired up.
+      broadcastGameState(room);
+    },
+  );
+
+  socket.on("sort_hand", (payload: { mode?: string }) => {
+    const room = getActiveRoom(socket.id);
+    if (!room) return;
+    const player = room.players.find((p) => p.socketId === socket.id);
+    if (!player) return;
+    const mode = payload?.mode === "runs" ? "runs" : "groups";
+    sortHand(player, mode as HandSortMode);
+    broadcastGameState(room);
   });
 
   // Ready-up override during the 45-second scoreboard intermission.
@@ -992,7 +1049,7 @@ io.on("connection", (socket: Socket) => {
     }
     const player = room.players.find((p) => p.socketId === socket.id)!;
     const drawn = room.drawPile.shift()!;
-    player.hand.push(drawn);
+    addTileWithSlot(player, drawn);
     room.hasDrawn = true;
     room.recorder?.record("draw", room, {
       actor: player.sessionId,
@@ -1018,7 +1075,7 @@ io.on("connection", (socket: Socket) => {
     }
     const player = room.players.find((p) => p.socketId === socket.id)!;
     const taken = room.discardPile.pop()!;
-    player.hand.push(taken);
+    addTileWithSlot(player, taken);
     room.hasDrawn = true;
     room.recorder?.record("draw", room, {
       actor: player.sessionId,
@@ -1058,6 +1115,7 @@ io.on("connection", (socket: Socket) => {
       return;
     }
     const [tile] = player.hand.splice(idx, 1);
+    delete player.handLayout[tile.id];
     room.discardPile.push(tile);
     room.recorder?.record("discard", room, {
       actor: player.sessionId,
@@ -1116,7 +1174,7 @@ io.on("connection", (socket: Socket) => {
       );
       return;
     }
-    player.hand = player.hand.filter((t) => !seen.has(t.id));
+    removeTilesFromHand(player, seen);
     (room.board[socket.id] ??= []).push(...proposedMelds);
     player.hasMeldedInitial = true;
     let pointsAdded = 0;
@@ -1174,7 +1232,7 @@ io.on("connection", (socket: Socket) => {
         return;
       }
     }
-    player.hand = player.hand.filter((t) => !seen.has(t.id));
+    removeTilesFromHand(player, seen);
     (room.board[socket.id] ??= []).push(...proposedMelds);
     let pointsAdded = 0;
     for (const meld of proposedMelds) {
@@ -1247,6 +1305,7 @@ io.on("connection", (socket: Socket) => {
       const oldS = scoreMeldFinal(meld);
       const newS = scoreMeldFinal(chosen);
       player.hand.splice(tileIdx, 1);
+      delete player.handLayout[tile.id];
       targetZone[meldIndex] = chosen;
       const delta = newS - oldS;
       player.meldedScore += delta;
@@ -1337,7 +1396,7 @@ io.on("connection", (socket: Socket) => {
     // target — anti-cheat against grabbing a fat pile and stalling.
     const takenTiles = room.discardPile.splice(pickIdx);
     const [received, ...bonus] = takenTiles;
-    player.hand.push(received);
+    addTileWithSlot(player, received);
     room.pendingRupereBonusCards = bonus;
     room.hasDrawn = true;
     room.mustUseTileId = tileId;
@@ -1378,7 +1437,7 @@ io.on("connection", (socket: Socket) => {
     }
     // Remove the target from hand; the bonus tiles are still in
     // pending and will be discarded back along with it.
-    player.hand = player.hand.filter((t) => t.id !== targetTileId);
+    removeTileFromHand(player, targetTileId);
     room.pendingRupereBonusCards = [];
     room.discardPile.splice(undo.pickIdx, 0, ...undo.tiles);
     room.hasDrawn = false;
@@ -1478,8 +1537,20 @@ io.on("connection", (socket: Socket) => {
       }
       const joker = meld[jokerIdx];
       meld[jokerIdx] = replacement;
+      // Replacement leaves the hand; the freed Joker arrives in its
+      // place. Re-use the replacement's slot for the joker so the
+      // player's grid layout doesn't drift on every swap.
+      const replacementSlot = player.handLayout[replacement.id];
       player.hand.splice(handIdx, 1);
+      delete player.handLayout[replacement.id];
       player.hand.push(joker);
+      if (typeof replacementSlot === "number") {
+        player.handLayout[joker.id] = replacementSlot;
+      } else {
+        addTileWithSlot(player, joker);
+        // addTileWithSlot pushed again — undo the duplicate push.
+        player.hand.pop();
+      }
       maybeRedeemRupereBonus(room, player);
       console.log(
         `Joker swap in ${room.id}: ${player.name} replaced ${jokerId} on ${targetPlayerId}/meld-${meldIndex} with ${replacement.id}`,

@@ -1,5 +1,15 @@
 # Rommy Changelog
 
+## [v2.9.0] - The "Tactile Rack" Update
+
+UX: Spatial Hand Management: Replaced the automatic hand-row with a 44-slot interactive grid for manual organization.
+
+Logic: Insertion Physics: Tiles now "shove" neighbors aside when dropped, preventing overlaps while maintaining a natural physical flow.
+
+Persistence: Memory Handshake: Tile slot coordinates are now persistent across sessions and refreshes via the Reputation Ledger.
+
+Feel: High-Fidelity Feedback: Added scale-on-drag and magnetic-snap animations with synced audio feedback.
+
 ## [v2.8.2] - The "Ace High" Hotfix⚙️ Game LogicCorrected Point Attribution: Updated the scoring engine to differentiate between "Low Aces" (5 pts) and "High Aces" (10 pts) in run formations.Meld Validation: Hardened the sequence checker to ensure $12-13-1$ is recognized as a high-value strategic play.📊 Analytics SyncReputation Accuracy: Ensured that the 10-point value is correctly factored into the Elo calculation and the "Match Tape" post-game debrief.
 
 ## [v2.8.1] - The "True Reputation" Patch

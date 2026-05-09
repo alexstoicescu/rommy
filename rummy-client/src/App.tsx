@@ -18,7 +18,11 @@ import {
 import { TileComponent } from "./components/TileComponent";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { Tile } from "./types/game";
-import { PlayerRack, RACK_ID } from "./components/PlayerRack";
+import {
+  PlayerRack,
+  RACK_ID,
+  parseSlotDroppableId,
+} from "./components/PlayerRack";
 import { DrawPile } from "./components/DrawPile";
 import { DiscardPile, DISCARD_PILE_ID } from "./components/DiscardPile";
 import { GameBoard } from "./components/GameBoard";
@@ -40,6 +44,7 @@ import {
   isValidSuita,
 } from "./rules";
 import {
+  playClick,
   playDiscard,
   playDraw,
   playMeld,
@@ -154,6 +159,8 @@ interface GameOverPayload {
 
 interface GameStateUpdate {
   hand: Tile[];
+  /** Tactical Spatial Rack: tileId -> slot index (0..43). */
+  handLayout: Record<string, number>;
   board: Record<string, Tile[][]>;
   drawPileCount: number;
   discardPile: Tile[];
@@ -192,6 +199,7 @@ interface GameStateUpdate {
 function App() {
   const { t } = useTranslation();
   const [hand, setHand] = useState<Tile[]>([]);
+  const [handLayout, setHandLayout] = useState<Record<string, number>>({});
   const [board, setBoard] = useState<Record<string, Tile[][]>>({});
   const [draftMelds, setDraftMelds] = useState<Tile[][]>([]);
   const [discardPile, setDiscardPile] = useState<Tile[]>([]);
@@ -280,12 +288,15 @@ function App() {
     () => new Set(draftMelds.flat().map((t) => t.id)),
     [draftMelds],
   );
-  const rackTiles = useMemo(() => {
-    const base = hand.filter((t) => !draftTileIds.has(t.id));
-    if (sortMode === "groups") return [...base].sort(compareByGroups);
-    if (sortMode === "runs") return [...base].sort(compareByRuns);
-    return base;
-  }, [hand, draftTileIds, sortMode]);
+  // The rack now uses server-authoritative slot positions
+  // (handLayout). We just filter out tiles staged in draft melds.
+  // Sorting is server-side via the sort_hand event so the layout
+  // persists across reconnects — sortMode here is purely a transient
+  // hint for the active button highlight.
+  const rackTiles = useMemo(
+    () => hand.filter((t) => !draftTileIds.has(t.id)),
+    [hand, draftTileIds],
+  );
 
   useEffect(() => {
     const onConnect = () => {
@@ -330,6 +341,7 @@ function App() {
       }
       prevDiscardLenRef.current = state.discardPile.length;
       setHand(state.hand);
+      setHandLayout(state.handLayout ?? {});
       setBoard(state.board);
       setDiscardPile(state.discardPile);
       setDrawPileCount(state.drawPileCount);
@@ -739,6 +751,23 @@ function App() {
     if (!over) return;
     const activeId = String(active.id);
     const overId = String(over.id);
+
+    // Tactical Spatial Rack — drop onto a specific slot. The server
+    // owns the shift/swap logic; we just emit and let the next
+    // game_state_update render the new layout.
+    {
+      const slotIdx = parseSlotDroppableId(overId);
+      if (slotIdx != null) {
+        if (draftTileIds.has(activeId)) return; // staged tiles re-enter via undo
+        if (!hand.some((t) => t.id === activeId)) return;
+        socket.emit("place_tile_at_slot", {
+          tileId: activeId,
+          targetSlot: slotIdx,
+        });
+        playClick();
+        return;
+      }
+    }
 
     // Joker swap: dropped onto a joker slot inside a confirmed meld.
     if (overId.startsWith(JOKER_SLOT_PREFIX)) {
@@ -1179,13 +1208,19 @@ function App() {
               <div className="player-console__sorts">
                 <button
                   className={`rack-sort${sortMode === "groups" ? " rack-sort--active" : ""}`}
-                  onClick={() => setSortMode("groups")}
+                  onClick={() => {
+                    setSortMode("groups");
+                    socket.emit("sort_hand", { mode: "groups" });
+                  }}
                 >
                   {t("sort_groups")}
                 </button>
                 <button
                   className={`rack-sort${sortMode === "runs" ? " rack-sort--active" : ""}`}
-                  onClick={() => setSortMode("runs")}
+                  onClick={() => {
+                    setSortMode("runs");
+                    socket.emit("sort_hand", { mode: "runs" });
+                  }}
                 >
                   {t("sort_runs")}
                 </button>
@@ -1204,7 +1239,12 @@ function App() {
                 </span>
               )}
             </div>
-            <PlayerRack tiles={rackTiles} />
+            <PlayerRack
+              tiles={rackTiles}
+              layout={handLayout}
+              dragActive={activeTile != null}
+              draggingId={activeTile?.id ?? null}
+            />
           </div>
         </main>
       </div>

@@ -41,6 +41,13 @@ export interface Player {
   colorIndex: number;
   /** Atu / one-shot bonuses awarded this round, added on top of meldedScore at finalize. */
   bonusPoints: number;
+  /**
+   * Tactical Spatial Rack (v2.9): tileId -> slot index in the
+   * player's 2-row × 22-col hand grid (0..43, row-major). Sparse —
+   * unmapped tiles are auto-placed at the first free slot before
+   * the next broadcast.
+   */
+  handLayout: Record<string, number>;
 }
 
 export type RoomPhase = "lobby" | "scrambling" | "playing" | "scoreboard";
@@ -235,6 +242,13 @@ export function dealRoom(room: Room): void {
     player.hasMeldedInitial = false;
     player.meldedScore = 0;
     player.bonusPoints = 0;
+    // Populate the tactical rack: lay tiles across the top row
+    // (slots 0..N-1) in deal order. Players can rearrange via
+    // place_tile_at_slot or sort_hand thereafter.
+    player.handLayout = {};
+    player.hand.forEach((tile, i) => {
+      player.handLayout[tile.id] = i;
+    });
     cursor += handSize;
   });
 
@@ -366,6 +380,8 @@ export function publicView(room: Room): PublicRoomView {
 export interface PlayerView extends PublicRoomView {
   hand: Tile[]; // private to the recipient
   hasMeldedInitial: boolean; // private convenience for the recipient
+  /** Tactical Spatial Rack — tileId -> slot index (0..43). */
+  handLayout: Record<string, number>;
 }
 
 export function viewForSocket(room: Room, socketId: string): PlayerView {
@@ -374,5 +390,6 @@ export function viewForSocket(room: Room, socketId: string): PlayerView {
     ...publicView(room),
     hand: me ? me.hand : [],
     hasMeldedInitial: me ? me.hasMeldedInitial : false,
+    handLayout: me ? { ...me.handLayout } : {},
   };
 }

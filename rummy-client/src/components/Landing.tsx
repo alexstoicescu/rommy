@@ -190,7 +190,7 @@ export function Landing({
               : t("landing_export_btn")}
         </button>
 
-        <div className="landing__version">v2.8.3 - ACE HIGH HOTFIX</div>
+        <div className="landing__version">v2.9.0 - TACTICAL RACK SYSTEM</div>
       </div>
     </div>
   );

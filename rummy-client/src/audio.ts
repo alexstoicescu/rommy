@@ -236,6 +236,21 @@ export function playWin(): void {
   });
 }
 
+/** Quick high-frequency tick — used when a tile snaps into a rack slot. */
+export function playClick(): void {
+  const c = getCtx();
+  if (!c) return;
+  voice(c, {
+    freq: 1280,
+    duration: 0.04,
+    type: "triangle",
+    peak: 0.18,
+    detuneCents: 0,
+    attack: 0.001,
+    release: 0.04,
+  });
+}
+
 export function playTick(): void {
   const c = getCtx();
   if (!c) return;
