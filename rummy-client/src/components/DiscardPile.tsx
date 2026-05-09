@@ -19,6 +19,13 @@ interface Props {
    * don't waste clicks.
    */
   locked?: boolean;
+  /**
+   * v2.9.3 magnetic-target hint. True when the local player is mid-
+   * drag AND it's legal for them to discard right now (their turn,
+   * post-draw, no rupere obligation pending). Triggers the pulsing
+   * magenta target glow + extends the droppable hit area by ~20px.
+   */
+  dragActive?: boolean;
   onRupere?: (tileId: string) => void;
 }
 
@@ -28,6 +35,7 @@ export function DiscardPile({
   tiles,
   canRupere,
   locked,
+  dragActive,
   onRupere,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: DISCARD_PILE_ID });
@@ -41,6 +49,7 @@ export function DiscardPile({
     "discard-pile",
     isOver ? "discard-pile--over" : "",
     locked ? "discard-pile--locked" : "",
+    dragActive ? "discard-pile--drag-active" : "",
   ]
     .filter(Boolean)
     .join(" ");

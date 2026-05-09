@@ -590,13 +590,7 @@ function App() {
     // landing-page session.
     window.location.reload();
   };
-  const handleEndTurn = () => {
-    if (!hasDrawn || hand.length === 0) return;
-    const last = hand[hand.length - 1];
-    if (draftTileIds.has(last.id)) return;
-    console.log("End-turn discard:", last.id);
-    socket.emit("discard_tile", last.id);
-  };
+  // handleEndTurn removed in v2.9.3 — drag-to-discard is the only path now.
   const handleSubmitEtalare = () => {
     if (draftMelds.length === 0) return;
     socket.emit("submit_etalare", draftMelds);
@@ -1160,6 +1154,17 @@ function App() {
                     <DiscardPile
                       tiles={discardPile}
                       canRupere={isMyTurn && !hasDrawn}
+                      dragActive={
+                        // Magenta target glow only when the drag is
+                        // legal right now: my turn, post-draw, no
+                        // pending rupere obligation, and the dragged
+                        // tile is in hand (not staged in a draft).
+                        activeTile != null &&
+                        isMyTurn &&
+                        hasDrawn &&
+                        !mustUseTileId &&
+                        !draftTileIds.has(activeTile.id)
+                      }
                       onRupere={handleRupere}
                     />
                   </>
@@ -1186,14 +1191,9 @@ function App() {
                   {t("meld_btn_undo")}
                 </button>
               )}
-              <button
-                className="end-turn-button"
-                onClick={handleEndTurn}
-                disabled={!hasDrawn || hand.length === 0}
-                title={t("meld_btn_end_turn_title")}
-              >
-                {t("meld_btn_end_turn")}
-              </button>
+              {/* End-Turn button removed in v2.9.3 — discards are now
+                  drag-and-drop only. The DiscardPile glows magenta as
+                  a target the moment a tile is lifted after a draw. */}
             </div>
           )}
 

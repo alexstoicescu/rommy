@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## [v2.9.3] - The "Direct Action" Update
+
+UI: Redundancy Purge: Removed the manual 'End Turn' button to declutter the arena and prioritize tactile gameplay.
+
+UX: Reactive Discarding: Implemented a magenta target-glow on the discard pile that activates only when a legal discard is possible.
+
+Feel: Magnetic Hand-off: Enhanced the snap-physics for discarded tiles to ensure turn-ending moves feel intentional and satisfying.
+
 ## [v2.9.2] - The "Landing Pad" Patch
 
 🎨 UI/UX Visibility

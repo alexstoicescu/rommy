@@ -190,7 +190,7 @@ export function Landing({
               : t("landing_export_btn")}
         </button>
 
-        <div className="landing__version">v2.9.2 - HIGH VISIBILITY MELD ZONE</div>
+        <div className="landing__version">v2.9.3 - REDUNDANCY PURGE & DISCARD POLISH</div>
       </div>
     </div>
   );
