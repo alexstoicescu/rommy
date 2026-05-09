@@ -149,20 +149,76 @@
   border-bottom-color: rgba(255, 224, 102, 0.4);
 }
 
+/* New-Meld drop zone — substantial landing pad anchored at the
+   bottom of the green play area, just above the player console.
+   v2.9.2: doubled vertical room for the +15% scaled tiles, neon
+   typography, reactive pulse when a drag is in progress anywhere
+   on the board. */
 .game-board__new-meld {
-  border: 2px dashed rgba(255, 255, 255, 0.4);
+  width: 95%;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 76px;
+  padding: 36px 24px;
+  border: 2px dashed rgba(0, 255, 255, 0.45);
   border-radius: 10px;
-  padding: 18px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f0fdff;
+  font-size: 1.2rem;
   font-style: italic;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
   user-select: none;
-  transition: background 120ms, border-color 120ms;
+  background: transparent;
+  transition: background 180ms ease, border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
+/* Drag-active: a drag is happening somewhere on the board. The zone
+   surfaces from transparent to a faint cyan wash and the border
+   ramps up its glow + breathes via a slow keyframe loop. */
+.game-board__new-meld--drag-active {
+  background: rgba(0, 255, 255, 0.05);
+  border-color: rgba(0, 255, 255, 0.7);
+  box-shadow:
+    0 0 14px rgba(0, 255, 255, 0.18),
+    inset 0 0 14px rgba(0, 255, 255, 0.08);
+  animation: new-meld-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes new-meld-pulse {
+  0%, 100% {
+    border-color: rgba(0, 255, 255, 0.55);
+    box-shadow:
+      0 0 10px rgba(0, 255, 255, 0.16),
+      inset 0 0 10px rgba(0, 255, 255, 0.06);
+  }
+  50% {
+    border-color: rgba(0, 255, 255, 0.9);
+    box-shadow:
+      0 0 22px rgba(0, 255, 255, 0.32),
+      inset 0 0 16px rgba(0, 255, 255, 0.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-board__new-meld--drag-active {
+    animation: none;
+  }
+}
+
+/* Active drop target — the cursor is currently over THIS zone. Wins
+   over the generic drag-active state with a stronger gold accent. */
 .game-board__new-meld--over {
-  background: rgba(255, 224, 102, 0.18);
+  background: rgba(255, 224, 102, 0.22);
   border-color: #ffe066;
   color: #fff;
+  text-shadow: 0 0 6px rgba(255, 224, 102, 0.55);
+  box-shadow:
+    0 0 18px rgba(255, 224, 102, 0.4),
+    inset 0 0 16px rgba(255, 224, 102, 0.18);
+  animation: none;
 }

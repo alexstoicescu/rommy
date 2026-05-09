@@ -23,6 +23,9 @@ interface Props {
   meldPoints: Record<string, number>;
   /** Atu / Draw / Discard ride inside the green table's header strip. */
   tableHeader?: ReactNode;
+  /** True while ANY tile is being dragged — drives the new-meld
+   *  drop zone's reactive surfacing. */
+  dragActive?: boolean;
 }
 
 const NEW_MELD_ID = "board-new-meld";
@@ -36,6 +39,7 @@ export function GameBoard({
   handCounts,
   meldPoints,
   tableHeader,
+  dragActive = false,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: NEW_MELD_ID });
   const { t } = useTranslation();
@@ -136,7 +140,13 @@ export function GameBoard({
 
       <div
         ref={setNodeRef}
-        className={`game-board__new-meld${isOver ? " game-board__new-meld--over" : ""}`}
+        className={[
+          "game-board__new-meld",
+          dragActive ? "game-board__new-meld--drag-active" : "",
+          isOver ? "game-board__new-meld--over" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         {t("board_drop_zone")}
       </div>

@@ -1,5 +1,25 @@
 # Rommy Changelog
 
+## [v2.9.2] - The "Landing Pad" Patch
+
+🎨 UI/UX Visibility
+
+Target Scaling: Doubled the vertical footprint of the 'New Meld' drop zone to improve drag-and-drop ergonomics.
+
+Typography Overhaul: Enhanced the instructional text with increased scale and a cyan neon glow for better legibility against the green felt.
+
+Dashed Border Logic: Swapped the legacy dotted border for a high-visibility dashed terminal style.
+
+⚙️ Reactive Feedback
+
+Proximity Glow: Implemented a reactive background shift that triggers when tiles are in motion, signaling the drop zone is "ready for input."
+
+Spatial Anchor: Verified the drop zone remains centered and responsive across varied screen resolutions.
+
+## [v2.9.1] Vercel Build Fix 
+
+Fixing a Vercel TS6133 build failure by removing two dead sort comparators from App.tsx; tsc -b + vite build now pass. Next: confirm the Vercel deploy goes green.
+
 ## [v2.9.0] - The "Tactile Rack" Update
 
 UX: Spatial Hand Management: Replaced the automatic hand-row with a 44-slot interactive grid for manual organization.

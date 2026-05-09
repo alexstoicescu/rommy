@@ -1125,6 +1125,7 @@ function App() {
                 localPlayerId={socket.id ?? ""}
                 handCounts={handCounts}
                 meldPoints={meldPoints}
+                dragActive={activeTile != null}
                 tableHeader={
                   <>
                     {atu && (
