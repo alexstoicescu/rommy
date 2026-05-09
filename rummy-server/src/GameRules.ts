@@ -179,22 +179,14 @@ function formatieTilePoints(setValue: number): number {
   return 10;
 }
 
-export function calculateMeldPoints(
-  meld: Tile[],
-  atuId?: string | null,
-): number {
+export function calculateMeldPoints(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const reified = reifySuita(meld)!;
     let sum = 0;
     for (let i = 0; i < meld.length; i++) {
-      // v3.7.0 — Atu override beats both joker (+50) and rung scoring.
-      // Defensive ordering: atu first, then joker, then rung.
-      if (atuId && meld[i].id === atuId) {
-        sum += 50;
-        continue;
-      }
       // Strict override: a Joker is always +50, regardless of the rung
-      // it stands in for.
+      // it stands in for. Check tile.isJoker BEFORE deriving any
+      // positional/contextual value.
       if (meld[i].isJoker) {
         sum += 50;
         continue;
@@ -208,10 +200,6 @@ export function calculateMeldPoints(
     const setValue = real[0].value;
     let sum = 0;
     for (const tile of meld) {
-      if (atuId && tile.id === atuId) {
-        sum += 50;
-        continue;
-      }
       if (tile.isJoker) {
         sum += 50;
         continue;
@@ -295,12 +283,11 @@ function scoreEffectiveValue(effective: number): number {
  * Score a Tile sitting in a player's hand at the moment of closing.
  * Jokers are penalised at 25 (no rung to inherit).
  *
- * v3.7.0 — Atu Ledger. If the tile's id matches `atuId`, its value is
- * 50 regardless of rank/suit. The atuId is resolved from the round's
- * Atu tile (room.atu.id); pass null/undefined to opt out.
+ * v3.7.0 (refined) — the Atu's 50 points are a player-attached bonus
+ * granted at deal time, not an intrinsic property of the card. The
+ * card itself scores its normal rank value here.
  */
-export function scoreTileFinal(tile: Tile, atuId?: string | null): number {
-  if (atuId && tile.id === atuId) return 50;
+export function scoreTileFinal(tile: Tile): number {
   if (tile.isJoker) return 25;
   return scoreEffectiveValue(tile.value);
 }
@@ -310,18 +297,15 @@ export function scoreTileFinal(tile: Tile, atuId?: string | null): number {
  * table. Returns 0 if the meld isn't a recognisable Suita or Formatie
  * (defensive — every meld committed to the board has been validated).
  *
- * v3.7.0 — atuId override is per-tile; the Atu tile counts as 50
- * even when sitting inside an otherwise-low-value meld.
+ * v3.7.0 (refined) — the Atu's 50 points are NOT applied here; they
+ * are credited to the original holder via bonusPoints (see
+ * dealRoom + calculateFinalScores).
  */
-export function scoreMeldFinal(meld: Tile[], atuId?: string | null): number {
+export function scoreMeldFinal(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const reified = reifySuita(meld)!;
     let sum = 0;
     for (let i = 0; i < meld.length; i++) {
-      if (atuId && meld[i].id === atuId) {
-        sum += 50;
-        continue;
-      }
       if (meld[i].isJoker) {
         sum += 50;
         continue;
@@ -335,10 +319,6 @@ export function scoreMeldFinal(meld: Tile[], atuId?: string | null): number {
     const setValue = real[0].value;
     let sum = 0;
     for (const tile of meld) {
-      if (atuId && tile.id === atuId) {
-        sum += 50;
-        continue;
-      }
       if (tile.isJoker) {
         sum += 50;
         continue;
@@ -385,7 +365,6 @@ export function calculateFinalScores(
   players: ScoringPlayer[],
   winnerId: string,
   closingTile: Tile,
-  atuId?: string | null,
 ): Record<string, number> {
   const out: Record<string, number> = {};
 
@@ -400,15 +379,15 @@ export function calculateFinalScores(
     } else if (!player.hasMeldedInitial) {
       score = -100;
     } else {
-      // v3.7.0 — Atu in hand at close = 50 (override). The atuId is
-      // threaded down through scoreTileFinal.
       const handSum = player.hand.reduce(
-        (sum, t) => sum + scoreTileFinal(t, atuId),
+        (sum, t) => sum + scoreTileFinal(t),
         0,
       );
       score = player.meldedScore - handSum;
     }
-    // Add the round's bonus points (currently just the Atu +50) on top.
+    // v3.7.0 — bonusPoints carries the Atu owner's +50 grant (set in
+    // dealRoom). Attributed to the player who received the Atu at
+    // deal time, regardless of where the card ended up.
     out[player.socketId] = score + player.bonusPoints;
   }
 

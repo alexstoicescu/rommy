@@ -402,17 +402,7 @@ async function finalizeRound(
   winnerId: string,
   closingTile: Tile,
 ): Promise<void> {
-  // v3.7.0 — Atu Ledger: pass the round's Atu tile-id so cards in hand
-  // matching it score 50 (instead of the normal 5/10/25). Null when
-  // the deck didn't yield an Atu (defensive — should never happen
-  // post-deal, but keeps scoring side-effect-free).
-  const atuId = room.atu?.id ?? null;
-  const scoreMap = calculateFinalScores(
-    room.players,
-    winnerId,
-    closingTile,
-    atuId,
-  );
+  const scoreMap = calculateFinalScores(room.players, winnerId, closingTile);
   const scoresByName: Record<string, number> = {};
   const globalScoresByName: Record<string, number> = {};
   const finalScoresBySession: Record<string, number> = {};
@@ -565,25 +555,12 @@ async function finalizeRound(
     tape.eloAfter = eloAfterBySession;
     tape.eloAffected = eloAffectedBySession;
     tape.matchType = matchType;
-    // v3.7.0 — Atu Ledger metadata. Find whichever player still
-    // holds the Atu tile in hand at close (the closer has hand=[]
-    // by definition, so they can never be the holder). The atuPenalty
-    // map is what the AAR breakdown table reads.
-    if (atuId) {
-      const holder = room.players.find((p) =>
-        p.hand.some((t) => t.id === atuId),
-      );
-      tape.atuHolderSessionId = holder?.sessionId ?? null;
-      const penalty: Record<string, number> = {};
-      for (const p of room.players) {
-        penalty[p.sessionId] =
-          holder && holder.sessionId === p.sessionId ? 50 : 0;
-      }
-      tape.atuPenalty = penalty;
-    } else {
-      tape.atuHolderSessionId = null;
-      tape.atuPenalty = {};
-    }
+    // v3.7.0 (refined) — Designated-Asset model. The +50 already lives
+    // inside the finalScores broadcast (it was added to the owner's
+    // bonusPoints at deal time). We only need to stamp the owner's
+    // sessionId on the tape so the AAR can render the breakdown line
+    // and the "GRANTED TO" tag.
+    tape.atuOwnerSessionId = room.atuOwnerSessionId;
     // v3.0.0 — stamp the tape with ephemeral status so the AAR can
     // optionally surface a "session-only stats" warning.
     tape.ephemeral = eloLedger.isEphemeral();
@@ -742,7 +719,7 @@ function runBotTurnInner(room: Room, bot: Player): void {
       bot.hand = bot.hand.filter((t) => !used.has(t.id));
       (room.board[bot.socketId] ??= []).push(...melds);
       bot.hasMeldedInitial = true;
-      for (const m of melds) bot.meldedScore += scoreMeldFinal(m, room.atu?.id ?? null);
+      for (const m of melds) bot.meldedScore += scoreMeldFinal(m);
       console.log(`Bot ${bot.name} performed Etalare (${melds.length} melds)`);
     }
   } else {
@@ -751,7 +728,7 @@ function runBotTurnInner(room: Room, bot: Player): void {
       const used = new Set(melds.flat().map((t) => t.id));
       bot.hand = bot.hand.filter((t) => !used.has(t.id));
       (room.board[bot.socketId] ??= []).push(...melds);
-      for (const m of melds) bot.meldedScore += scoreMeldFinal(m, room.atu?.id ?? null);
+      for (const m of melds) bot.meldedScore += scoreMeldFinal(m);
       console.log(`Bot ${bot.name} played ${melds.length} new meld(s)`);
     }
   }
@@ -762,8 +739,8 @@ function runBotTurnInner(room: Room, bot: Player): void {
       if (!att) break;
       const zone = room.board[att.ownerId];
       const meld = zone[att.meldIndex];
-      const oldS = scoreMeldFinal(meld, room.atu?.id ?? null);
-      const newS = scoreMeldFinal(att.chosen, room.atu?.id ?? null);
+      const oldS = scoreMeldFinal(meld);
+      const newS = scoreMeldFinal(att.chosen);
       bot.hand = bot.hand.filter((t) => t.id !== att.tile.id);
       zone[att.meldIndex] = att.chosen;
       bot.meldedScore += newS - oldS;
@@ -1255,7 +1232,7 @@ io.on("connection", (socket: Socket) => {
     player.hasMeldedInitial = true;
     let pointsAdded = 0;
     for (const meld of proposedMelds) {
-      const pts = scoreMeldFinal(meld, room.atu?.id ?? null);
+      const pts = scoreMeldFinal(meld);
       player.meldedScore += pts;
       pointsAdded += pts;
     }
@@ -1312,7 +1289,7 @@ io.on("connection", (socket: Socket) => {
     (room.board[socket.id] ??= []).push(...proposedMelds);
     let pointsAdded = 0;
     for (const meld of proposedMelds) {
-      const pts = scoreMeldFinal(meld, room.atu?.id ?? null);
+      const pts = scoreMeldFinal(meld);
       player.meldedScore += pts;
       pointsAdded += pts;
     }
@@ -1378,8 +1355,8 @@ io.on("connection", (socket: Socket) => {
         sendInvalid("That tile cannot attach to that meld.");
         return;
       }
-      const oldS = scoreMeldFinal(meld, room.atu?.id ?? null);
-      const newS = scoreMeldFinal(chosen, room.atu?.id ?? null);
+      const oldS = scoreMeldFinal(meld);
+      const newS = scoreMeldFinal(chosen);
       player.hand.splice(tileIdx, 1);
       delete player.handLayout[tile.id];
       targetZone[meldIndex] = chosen;

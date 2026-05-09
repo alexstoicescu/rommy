@@ -67,11 +67,13 @@ export interface MatchTape {
   startingPlayers: MatchTapePlayer[];
   /** "ranked" if all starting players were human, else "social". */
   matchType: MatchType;
-  /** v3.7.0 — sessionId of whoever held the Atu in hand at close
-   *  (null if it was melded or held by the closer, who has hand=[]). */
-  atuHolderSessionId?: string | null;
-  /** v3.7.0 — sessionId → 50 if held the Atu in hand, else 0. */
-  atuPenalty?: Record<string, number>;
+  /**
+   * v3.7.0 — sessionId of the player who was granted the Atu at deal
+   * time. The +50 is already inside finalScores (via that player's
+   * bonusPoints). This field lets the AAR show "GRANTED TO: <name>"
+   * and break the +50 out as its own line in the score table.
+   */
+  atuOwnerSessionId?: string | null;
   winnerSessionId: string;
   closingTile: Tile;
 }

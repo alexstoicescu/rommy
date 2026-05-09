@@ -577,9 +577,24 @@
   margin-top: 6px;
 }
 
-.aar__table--breakdown td.aar__atu-penalty {
-  color: #ff5a78;
-  text-shadow: 0 0 1px #ff5a78, 0 0 4px rgba(255, 90, 120, 0.35);
+/* v3.7.0 — the Atu Bonus column (+50) reads as a positive credit
+   in cyan, distinct from the neon-red HELD/PENALTY framing of the
+   first v3.7.0 attempt. Pairs visually with the cyan ELO-up badges. */
+.aar__table--breakdown td.aar__atu-bonus {
+  color: #00f2ff;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.4);
+}
+
+/* Foot row recapping the +50 grant: a faint cyan rule above + a
+   smaller monospace label so it reads as a footnote rather than
+   a competing data row. */
+.aar__breakdown-summary td {
+  border-top: 1px solid rgba(0, 242, 255, 0.25);
+  padding-top: 6px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(207, 226, 214, 0.75);
 }
 
 /* On the v3.1.0 short-screen breakpoint the breakdown is the most

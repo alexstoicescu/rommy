@@ -137,6 +137,13 @@ export interface Room {
   /** SocketId of the player who first received (and was credited for) the Atu. */
   atuAwardedTo: string | null;
   /**
+   * v3.7.0 — Designated Asset model. The Atu is granted at deal time
+   * to a specific player; sessionId stays stable across reconnects so
+   * the +50 bonus stays attached even if the holder briefly drops.
+   * Set inside `dealRoom`; null between rounds.
+   */
+  atuOwnerSessionId: string | null;
+  /**
    * Per-round event log. Created at the start of each scramble and
    * sealed at finalizeRound. Null between rounds. Carries the live
    * MatchTape for the After-Action Report and replay scrubber.
@@ -171,6 +178,7 @@ export function createRoom(id: string): Room {
     firstDiscardTileId: null,
     atu: null,
     atuAwardedTo: null,
+    atuOwnerSessionId: null,
     recorder: null,
   };
 }
@@ -230,9 +238,15 @@ export function dealRoom(room: Room): void {
   //    the Atu — that was a bug, not the intended rule.
   const [atuTile] = deck.splice(0, 1);
   room.atu = atuTile ?? null;
-  // The Atu sits face-up on the table. Nobody is auto-credited for
-  // holding it; the +50 bonus rule was an artifact of the deal bug.
+  // v3.7.0 (Designated Asset model). The Atu is granted at deal time
+  // to player 0 in seat order — the same player who receives the
+  // 15-tile starter hand. Their +50 is attached as bonusPoints right
+  // here so it can never desync with the card's whereabouts. The
+  // legacy `atuAwardedTo` (socketId of the first picker) stays null;
+  // we keep the field around because the public view still exposes
+  // it for older client builds, but no game logic reads it now.
   room.atuAwardedTo = null;
+  room.atuOwnerSessionId = room.players[0]?.sessionId ?? null;
 
   // 2. The deal: player 0 gets 15, every other player gets 14.
   let cursor = 0;
@@ -241,7 +255,11 @@ export function dealRoom(room: Room): void {
     player.hand = deck.slice(cursor, cursor + handSize);
     player.hasMeldedInitial = false;
     player.meldedScore = 0;
-    player.bonusPoints = 0;
+    // Player 0 is the Atu owner this round → +50. Everyone else
+    // starts at 0. Note this is set BEFORE any in-round events
+    // touch bonusPoints, so a future "hype/risk" bonus would add on
+    // top rather than overwrite.
+    player.bonusPoints = idx === 0 ? 50 : 0;
     // Populate the tactical rack: lay tiles across the top row
     // (slots 0..N-1) in deal order. Players can rearrange via
     // place_tile_at_slot or sort_hand thereafter.
@@ -312,6 +330,8 @@ export interface PublicRoomView {
   atu: Tile | null;
   /** SocketId of the player who was awarded the +50 Atu bonus. */
   atuAwardedTo: string | null;
+  /** v3.7.0 — sessionId of the deal-time Atu grantee. Stable across reconnects. */
+  atuOwnerSessionId: string | null;
   phase: RoomPhase;
   scoreboardEndsAt: number | null;
   scrambleEndsAt: number | null;
@@ -362,6 +382,7 @@ export function publicView(room: Room): PublicRoomView {
     meldPoints,
     atu: room.atu,
     atuAwardedTo: room.atuAwardedTo,
+    atuOwnerSessionId: room.atuOwnerSessionId,
     phase: room.phase,
     scoreboardEndsAt: room.scoreboardEndsAt,
     scrambleEndsAt: room.scrambleEndsAt,

@@ -129,21 +129,15 @@ export function jokerGhostRanks(meld: Tile[]): Map<string, number> | null {
   return null;
 }
 
-// v3.7.0 — atuId override: a tile whose id matches the round's Atu
-// scores 50 here too, mirroring the server. Pass null/undefined when
-// the Atu isn't yet known (e.g. pre-deal lobby preview).
-export function calculateMeldPoints(
-  meld: Tile[],
-  atuId?: string | null,
-): number {
+// v3.7.0 (refined) — the Atu's 50 points are a player-attached
+// bonus granted at deal time, not a per-tile override. So this
+// function (and canInitialMeld) takes no atuId; the card scores
+// its normal rank/joker value here.
+export function calculateMeldPoints(meld: Tile[]): number {
   if (isValidSuita(meld)) {
     const r = reifySuita(meld)!;
     let sum = 0;
     for (let i = 0; i < meld.length; i++) {
-      if (atuId && meld[i].id === atuId) {
-        sum += 50;
-        continue;
-      }
       // Strict override: Joker is always +50, never the rung it replaces.
       if (meld[i].isJoker) {
         sum += 50;
@@ -158,10 +152,6 @@ export function calculateMeldPoints(
     const setValue = real[0].value;
     let sum = 0;
     for (const tile of meld) {
-      if (atuId && tile.id === atuId) {
-        sum += 50;
-        continue;
-      }
       if (tile.isJoker) {
         sum += 50;
         continue;
@@ -173,10 +163,7 @@ export function calculateMeldPoints(
   return 0;
 }
 
-export function canInitialMeld(
-  melds: Tile[][],
-  atuId?: string | null,
-): boolean {
+export function canInitialMeld(melds: Tile[][]): boolean {
   if (melds.length === 0) return false;
   let total = 0;
   let hasSuita = false;
@@ -185,7 +172,7 @@ export function canInitialMeld(
     const isF = !isS && isValidFormatie(m);
     if (!isS && !isF) return false;
     if (isS) hasSuita = true;
-    total += calculateMeldPoints(m, atuId);
+    total += calculateMeldPoints(m);
   }
   return hasSuita && total >= 45;
 }

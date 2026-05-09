@@ -1,22 +1,22 @@
 # Rommy Changelog
 
-## [v3.7.0] - The "Atu Ledger" Update
-This patch introduces transparency to the Syndicate's accounting and rebalances the power of the Atu card, turning it into a high-risk, high-reward liability.
+[v3.7.0] - The "Atu Ledger" Update
+This update finalizes the Atu protocol, ensuring that the most valuable asset in the game is tracked with absolute precision from the moment of the deal.
 
-⚖️ Scoring: The Atu Protocol
-Fixed Liability: The Atu card is now valued at exactly 50 points. Being caught with this card at the end of a round will significantly impact your ELO progression.
+⚖️ Scoring: The Atu Assignment
+Fixed Attribution: The Atu is now a 50-point asset/liability granted to the player at the start of the match. The value is locked to the player, not the card's location.
 
-Ownership Tracking: The system now identifies the holder of the Atu upon round completion, displaying their name as a "Marked" label on the card UI.
+Meld Neutrality: The Atu card now functions as a standard rank-value card within melds, preventing the "hallucinated" meld-score inflation previously suggested by the logic engine.
 
-📊 UI/UX: After-Action Report (AAR)
-Score Breakdown: Replaced the winner announcement with a comprehensive performance table. Players can now see exactly how their final scores were calculated, including specific Atu penalties.
+📊 UI/UX: Performance Audit
+Ownership Labeling: The Atu card is now marked with a 'GRANTED TO' tag in the post-game summary, revealing who started the round with the advantage.
 
-Identity Tags: Added neon-red ownership overlays for key cards in the end-game summary to increase competitive transparency.
+Detailed Accounting: The new Score Breakdown Table provides a transparent view of points, separating hand totals from the fixed Atu bonus.
 
 ⚙️ Maintenance
-Version Sync: Updated the Main Menu to reflect the v3.7.0 build.
+Main Menu Sync: Version v3.7.0 is now officially displayed in the terminal entryway.
 
-Backbone Consistency: Verified that the 50-point penalty is correctly synchronized with the Supabase permanent ledger.
+Backbone Update: The atu_owner_id is now a primary field in the permanent Supabase match logs.
 
 ## [v3.6.0] - The "Wildcard Fix" Update
 This patch corrects a critical flaw in the Meld Validator, ensuring that Jokers correctly fulfill their role as polymorphic assets within the Syndicate.

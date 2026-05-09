@@ -27,6 +27,11 @@ import {
   type TileColor,
 } from "../GameRules";
 
+// scoreTileFinal is referenced in the v3.7.0 regression block. Marker
+// so eslint doesn't flag the import as unused if a future trim drops
+// the reference.
+void scoreTileFinal;
+
 let passed = 0;
 let failed = 0;
 
@@ -317,84 +322,66 @@ const joker = (id: string): Tile => tile(id, "joker", 0, true);
   );
 }
 
-// === Atu Ledger scoring — v3.7.0 =============================================
+// === Atu Ledger scoring — v3.7.0 (Designated-Asset model) ====================
 //
-// Rule: any tile whose id matches the round's Atu scores 50, regardless
-// of rank/suit/context (hand, set, run). Joker is unaffected — it still
-// scores 50 by its own rule. Without the atuId argument, the new
-// parameter is no-op (back-compat with pre-v3.7.0 callers).
-console.log("\nAtu Ledger scoring (v3.7.0)");
+// v3.7.0 was first implemented as "the Atu CARD scores 50 wherever it
+// sits." That was reverted: the Atu is a player-attached bonus
+// granted at deal time. The card itself scores its normal rank value
+// in every context. These regression tests pin that contract — if a
+// future version reintroduces a per-tile override, the failures here
+// will catch it.
+console.log("\nAtu Ledger scoring (v3.7.0 — designated-asset model)");
 
-// scoreTileFinal — tile in hand at close
+// The Atu card in a hand scores its rank value, NOT 50.
 {
-  const t = tile("atu-tile", "red", 5); // would normally be 5
-  eq(scoreTileFinal(t, "atu-tile"), 50, "scoreTileFinal: 5 in hand IS the Atu → 50");
-  eq(scoreTileFinal(t, "different-id"), 5, "scoreTileFinal: 5 in hand, NOT the Atu → 5");
-  eq(scoreTileFinal(t), 5, "scoreTileFinal: omitted atuId → no-op (5)");
+  const t = tile("atu-tile", "red", 5);
+  eq(scoreTileFinal(t), 5, "scoreTileFinal: Atu card in hand scores its rank (5)");
+}
+{
+  const ace = tile("atu-ace", "blue", 1);
+  eq(scoreTileFinal(ace), 25, "scoreTileFinal: Ace stays 25 even when it's the Atu");
 }
 
-// scoreTileFinal — Ace and Atu
+// The Atu card inside a Suita scores its rank, not 50.
 {
-  const t = tile("atu-ace", "blue", 1); // would normally be 25 (closing rule)
-  eq(
-    scoreTileFinal(t, "atu-ace"),
-    50,
-    "scoreTileFinal: Atu override beats the Ace=25 rule",
-  );
-  eq(scoreTileFinal(t, "other"), 25, "scoreTileFinal: Ace stays 25 when not Atu");
-}
-
-// scoreMeldFinal — Atu inside a Suita
-{
-  // 5-6-7 yellow, where 6 is the Atu. Normal scoreMeldFinal: 5+5+5=15.
-  // With atuId pointing at the 6 tile: 5 + 50 + 5 = 60.
   const meld: Tile[] = [
     tile("y-5", "yellow", 5),
     tile("atu-y-6", "yellow", 6),
     tile("y-7", "yellow", 7),
   ];
-  eq(scoreMeldFinal(meld), 15, "5-6-7 normal closing = 15 (no atu)");
   eq(
-    scoreMeldFinal(meld, "atu-y-6"),
-    60,
-    "5-Atu(6)-7 closing = 60 (5 + 50 atu override + 5)",
+    scoreMeldFinal(meld),
+    15,
+    "5-Atu(6)-7 Suita closes at 15 (Atu counts at face value)",
   );
 }
 
-// scoreMeldFinal — Atu inside a Formatie
+// The Atu card inside a Formatie scores its rank, not 50.
 {
   const meld: Tile[] = [
     tile("k-9", "black", 9),
     tile("atu-r-9", "red", 9),
     tile("b-9", "blue", 9),
   ];
-  eq(scoreMeldFinal(meld), 15, "9-9-9 normal closing = 15");
   eq(
-    scoreMeldFinal(meld, "atu-r-9"),
-    60,
-    "9-Atu(9)-9 closing = 60 (5 + 50 + 5; Atu beats rung)",
+    scoreMeldFinal(meld),
+    15,
+    "9-Atu(9)-9 Formatie closes at 15 (Atu counts at face value)",
   );
 }
 
-// calculateMeldPoints — Etalare-time Atu beats joker collisions only
-// for tile-id matches; a joker that ISN'T the atu still scores 50.
+// calculateMeldPoints — the Atu card contributes its rank; joker
+// continues to score +50 by its own rule.
 {
   const meld: Tile[] = [
     tile("atu-k-3", "black", 3),
     tile("r-3", "red", 3),
     joker("j-x"),
   ];
-  // Without atu: 5 (k-3) + 5 (r-3) + 50 (joker) = 60.
   eq(
     calculateMeldPoints(meld),
     60,
-    "Etalare 3-3-J no-atu = 60 (5+5+50 joker)",
-  );
-  // With atu pointing at the k-3: 50 + 5 + 50 = 105.
-  eq(
-    calculateMeldPoints(meld, "atu-k-3"),
-    105,
-    "Etalare Atu(3)-3-J = 105 (50 atu + 5 + 50 joker)",
+    "Etalare 3-Atu(3)-J = 60 (5 + 5 + 50 joker; no atu override)",
   );
 }
 

@@ -251,29 +251,34 @@ export function AfterActionReport({
             </dl>
           </section>
 
-          {/* v3.7.0 — Atu Ledger: ownership tag + score breakdown.
-              Renders only when the round had an Atu (always true post-
-              deal; the guard is defensive against legacy tapes). */}
+          {/* v3.7.0 (refined) — Atu Ledger: the Atu is a Designated
+              Asset granted at deal time. Card shown with a "GRANTED
+              TO" tag identifying the owner; the +50 sits as its own
+              line under the per-player breakdown so the AAR reads
+              "your final score = hand-summed score, plus +50 if the
+              Atu was granted to you." */}
           {tape.atu && (
             <section className="aar__card aar__card--atu">
               <div className="aar__card-label">{t("aar_atu_label")}</div>
               <div className="aar__atu-stack">
                 <TileComponent tile={tape.atu} />
                 {(() => {
-                  const holderSid = tape.atuHolderSessionId;
-                  const holder = holderSid
-                    ? tape.players.find((p) => p.sessionId === holderSid)
+                  const ownerSid = tape.atuOwnerSessionId;
+                  const owner = ownerSid
+                    ? tape.players.find((p) => p.sessionId === ownerSid)
                     : null;
-                  if (!holder) {
+                  if (!owner) {
                     return (
                       <span className="aar__atu-tag aar__atu-tag--none">
-                        {t("aar_atu_unheld")}
+                        {t("aar_atu_ungranted")}
                       </span>
                     );
                   }
                   return (
                     <span className="aar__atu-tag">
-                      {t("aar_atu_held_by", { name: holder.name.toUpperCase() })}
+                      {t("aar_atu_granted_to", {
+                        name: owner.name.toUpperCase(),
+                      })}
                     </span>
                   );
                 })()}
@@ -283,7 +288,7 @@ export function AfterActionReport({
                   <tr>
                     <th>{t("aar_col_player")}</th>
                     <th>{t("aar_col_hand_total")}</th>
-                    <th>{t("aar_col_atu_penalty")}</th>
+                    <th>{t("aar_col_atu_bonus")}</th>
                     <th>{t("aar_col_final_score")}</th>
                   </tr>
                 </thead>
@@ -293,22 +298,23 @@ export function AfterActionReport({
                       .reverse()
                       .find((e) => e.type === "finalize");
                     const hands = finalize?.snapshot.hands ?? {};
-                    const atuId = tape.atu?.id ?? null;
+                    const ownerSid = tape.atuOwnerSessionId ?? null;
                     return tape.players.map((p) => {
                       const c =
                         themes[p.colorIndex % themes.length] ?? "#cfe2d6";
                       const hand = hands[p.sessionId] ?? [];
-                      // Hand total counts every tile EXCEPT the Atu
-                      // (which is broken out into its own column).
-                      // Per-tile values mirror server scoreEffectiveValue.
+                      // Hand total uses the server's closing-time
+                      // table: jokers/aces 25, 2-9 = 5, 10-13 = 10.
+                      // Atu card scores at face value here too — no
+                      // exclusion, no override.
                       const handTotal = hand.reduce((s, tile) => {
-                        if (atuId && tile.id === atuId) return s;
                         if (tile.isJoker) return s + 25;
                         if (tile.value === 1) return s + 25;
                         if (tile.value >= 2 && tile.value <= 9) return s + 5;
                         return s + 10;
                       }, 0);
-                      const atuPen = tape.atuPenalty?.[p.sessionId] ?? 0;
+                      const isOwner =
+                        ownerSid != null && ownerSid === p.sessionId;
                       const finalScore = tape.finalScores[p.sessionId] ?? 0;
                       return (
                         <tr key={p.sessionId}>
@@ -316,12 +322,12 @@ export function AfterActionReport({
                           <td className="aar__table-value">{handTotal}</td>
                           <td
                             className={
-                              atuPen > 0
-                                ? "aar__table-value aar__atu-penalty"
+                              isOwner
+                                ? "aar__table-value aar__atu-bonus"
                                 : "aar__table-value"
                             }
                           >
-                            {atuPen > 0 ? `+${atuPen}` : "—"}
+                            {isOwner ? "+50" : "—"}
                           </td>
                           <td className="aar__table-value">{finalScore}</td>
                         </tr>
@@ -329,6 +335,14 @@ export function AfterActionReport({
                     });
                   })()}
                 </tbody>
+                {tape.atuOwnerSessionId && (
+                  <tfoot>
+                    <tr className="aar__breakdown-summary">
+                      <td colSpan={3}>{t("aar_atu_holder_line")}</td>
+                      <td className="aar__table-value aar__atu-bonus">+50</td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </section>
           )}
