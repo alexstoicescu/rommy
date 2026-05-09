@@ -45,6 +45,10 @@ import {
   HighVisibilityToggle,
   readHighVisibility,
 } from "./components/HighVisibilityToggle";
+import {
+  PerformanceModeToggle,
+  readPerformanceMode,
+} from "./components/PerformanceModeToggle";
 import { useTranslation } from "react-i18next";
 import {
   calculateMeldPoints,
@@ -210,6 +214,10 @@ function App() {
   // v3.2.0 — Chroma Clarity. Toggling this on adds .app--high-vis,
   // bumping tile font-weight and intensifying suit glows.
   const [highVis, setHighVis] = useState<boolean>(() => readHighVisibility());
+  // v3.4.0 — Kinetic Zero. Performance Mode disables heavy animations
+  // (CRT scanline, neon pulses, AAR backdrop blur) to reclaim frame
+  // headroom on integrated GPUs / older laptops.
+  const [lowFx, setLowFx] = useState<boolean>(() => readPerformanceMode());
   const [handLayout, setHandLayout] = useState<Record<string, number>>({});
   // Tactical Selection (v2.9.4) — set of tile.ids the player has
   // tapped. Survives sorts (keyed by tile.id, which is stable). When
@@ -1056,7 +1064,8 @@ function App() {
         className={
           "app" +
           (viewportMode === "fixed" ? " app--fixed-size" : "") +
-          (highVis ? " app--high-vis" : "")
+          (highVis ? " app--high-vis" : "") +
+          (lowFx ? " app--low-fx" : "")
         }
         style={{ ["--theme-color" as string]: localThemeColor }}
       >
@@ -1078,6 +1087,7 @@ function App() {
           <VolumeSlider />
           <ViewportToggle mode={viewportMode} onChange={setViewportMode} />
           <HighVisibilityToggle enabled={highVis} onChange={setHighVis} />
+          <PerformanceModeToggle enabled={lowFx} onChange={setLowFx} />
           {inLobby && !gameStarted && (
             <aside
               className="sidebar-lobby"

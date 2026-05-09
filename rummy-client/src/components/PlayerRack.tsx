@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { Tile } from "../types/game";
@@ -119,7 +119,7 @@ function SlottedTile({
   );
 }
 
-export function PlayerRack({
+function PlayerRackImpl({
   tiles,
   layout,
   dragActive = false,
@@ -217,5 +217,13 @@ export function PlayerRack({
     </div>
   );
 }
+
+// v3.4.0 — memoized so a parent re-render whose props haven't changed
+// (e.g. turn-timer ticks, scoreboard countdown) doesn't force the
+// 44-cell grid + draggable wiring to recompute. The FLIP animation
+// driven by useLayoutEffect inside still fires on real layout
+// changes — memo only short-circuits when props are referentially
+// equal, which by definition means no layout move happened.
+export const PlayerRack = memo(PlayerRackImpl);
 
 export default PlayerRack;

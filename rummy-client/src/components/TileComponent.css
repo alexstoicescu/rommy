@@ -92,11 +92,25 @@
 
 .tile:hover,
 .tile.tile--selected {
-  transform: translateY(-6px);
+  /* v3.4.0 — translate3d() forces compositor promotion on every
+     browser, including older Safari builds where 2D translate is
+     occasionally rasterized on the main thread. The visual is
+     identical to translateY(-6px). */
+  transform: translate3d(0, -6px, 0);
   box-shadow:
     inset 0 0 0 1px var(--suit-glow),
     inset 0 0 8px var(--suit-glow),
     0 8px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* v3.4.0 — Tiles entering a hover/select/drag transition get
+   will-change so the compositor pre-allocates a layer. Scoped to
+   the transition states only; keeping it on every tile all the
+   time would cost VRAM (one layer per ~60 tiles). */
+.tile:hover,
+.tile.tile--selected,
+.tile.tile--dragging {
+  will-change: transform, opacity;
 }
 
 /* Joker — single bold "J" Power-Card style. The wrapper stays a flex

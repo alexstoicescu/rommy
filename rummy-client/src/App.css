@@ -109,6 +109,58 @@
   font-weight: 900;
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   v3.4.0 Kinetic Zero — Performance Mode (.app--low-fx).
+   Strips the most expensive *idle* effects (constant pulses,
+   backdrop-filters, fullscreen scanline overlay) while leaving the
+   single-shot interaction animations (tile lift, discard slide-in)
+   intact — those are short and cheap. Each rule below was picked
+   because it does GPU work continuously, not just once.
+   ──────────────────────────────────────────────────────────────── */
+
+/* CRT scanline overlay paints across the entire viewport every
+   frame. Hide it entirely in low-fx mode. */
+.app--low-fx::after {
+  display: none;
+}
+
+/* Brand neon-pulse keyframe runs forever. */
+.app--low-fx .sidebar__brand {
+  animation: none;
+  text-shadow:
+    0 0 6px rgba(0, 242, 255, 0.55),
+    0 0 14px rgba(0, 242, 255, 0.3);
+}
+
+/* Discard pile pulses (target + ghost-empty) and new-meld pulse all
+   loop at 1.5–1.8s on the compositor. Pause them. */
+.app--low-fx .discard-pile--drag-active,
+.app--low-fx .discard-pile__empty,
+.app--low-fx .game-board__new-meld--drag-active {
+  animation: none;
+}
+
+/* Simplify the tile shadow stack: drop the outer halo + inner rim
+   blur to a single drop shadow. Keeps the silhouette readable
+   without the 5-layer composite cost. */
+.app--low-fx .tile {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* AAR backdrop-filter (8px blur over the full-screen overlay) is
+   one of the most expensive effects in the app — drop it. */
+.app--low-fx .aar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(2, 6, 14, 0.95);
+}
+
+/* AAR watermark + any other decorative motion the AAR adds are
+   also paused / hidden so the report renders flat. */
+.app--low-fx .aar__watermark {
+  display: none;
+}
+
 /* ── Sidebar (left, 320px) ─────────────────────────────────────────── */
 .sidebar {
   display: flex;
@@ -192,7 +244,8 @@
 .sidebar > .sidebar-lobby,
 .sidebar > .volume-slider,
 .sidebar > .viewport-toggle,
-.sidebar > .hv-toggle {
+.sidebar > .hv-toggle,
+.sidebar > .perf-toggle {
   width: 100%;
   max-width: none;
   margin: 0;

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Tile } from "../types/game";
 import "./TileComponent.css";
 
@@ -5,7 +6,12 @@ interface Props {
   tile: Tile;
 }
 
-export function TileComponent({ tile }: Props) {
+// v3.4.0 Kinetic Zero — wrapped in React.memo so a parent re-render
+// (e.g. turn timer ticks driving an App.tsx state change) doesn't
+// propagate through every tile in every meld. Tiles only re-render
+// when their `tile` reference changes, which on this codebase only
+// happens on real server-state mutations.
+function TileComponentImpl({ tile }: Props) {
   if (tile.isJoker) {
     return (
       <div className="tile tile--joker" data-color="joker">
@@ -24,5 +30,7 @@ export function TileComponent({ tile }: Props) {
     </div>
   );
 }
+
+export const TileComponent = memo(TileComponentImpl);
 
 export default TileComponent;

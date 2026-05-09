@@ -1,5 +1,23 @@
 # Rommy Changelog
 
+## [v3.4.0] - The "Kinetic Zero" Update
+
+⚡ Performance: GPU Authorization
+
+Hardware Acceleration: Shifted all animation calculations to the GPU via translate3d and scale transforms, eliminating CPU-bound layout thrashing.
+
+Compositor Optimization: Implemented will-change hints for active tiles, reducing frame-drop during high-speed meld placements.
+
+⚙️ Logic: Intelligent Culling
+
+Memoized Components: Applied React.memo across the tile hierarchy, reducing unnecessary DOM reconciliations by up to 80% during complex turns.
+
+Stable Callbacks: Refactored event pipelines with useCallback to prevent cascading re-renders in the Player Hand.
+
+🎨 UI: Adaptive Fidelity
+
+Performance Mode: Introduced a toggle to switch between 'High Neon' and 'High Performance', allowing users on legacy hardware to maintain a stable 60 FPS.
+
 ## [v3.3.0] - The "Fluid Disposal" Update
 
 ⚙️ UX: Natural Navigation

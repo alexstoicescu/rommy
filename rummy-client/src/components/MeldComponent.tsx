@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   SortableContext,
   horizontalListSortingStrategy,
@@ -46,7 +47,7 @@ function JokerSlot({ meldId, tile }: JokerSlotProps) {
   );
 }
 
-export function MeldComponent({ id, tiles, interactive = true }: Props) {
+function MeldComponentImpl({ id, tiles, interactive = true }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   const isDraft = id.startsWith("draft-meld-");
@@ -82,5 +83,10 @@ export function MeldComponent({ id, tiles, interactive = true }: Props) {
     </div>
   );
 }
+
+// v3.4.0 — memoized so the meld zone only repaints melds whose tile
+// reference array actually changed (server-driven), not on every
+// turn-timer tick.
+export const MeldComponent = memo(MeldComponentImpl);
 
 export default MeldComponent;

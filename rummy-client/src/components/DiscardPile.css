@@ -199,19 +199,22 @@
      top of older overlapping tiles. */
 }
 
+/* v3.4.0 — translate3d() across all keyframes for explicit
+   compositor promotion. Identical visual; cheaper on browsers
+   that don't auto-promote 2D translate. */
 @keyframes discard-slide-in {
   0% {
-    transform: translate(0, -28px) rotate(-6deg);
+    transform: translate3d(0, -28px, 0) rotate(-6deg);
     opacity: 0;
     filter: drop-shadow(0 14px 14px rgba(255, 0, 191, 0.45))
       drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
   }
   60% {
-    transform: translate(0, 4px) rotate(2deg);
+    transform: translate3d(0, 4px, 0) rotate(2deg);
     opacity: 1;
   }
   100% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
     opacity: 1;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45))
       drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
@@ -239,7 +242,7 @@
 
 /* Tiles that would be swept up by a click on the hovered slot. */
 .discard-pile__slot--will-take {
-  transform: translateY(-6px);
+  transform: translate3d(0, -6px, 0);
   filter: drop-shadow(0 0 8px rgba(255, 224, 102, 0.85));
 }
 
