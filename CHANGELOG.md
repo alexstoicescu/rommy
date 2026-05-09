@@ -1,5 +1,23 @@
 # Rommy Changelog
 
+## [v3.2.0] - The "Chroma Clarity" Update
+
+🎨 Visual: Luminous Calibration
+
+Cyber-Cyan Shift: Re-engineered the Blue card palette to a higher-luminance Cyan to prevent visual bleeding on dark displays.
+
+Onyx Silhouetting: Replaced pure black cards with a multi-layered Onyx Gray, featuring a white inner glow for perfect edge definition.
+
+🧠 UX: Tactile Patterning
+
+Pattern Mapping: Introduced unique geometric textures (lines/grids) for each card color, enabling identification through shape and texture, not just hue.
+
+High-Contrast Mode: Added a system-wide toggle to amplify glow intensity and typography for players in high-glare environments.
+
+⚙️ Optimization
+
+Luminance Balancing: Verified all card combinations meet a minimum 4.5:1 contrast ratio against the primary board background.
+
 ## [v3.1.0] - The "Adaptive Terminal" Update
 
 🎨 UI/UX: Fluid Scaling

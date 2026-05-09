@@ -1,0 +1,77 @@
+/* v3.2.0 — Sidebar High-Visibility toggle. Visual stack matches the
+   adjacent VolumeSlider / ViewportToggle so the left rail keeps
+   reading as one cohesive panel. */
+.hv-toggle {
+  width: 100%;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: rgba(2, 8, 14, 0.78);
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  border-radius: 6px;
+  box-shadow:
+    0 0 12px rgba(0, 242, 255, 0.15),
+    inset 0 0 16px rgba(0, 242, 255, 0.05);
+  color: #cfe2d6;
+  padding: 6px 10px 10px;
+  box-sizing: border-box;
+}
+
+.hv-toggle__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.hv-toggle__prompt,
+.hv-toggle__title {
+  color: #00f2ff;
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
+}
+
+.hv-toggle__prompt {
+  font-weight: 700;
+}
+
+.hv-toggle__buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.hv-toggle__btn {
+  padding: 5px 6px;
+  background: rgba(0, 242, 255, 0.05);
+  color: #cfe2d6;
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.hv-toggle__btn:hover {
+  background: rgba(0, 242, 255, 0.12);
+  color: #00f2ff;
+}
+
+.hv-toggle__btn--active {
+  background: rgba(0, 242, 255, 0.18);
+  color: #00f2ff;
+  border-color: rgba(0, 242, 255, 0.7);
+  box-shadow:
+    0 0 8px rgba(0, 242, 255, 0.35),
+    inset 0 0 8px rgba(0, 242, 255, 0.18);
+  text-shadow: 0 0 1px #00f2ff, 0 0 4px rgba(0, 242, 255, 0.45);
+}
+
+.hv-toggle__btn:focus-visible {
+  outline: 1px solid #00f2ff;
+  outline-offset: 1px;
+}

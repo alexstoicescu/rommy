@@ -95,6 +95,20 @@
   --aar-btn-font: 11px;
 }
 
+/* v3.2.0 — High-Visibility Mode. Doubles the rim + outer halo blur
+   on every .tile and bumps the numeral font-weight from 700 → 900.
+   The TileComponent.css cascade reads --inner-rim-blur and
+   --outer-halo-blur from the .app token block, so this single rule
+   intensifies all suits in lockstep without restating per-suit
+   shadow stacks. */
+.app.app--high-vis {
+  --inner-rim-blur: 12px;
+  --outer-halo-blur: 10px;
+}
+.app.app--high-vis .tile {
+  font-weight: 900;
+}
+
 /* ── Sidebar (left, 320px) ─────────────────────────────────────────── */
 .sidebar {
   display: flex;
@@ -177,7 +191,8 @@
 .sidebar > .leaderboard,
 .sidebar > .sidebar-lobby,
 .sidebar > .volume-slider,
-.sidebar > .viewport-toggle {
+.sidebar > .viewport-toggle,
+.sidebar > .hv-toggle {
   width: 100%;
   max-width: none;
   margin: 0;

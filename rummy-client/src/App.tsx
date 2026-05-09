@@ -41,6 +41,10 @@ import {
   readViewportMode,
   type ViewportMode,
 } from "./components/ViewportToggle";
+import {
+  HighVisibilityToggle,
+  readHighVisibility,
+} from "./components/HighVisibilityToggle";
 import { useTranslation } from "react-i18next";
 import {
   calculateMeldPoints,
@@ -203,6 +207,9 @@ function App() {
   const [viewportMode, setViewportMode] = useState<ViewportMode>(
     () => readViewportMode(),
   );
+  // v3.2.0 — Chroma Clarity. Toggling this on adds .app--high-vis,
+  // bumping tile font-weight and intensifying suit glows.
+  const [highVis, setHighVis] = useState<boolean>(() => readHighVisibility());
   const [handLayout, setHandLayout] = useState<Record<string, number>>({});
   // Tactical Selection (v2.9.4) — set of tile.ids the player has
   // tapped. Survives sorts (keyed by tile.id, which is stable). When
@@ -1047,7 +1054,9 @@ function App() {
     >
       <div
         className={
-          "app" + (viewportMode === "fixed" ? " app--fixed-size" : "")
+          "app" +
+          (viewportMode === "fixed" ? " app--fixed-size" : "") +
+          (highVis ? " app--high-vis" : "")
         }
         style={{ ["--theme-color" as string]: localThemeColor }}
       >
@@ -1068,6 +1077,7 @@ function App() {
           />
           <VolumeSlider />
           <ViewportToggle mode={viewportMode} onChange={setViewportMode} />
+          <HighVisibilityToggle enabled={highVis} onChange={setHighVis} />
           {inLobby && !gameStarted && (
             <aside
               className="sidebar-lobby"

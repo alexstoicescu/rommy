@@ -4,6 +4,19 @@
 .tile {
   --suit-color: #444;
   --suit-glow: rgba(0, 0, 0, 0.2);
+  /* v3.2.0 Chroma Clarity tokens. Defaults below are the
+     "transparent" no-op values so the cascade for the hue-less
+     default tile (no data-color set) still draws cleanly. The
+     per-suit blocks below override them. --inner-edge-glow is the
+     hook for the white inner halo on black tiles; --outer-halo is
+     the new 1px outer glow for every suit; --tile-pattern is the
+     SVG texture (lines / grid) painted behind the numeral.
+     --glow-mult is bumped to 2 by .app--high-vis so visibility mode
+     can intensify the rims without restating the whole stack. */
+  --inner-edge-glow: 0 0 0 0 transparent;
+  --outer-halo-blur: 4px;
+  --inner-rim-blur: 6px;
+  --tile-pattern: none;
   /* Tactical sizing — ~15% smaller than the previous v2026 ceiling
      so multiple rows of melds and a full hand can coexist without
      squeezing each other. 2:3 aspect-ratio is the canonical
@@ -15,7 +28,13 @@
   aspect-ratio: 2 / 3;
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 6px;
-  background: #fffdf6;
+  /* v3.2.0 — pattern texture painted on top of the bakelite face.
+     background-color stays as the bakelite cream; background-image
+     is per-suit (lines / grid) at 10% alpha so the numeral remains
+     the dominant element. */
+  background-color: #fffdf6;
+  background-image: var(--tile-pattern);
+  background-repeat: repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,29 +42,48 @@
   font-size: clamp(18px, 2.1vw, 30px);
   font-weight: 700;
   color: var(--suit-color);
-  /* Rim light: two inset shadows trace the inner edge with the suit
-     color, fading inward. Drop shadow underneath gives subtle weight.
-     No outer halo — the rim is the only neon contribution. */
+  /* v3.2.0 — Neon Silhouetting. Rim light + a new 1px outer halo
+     so each tile silhouettes against the green felt; black tiles
+     additionally get a 0.5px white inner edge via --inner-edge-glow
+     (set in the per-suit block). The high-visibility mode multiplies
+     the blur radii via --inner-rim-blur / --outer-halo-blur. */
   box-shadow:
     inset 0 0 0 1px var(--suit-glow),
-    inset 0 0 6px var(--suit-glow),
-    0 2px 4px rgba(0, 0, 0, 0.4);
+    inset 0 0 var(--inner-rim-blur) var(--suit-glow),
+    inset var(--inner-edge-glow),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 0 var(--outer-halo-blur) var(--suit-glow);
   user-select: none;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-/* Suit palette — classic ink for the numeral, suit-colored rim glow. */
+/* Suit palette — v3.2.0 Chroma Clarity: blue calibrated to Electric
+   Cyan, black to Onyx Gray. Glow rgba mirrors the suit color so the
+   neon silhouette always reads as "this card's hue". */
 .tile[data-color="red"] {
   --suit-color: #cc1a2c;
   --suit-glow: rgba(255, 60, 90, 0.55);
 }
 .tile[data-color="black"] {
-  --suit-color: #111;
-  --suit-glow: rgba(160, 90, 220, 0.5);
+  /* Onyx Gray — slightly lifted off pure black so it doesn't fight
+     the screen's black point. The white inner edge keeps the
+     silhouette crisp on the dark green felt even before the outer
+     halo lands. */
+  --suit-color: #181818;
+  --suit-glow: rgba(220, 220, 220, 0.45);
+  --inner-edge-glow: 0 0 5px rgba(255, 255, 255, 0.2);
+  /* Fine grid mesh — 6×6 px, 0.5px stroke, 10% alpha. */
+  --tile-pattern:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='6' height='6'><path d='M6 0H0V6' fill='none' stroke='%23181818' stroke-opacity='0.1' stroke-width='0.5'/></svg>");
 }
 .tile[data-color="blue"] {
-  --suit-color: #1f3aa8;
-  --suit-glow: rgba(80, 150, 255, 0.55);
+  /* Electric Cyan — replaces the deep #1f3aa8 ink that was reading
+     near-black on lower-end laptop panels. */
+  --suit-color: #00E5FF;
+  --suit-glow: rgba(0, 229, 255, 0.6);
+  /* Horizontal lines, 8×8 px, 1px stripe, 10% alpha. */
+  --tile-pattern:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><rect width='8' height='1' y='3' fill='%2300E5FF' fill-opacity='0.1'/></svg>");
 }
 .tile[data-color="yellow"] {
   --suit-color: #b8860b;
