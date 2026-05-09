@@ -90,19 +90,12 @@ function parseJokerSlotId(
   return { ownerId, meldIndex, jokerId };
 }
 
+// Sort logic moved server-side in v2.9 (HandGrid.sortHand). The
+// SortMode type still drives the active-button highlight in the
+// rack action bar — the actual tile reordering is server-
+// authoritative via the sort_hand socket event so it persists
+// across reconnects.
 type SortMode = "none" | "groups" | "runs";
-
-function compareByGroups(a: Tile, b: Tile): number {
-  if (a.isJoker !== b.isJoker) return a.isJoker ? 1 : -1;
-  if (a.value !== b.value) return a.value - b.value;
-  return a.color.localeCompare(b.color);
-}
-
-function compareByRuns(a: Tile, b: Tile): number {
-  if (a.isJoker !== b.isJoker) return a.isJoker ? 1 : -1;
-  if (a.color !== b.color) return a.color.localeCompare(b.color);
-  return a.value - b.value;
-}
 
 const SESSION_STORAGE_KEY = "rommy_session_id";
 
