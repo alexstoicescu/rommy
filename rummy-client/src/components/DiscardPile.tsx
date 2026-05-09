@@ -31,16 +31,37 @@ interface Props {
    * magenta target glow + extends the droppable hit area by ~20px.
    */
   dragActive?: boolean;
+  /**
+   * v3.5.0 Lean Mode. When true, only tiles whose horizontal slot
+   * intersects the visible scroll viewport (plus a 2-tile buffer
+   * each side) are rendered as full slots; the rest become
+   * zero-cost placeholders that preserve layout width but skip the
+   * <TileComponent> + <button> subtree entirely.
+   */
+  lean?: boolean;
   onRupere?: (tileId: string) => void;
 }
 
 export const DISCARD_PILE_ID = "discard-pile";
+
+// v3.5.0 — overlap distance in CSS (matches discard-pile__slot
+// margin-left: -8px). Used by the windowing math to translate
+// scrollLeft into a tile index.
+const SLOT_OVERLAP_PX = 8;
+// Buffer rendered on each side of the visible window so a small
+// scroll doesn't immediately reveal an unmounted gap.
+const WINDOW_BUFFER = 2;
+// Fallback used until the first real .tile measurement lands.
+// Mid of the v3.1.0 clamp range. Conservative — if it's wrong by
+// a few px the window just over-renders, never under-renders.
+const FALLBACK_TILE_W = 50;
 
 export function DiscardPile({
   tiles,
   canRupere,
   locked,
   dragActive,
+  lean,
   onRupere,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: DISCARD_PILE_ID });
@@ -76,6 +97,60 @@ export function DiscardPile({
     scrollerRef.current = node;
   };
 
+  // v3.5.0 — Window-based virtualization. When lean=false (or there
+  // are very few tiles) we render everything normally. When lean=true
+  // we compute [start, end) from the current scrollLeft + clientWidth
+  // and only render full slots inside that window; everything else
+  // becomes a placeholder that preserves layout width.
+  const [windowRange, setWindowRange] = useState<[number, number]>([
+    0,
+    tiles.length,
+  ]);
+  useEffect(() => {
+    if (!lean) {
+      setWindowRange([0, tiles.length]);
+      return;
+    }
+    const el = scrollerRef.current;
+    if (!el) return;
+    const measureTileWidth = (): number => {
+      const slot = el.querySelector<HTMLElement>(".discard-pile__slot .tile");
+      if (slot) {
+        const w = slot.getBoundingClientRect().width;
+        if (w > 0) return w;
+      }
+      const ph = el.querySelector<HTMLElement>(".discard-pile__placeholder");
+      if (ph) {
+        const w = ph.getBoundingClientRect().width;
+        if (w > 0) return w;
+      }
+      return FALLBACK_TILE_W;
+    };
+    const compute = () => {
+      const tileW = measureTileWidth();
+      const advance = Math.max(1, tileW - SLOT_OVERLAP_PX);
+      const left = el.scrollLeft;
+      const right = left + el.clientWidth;
+      const startIdx = Math.max(
+        0,
+        Math.floor(left / advance) - WINDOW_BUFFER,
+      );
+      const endIdx = Math.min(
+        tiles.length,
+        Math.ceil(right / advance) + WINDOW_BUFFER,
+      );
+      setWindowRange([startIdx, endIdx]);
+    };
+    compute();
+    el.addEventListener("scroll", compute, { passive: true });
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", compute);
+      ro.disconnect();
+    };
+  }, [lean, tiles.length]);
+
   const lastIdx = tiles.length - 1;
   const interactive = !!canRupere && !locked;
 
@@ -103,6 +178,25 @@ export function DiscardPile({
           onMouseLeave={() => setHoverIdx(null)}
         >
           {tiles.map((tile, i) => {
+            // v3.5.0 — when lean mode is on, only tiles inside the
+            // computed window get a full slot. Everything else is a
+            // zero-cost placeholder. Layout width is preserved by
+            // the placeholder so scroll geometry stays correct and
+            // the drop target hit area remains stable.
+            const inWindow =
+              !lean || (i >= windowRange[0] && i < windowRange[1]);
+            if (!inWindow) {
+              return (
+                <div
+                  key={tile.id}
+                  className={
+                    "discard-pile__placeholder" +
+                    (i === 0 ? " discard-pile__placeholder--first" : "")
+                  }
+                  aria-hidden="true"
+                />
+              );
+            }
             const willTake =
               interactive &&
               hoverIdx != null &&

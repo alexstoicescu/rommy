@@ -161,6 +161,83 @@
   display: none;
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   v3.5.0 Lean Circuitry — .app--lean-mode.
+   Goes further than low-fx: strips ALL shadows + filters + tile
+   patterns, replaces neon halos with 1px borders, dims the palette
+   to ~75% saturation as a visual confirmation, and pauses the same
+   idle pulses. Combine with low-fx if you want the full belt-and-
+   braces stripdown — both sets of rules are additive.
+
+   Note: lean mode also flips DiscardPile into windowed rendering
+   (see DiscardPile.tsx — the React side does that part, not CSS).
+   ──────────────────────────────────────────────────────────────── */
+
+/* Dimmed-neon visual confirmation. Saturation pulled back so the
+   neon reads "muted" without losing color identity. Cheap filter
+   on a single layer (not per-element). */
+.app--lean-mode {
+  filter: saturate(0.75) brightness(0.92);
+}
+
+/* CRT scanlines + heavy backdrop-filters off, identical to low-fx. */
+.app--lean-mode::after {
+  display: none;
+}
+.app--lean-mode .aar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(2, 6, 14, 0.95);
+}
+.app--lean-mode .aar__watermark {
+  display: none;
+}
+.app--lean-mode .sidebar {
+  backdrop-filter: none;
+}
+
+/* Idle-pulse animations off across the board. */
+.app--lean-mode .sidebar__brand,
+.app--lean-mode .discard-pile--drag-active,
+.app--lean-mode .discard-pile__empty,
+.app--lean-mode .game-board__new-meld--drag-active {
+  animation: none;
+}
+
+/* Shadow Stripping — every box-shadow we'd otherwise paint is
+   replaced with a single 1px border. Tile gets a thin border in
+   its suit color (read off --suit-color set per-suit). */
+.app--lean-mode .tile {
+  box-shadow: none;
+  border: 1px solid var(--suit-color, #444);
+  /* Texture Purge — flat backgrounds, no SVG patterns. */
+  background-image: none;
+}
+
+/* Sidebar panels — the rest of the surfaces with neon shadows.
+   Borders kept (already 1px); just kill the glow stack. */
+.app--lean-mode .leaderboard,
+.app--lean-mode .sidebar-lobby,
+.app--lean-mode .volume-slider,
+.app--lean-mode .viewport-toggle,
+.app--lean-mode .hv-toggle,
+.app--lean-mode .perf-toggle,
+.app--lean-mode .lean-toggle,
+.app--lean-mode .sidebar__brand,
+.app--lean-mode .sidebar__exit {
+  box-shadow: none;
+}
+
+/* Discard scrollbar — drop the glow pillow on the thumb. */
+.app--lean-mode .discard-pile::-webkit-scrollbar-thumb {
+  box-shadow: none;
+}
+
+/* New-meld drop zone — drop the dashed pulse glow. */
+.app--lean-mode .game-board__new-meld {
+  box-shadow: none;
+}
+
 /* ── Sidebar (left, 320px) ─────────────────────────────────────────── */
 .sidebar {
   display: flex;
@@ -245,7 +322,8 @@
 .sidebar > .volume-slider,
 .sidebar > .viewport-toggle,
 .sidebar > .hv-toggle,
-.sidebar > .perf-toggle {
+.sidebar > .perf-toggle,
+.sidebar > .lean-toggle {
   width: 100%;
   max-width: none;
   margin: 0;

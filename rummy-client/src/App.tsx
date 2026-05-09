@@ -49,6 +49,10 @@ import {
   PerformanceModeToggle,
   readPerformanceMode,
 } from "./components/PerformanceModeToggle";
+import {
+  LeanModeToggle,
+  readLeanMode,
+} from "./components/LeanModeToggle";
 import { useTranslation } from "react-i18next";
 import {
   calculateMeldPoints,
@@ -75,7 +79,16 @@ const DRAFT_PREFIX = "draft-meld-";
 const BOARD_PREFIX = "board-meld:";
 const JOKER_SLOT_PREFIX = "joker-slot:";
 
-const PLAYER_THEMES = ["#00f2ff", "#ff007f", "#39ff14", "#ffcc00"] as const;
+// v3.5.0 — Object.freeze on the static palette so React.memo bailouts
+// further down the tree can rely on referential AND structural
+// stability. `as const` already makes this readonly to the type
+// system; freeze enforces it at runtime too.
+const PLAYER_THEMES = Object.freeze([
+  "#00f2ff",
+  "#ff007f",
+  "#39ff14",
+  "#ffcc00",
+] as const);
 
 function parseBoardMeldId(id: string): { ownerId: string; meldIndex: number } | null {
   if (!id.startsWith(BOARD_PREFIX)) return null;
@@ -218,6 +231,10 @@ function App() {
   // (CRT scanline, neon pulses, AAR backdrop blur) to reclaim frame
   // headroom on integrated GPUs / older laptops.
   const [lowFx, setLowFx] = useState<boolean>(() => readPerformanceMode());
+  // v3.5.0 — Lean Mode (8GB RAM optimization). Distinct from
+  // Performance Mode: lean targets DOM-node count + GPU memory by
+  // virtualizing the discard pile and stripping textures/shadows.
+  const [leanMode, setLeanMode] = useState<boolean>(() => readLeanMode());
   const [handLayout, setHandLayout] = useState<Record<string, number>>({});
   // Tactical Selection (v2.9.4) — set of tile.ids the player has
   // tapped. Survives sorts (keyed by tile.id, which is stable). When
@@ -1065,7 +1082,8 @@ function App() {
           "app" +
           (viewportMode === "fixed" ? " app--fixed-size" : "") +
           (highVis ? " app--high-vis" : "") +
-          (lowFx ? " app--low-fx" : "")
+          (lowFx ? " app--low-fx" : "") +
+          (leanMode ? " app--lean-mode" : "")
         }
         style={{ ["--theme-color" as string]: localThemeColor }}
       >
@@ -1088,6 +1106,7 @@ function App() {
           <ViewportToggle mode={viewportMode} onChange={setViewportMode} />
           <HighVisibilityToggle enabled={highVis} onChange={setHighVis} />
           <PerformanceModeToggle enabled={lowFx} onChange={setLowFx} />
+          <LeanModeToggle enabled={leanMode} onChange={setLeanMode} />
           {inLobby && !gameStarted && (
             <aside
               className="sidebar-lobby"
@@ -1269,6 +1288,7 @@ function App() {
                     <DiscardPile
                       tiles={discardPile}
                       canRupere={isMyTurn && !hasDrawn}
+                      lean={leanMode}
                       dragActive={
                         // Magenta target glow only when the drag is
                         // legal right now: my turn, post-draw, no

@@ -1,5 +1,25 @@
 # Rommy Changelog
 
+## [v3.5.0] - The "Lean Circuitry" Update
+This update introduces a specialized execution mode for low-memory environments, ensuring the Syndicate remains accessible on legacy hardware and lightweight mobile terminals.
+
+⚙️ Optimization: Memory Management
+Lean Mode Toggle: Added a dedicated performance switch located directly beneath the Audio Interface.
+
+Shadow Stripping: Implemented a 'Flat-Focus' profile that removes expensive box-shadows and backdrop filters, reducing GPU memory overhead.
+
+DOM Virtualization: The Discarded Pile now utilizes dynamic unmounting. Only tiles visible in the viewport occupy memory, drastically lowering the DOM node count.
+
+🧠 Logic: Resource Allocation
+Texture Purging: Optional disabling of high-fidelity SVG patterns to prioritize RAM for game-state logic.
+
+GC Efficiency: Optimized the lifecycle of socket listeners and event handlers to minimize Garbage Collection "hitches" during long sessions.
+
+Static Freezing: Hard-coded game assets are now immutable, reducing the workload on the browser's reactivity engine.
+
+🎨 UI: Terminal Feedback
+Efficiency Palette: Introduced a high-contrast, low-glow visual theme for Lean Mode that maintains legibility without the hardware cost.
+
 ## [v3.4.0] - The "Kinetic Zero" Update
 
 ⚡ Performance: GPU Authorization

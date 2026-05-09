@@ -240,6 +240,21 @@
   outline: none;
 }
 
+/* v3.5.0 — Lean Mode placeholder. Outside the visible window the
+   tiles render as these zero-content divs. Outer width matches a
+   real .tile so flex layout + scroll geometry stay identical;
+   no shadows, no animations, no children — just a sized box. */
+.discard-pile__placeholder {
+  width: clamp(var(--tile-min, 38px), var(--tile-fluid, 4.5vw), var(--tile-max, 65px));
+  aspect-ratio: 2 / 3;
+  margin-left: -8px;
+  flex: none;
+  pointer-events: none;
+}
+.discard-pile__placeholder--first {
+  margin-left: 0;
+}
+
 /* Tiles that would be swept up by a click on the hovered slot. */
 .discard-pile__slot--will-take {
   transform: translate3d(0, -6px, 0);
