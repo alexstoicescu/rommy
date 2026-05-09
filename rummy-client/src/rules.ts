@@ -129,11 +129,21 @@ export function jokerGhostRanks(meld: Tile[]): Map<string, number> | null {
   return null;
 }
 
-export function calculateMeldPoints(meld: Tile[]): number {
+// v3.7.0 — atuId override: a tile whose id matches the round's Atu
+// scores 50 here too, mirroring the server. Pass null/undefined when
+// the Atu isn't yet known (e.g. pre-deal lobby preview).
+export function calculateMeldPoints(
+  meld: Tile[],
+  atuId?: string | null,
+): number {
   if (isValidSuita(meld)) {
     const r = reifySuita(meld)!;
     let sum = 0;
     for (let i = 0; i < meld.length; i++) {
+      if (atuId && meld[i].id === atuId) {
+        sum += 50;
+        continue;
+      }
       // Strict override: Joker is always +50, never the rung it replaces.
       if (meld[i].isJoker) {
         sum += 50;
@@ -148,6 +158,10 @@ export function calculateMeldPoints(meld: Tile[]): number {
     const setValue = real[0].value;
     let sum = 0;
     for (const tile of meld) {
+      if (atuId && tile.id === atuId) {
+        sum += 50;
+        continue;
+      }
       if (tile.isJoker) {
         sum += 50;
         continue;
@@ -159,7 +173,10 @@ export function calculateMeldPoints(meld: Tile[]): number {
   return 0;
 }
 
-export function canInitialMeld(melds: Tile[][]): boolean {
+export function canInitialMeld(
+  melds: Tile[][],
+  atuId?: string | null,
+): boolean {
   if (melds.length === 0) return false;
   let total = 0;
   let hasSuita = false;
@@ -168,7 +185,7 @@ export function canInitialMeld(melds: Tile[][]): boolean {
     const isF = !isS && isValidFormatie(m);
     if (!isS && !isF) return false;
     if (isS) hasSuita = true;
-    total += calculateMeldPoints(m);
+    total += calculateMeldPoints(m, atuId);
   }
   return hasSuita && total >= 45;
 }

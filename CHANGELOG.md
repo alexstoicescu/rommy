@@ -1,5 +1,23 @@
 # Rommy Changelog
 
+## [v3.7.0] - The "Atu Ledger" Update
+This patch introduces transparency to the Syndicate's accounting and rebalances the power of the Atu card, turning it into a high-risk, high-reward liability.
+
+⚖️ Scoring: The Atu Protocol
+Fixed Liability: The Atu card is now valued at exactly 50 points. Being caught with this card at the end of a round will significantly impact your ELO progression.
+
+Ownership Tracking: The system now identifies the holder of the Atu upon round completion, displaying their name as a "Marked" label on the card UI.
+
+📊 UI/UX: After-Action Report (AAR)
+Score Breakdown: Replaced the winner announcement with a comprehensive performance table. Players can now see exactly how their final scores were calculated, including specific Atu penalties.
+
+Identity Tags: Added neon-red ownership overlays for key cards in the end-game summary to increase competitive transparency.
+
+⚙️ Maintenance
+Version Sync: Updated the Main Menu to reflect the v3.7.0 build.
+
+Backbone Consistency: Verified that the 50-point penalty is correctly synchronized with the Supabase permanent ledger.
+
 ## [v3.6.0] - The "Wildcard Fix" Update
 This patch corrects a critical flaw in the Meld Validator, ensuring that Jokers correctly fulfill their role as polymorphic assets within the Syndicate.
 

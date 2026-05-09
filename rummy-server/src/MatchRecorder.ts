@@ -106,6 +106,14 @@ export interface MatchTape {
   matchType: MatchType;
   /** v3.0.0 — true when ELO writes did not hit Supabase (Ephemeral Mode). */
   ephemeral?: boolean;
+  /** v3.7.0 — sessionId of whichever player held the Atu in their hand
+   *  at close (if any). null when nobody held it (e.g. it was melded
+   *  on the board, or the closer played it as the closing tile). */
+  atuHolderSessionId?: string | null;
+  /** v3.7.0 — sessionId → 50 if that player held the Atu in hand at
+   *  close, else 0. Pre-computed server-side so the AAR can render
+   *  the breakdown table without re-deriving from the snapshot. */
+  atuPenalty?: Record<string, number>;
   winnerSessionId: string;
   closingTile: Tile;
 }

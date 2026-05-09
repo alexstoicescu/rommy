@@ -1006,9 +1006,11 @@ function App() {
       };
     }
     if (!hasMelded) {
-      if (!canInitialMeld(draftMelds)) {
+      // v3.7.0 — pass the round's Atu id so the live point preview
+      // mirrors the server's 50-point Atu rule.
+      if (!canInitialMeld(draftMelds, atu?.id ?? null)) {
         const total = draftMelds.reduce(
-          (s, m) => s + calculateMeldPoints(m),
+          (s, m) => s + calculateMeldPoints(m, atu?.id ?? null),
           0,
         );
         const hasSuita = draftMelds.some(isValidSuita);

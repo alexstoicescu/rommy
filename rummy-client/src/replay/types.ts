@@ -67,6 +67,11 @@ export interface MatchTape {
   startingPlayers: MatchTapePlayer[];
   /** "ranked" if all starting players were human, else "social". */
   matchType: MatchType;
+  /** v3.7.0 — sessionId of whoever held the Atu in hand at close
+   *  (null if it was melded or held by the closer, who has hand=[]). */
+  atuHolderSessionId?: string | null;
+  /** v3.7.0 — sessionId → 50 if held the Atu in hand, else 0. */
+  atuPenalty?: Record<string, number>;
   winnerSessionId: string;
   closingTile: Tile;
 }

@@ -251,6 +251,88 @@ export function AfterActionReport({
             </dl>
           </section>
 
+          {/* v3.7.0 — Atu Ledger: ownership tag + score breakdown.
+              Renders only when the round had an Atu (always true post-
+              deal; the guard is defensive against legacy tapes). */}
+          {tape.atu && (
+            <section className="aar__card aar__card--atu">
+              <div className="aar__card-label">{t("aar_atu_label")}</div>
+              <div className="aar__atu-stack">
+                <TileComponent tile={tape.atu} />
+                {(() => {
+                  const holderSid = tape.atuHolderSessionId;
+                  const holder = holderSid
+                    ? tape.players.find((p) => p.sessionId === holderSid)
+                    : null;
+                  if (!holder) {
+                    return (
+                      <span className="aar__atu-tag aar__atu-tag--none">
+                        {t("aar_atu_unheld")}
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="aar__atu-tag">
+                      {t("aar_atu_held_by", { name: holder.name.toUpperCase() })}
+                    </span>
+                  );
+                })()}
+              </div>
+              <table className="aar__table aar__table--breakdown">
+                <thead>
+                  <tr>
+                    <th>{t("aar_col_player")}</th>
+                    <th>{t("aar_col_hand_total")}</th>
+                    <th>{t("aar_col_atu_penalty")}</th>
+                    <th>{t("aar_col_final_score")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const finalize = [...tape.events]
+                      .reverse()
+                      .find((e) => e.type === "finalize");
+                    const hands = finalize?.snapshot.hands ?? {};
+                    const atuId = tape.atu?.id ?? null;
+                    return tape.players.map((p) => {
+                      const c =
+                        themes[p.colorIndex % themes.length] ?? "#cfe2d6";
+                      const hand = hands[p.sessionId] ?? [];
+                      // Hand total counts every tile EXCEPT the Atu
+                      // (which is broken out into its own column).
+                      // Per-tile values mirror server scoreEffectiveValue.
+                      const handTotal = hand.reduce((s, tile) => {
+                        if (atuId && tile.id === atuId) return s;
+                        if (tile.isJoker) return s + 25;
+                        if (tile.value === 1) return s + 25;
+                        if (tile.value >= 2 && tile.value <= 9) return s + 5;
+                        return s + 10;
+                      }, 0);
+                      const atuPen = tape.atuPenalty?.[p.sessionId] ?? 0;
+                      const finalScore = tape.finalScores[p.sessionId] ?? 0;
+                      return (
+                        <tr key={p.sessionId}>
+                          <td style={{ color: c }}>{p.name}</td>
+                          <td className="aar__table-value">{handTotal}</td>
+                          <td
+                            className={
+                              atuPen > 0
+                                ? "aar__table-value aar__atu-penalty"
+                                : "aar__table-value"
+                            }
+                          >
+                            {atuPen > 0 ? `+${atuPen}` : "—"}
+                          </td>
+                          <td className="aar__table-value">{finalScore}</td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </section>
+          )}
+
           {/* Highlights */}
           <section className="aar__card aar__card--highlights">
             <div className="aar__card-label">{t("aar_highlights")}</div>
