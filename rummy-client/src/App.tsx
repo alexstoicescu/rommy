@@ -36,6 +36,11 @@ import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { Leaderboard } from "./components/Leaderboard";
 import { ScramblePile } from "./components/ScramblePile";
 import { VolumeSlider } from "./components/VolumeSlider";
+import {
+  ViewportToggle,
+  readViewportMode,
+  type ViewportMode,
+} from "./components/ViewportToggle";
 import { useTranslation } from "react-i18next";
 import {
   calculateMeldPoints,
@@ -192,6 +197,12 @@ interface GameStateUpdate {
 function App() {
   const { t } = useTranslation();
   const [hand, setHand] = useState<Tile[]>([]);
+  // v3.1.0 — Viewport-Aware Scaling. Default "responsive" lets the
+  // @media (max-height: 900px) breakpoint shrink tile/padding tokens
+  // automatically; "fixed" pins v2.9.x metrics regardless of size.
+  const [viewportMode, setViewportMode] = useState<ViewportMode>(
+    () => readViewportMode(),
+  );
   const [handLayout, setHandLayout] = useState<Record<string, number>>({});
   // Tactical Selection (v2.9.4) — set of tile.ids the player has
   // tapped. Survives sorts (keyed by tile.id, which is stable). When
@@ -1035,7 +1046,9 @@ function App() {
       onDragCancel={handleDragCancel}
     >
       <div
-        className="app"
+        className={
+          "app" + (viewportMode === "fixed" ? " app--fixed-size" : "")
+        }
         style={{ ["--theme-color" as string]: localThemeColor }}
       >
         <aside className="sidebar">
@@ -1054,6 +1067,7 @@ function App() {
             }))}
           />
           <VolumeSlider />
+          <ViewportToggle mode={viewportMode} onChange={setViewportMode} />
           {inLobby && !gameStarted && (
             <aside
               className="sidebar-lobby"

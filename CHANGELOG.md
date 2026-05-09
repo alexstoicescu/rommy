@@ -1,5 +1,19 @@
 # Rommy Changelog
 
+## [v3.1.0] - The "Adaptive Terminal" Update
+
+🎨 UI/UX: Fluid Scaling
+
+Viewport Locking: Bound the game container to 100vh to eliminate vertical browser scrolling on all resolutions.
+
+Proportional Shrink: Implemented dynamic scaling for the game board, ensuring it remains fully visible on high-DPI 1440p laptop monitors.
+
+Independent Sidebar: Isolated the sidebar scrolling logic to prevent layout shifts during intense matches.
+
+⚙️ Optimization
+
+High-DPI Support: Tuned CSS clamp() values for tiles to maintain legibility on 15-inch displays while maximizing play area.
+
 ## [v3.0.0] - The "Hidden Backbone" Update
 This major release marks the transition from a session-based prototype to a permanent, server-authorized competitive platform. By integrating Supabase via the MCP protocol, the Syndicate's reputation ledger is now etched into a global database while maintaining the intimacy of private room play.
 

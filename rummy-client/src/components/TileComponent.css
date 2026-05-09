@@ -7,8 +7,11 @@
   /* Tactical sizing — ~15% smaller than the previous v2026 ceiling
      so multiple rows of melds and a full hand can coexist without
      squeezing each other. 2:3 aspect-ratio is the canonical
-     bakelite proportion. */
-  width: clamp(38px, 4.5vw, 65px);
+     bakelite proportion.
+     v3.1.0: fluid term reads from --tile-fluid on .app, which uses
+     min(vw, vh) so short-but-wide displays shrink rather than
+     overflow. Cap and floor are also tunable per-breakpoint. */
+  width: clamp(var(--tile-min, 38px), var(--tile-fluid, 4.5vw), var(--tile-max, 65px));
   aspect-ratio: 2 / 3;
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 6px;

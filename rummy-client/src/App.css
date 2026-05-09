@@ -28,6 +28,22 @@
    than the screen. */
 .app {
   --theme-color: #ffe066;
+  /* v3.1.0 Viewport-Aware Scaling tokens. Every responsive surface
+     reads from these so a single media query at the bottom of the
+     file can shrink the entire UI for short displays (1440p / 15-inch
+     laptops where vertical real estate is the binding constraint).
+     The fixed-size mode further down pins them to the v2.9.x defaults
+     for users who'd rather take an internal scrollbar than a smaller
+     tile face. */
+  --tile-max: 65px;
+  --tile-min: 38px;
+  --tile-fluid: min(4.5vw, 8.5vh);
+  --rack-pad: 12px;
+  --meld-zone-pad: 1.5rem;
+  --meld-zone-gap: 1rem;
+  --aar-btn-pad-y: 8px;
+  --aar-btn-pad-x: 14px;
+  --aar-btn-font: 11px;
   width: 100%;
   height: 100vh;
   display: grid;
@@ -46,6 +62,37 @@
     44px 44px;
   position: relative;
   isolation: isolate;
+}
+
+/* v3.1.0 — Short-screen breakpoint. Triggers on 1440p/15-inch laptops
+   where vertical pressure pushes the rack + AAR off-screen. Shrinks
+   tile face, rack padding, and AAR button metrics in lockstep so the
+   full game fits in 100vh without an internal meld-zone scrollbar. */
+@media (max-height: 900px) {
+  .app {
+    --tile-max: 50px;
+    --rack-pad: 6px;
+    --meld-zone-pad: 0.75rem;
+    --meld-zone-gap: 0.5rem;
+    --aar-btn-pad-y: 5px;
+    --aar-btn-pad-x: 10px;
+    --aar-btn-font: 10px;
+  }
+}
+
+/* v3.1.0 — Fit-to-Screen "Fixed Size" override. The toggle in the
+   sidebar adds .app--fixed-size; in this mode we pin the v2.9.x
+   tile/padding metrics regardless of viewport. The .meld-zone
+   overflow-y:auto still saves us from page-level scroll. */
+.app.app--fixed-size {
+  --tile-max: 65px;
+  --tile-fluid: 4.5vw;
+  --rack-pad: 12px;
+  --meld-zone-pad: 1.5rem;
+  --meld-zone-gap: 1rem;
+  --aar-btn-pad-y: 8px;
+  --aar-btn-pad-x: 14px;
+  --aar-btn-font: 11px;
 }
 
 /* ── Sidebar (left, 320px) ─────────────────────────────────────────── */
@@ -129,7 +176,8 @@
    / margin inside the 320px rail and span its full width. */
 .sidebar > .leaderboard,
 .sidebar > .sidebar-lobby,
-.sidebar > .volume-slider {
+.sidebar > .volume-slider,
+.sidebar > .viewport-toggle {
   width: 100%;
   max-width: none;
   margin: 0;

@@ -44,8 +44,11 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.5rem;
+  /* v3.1.0 — gap + padding read tokens from .app so the short-screen
+     breakpoint (max-height: 900px) can tighten the felt without a
+     duplicated rule here. */
+  gap: var(--meld-zone-gap, 1rem);
+  padding: var(--meld-zone-pad, 1.5rem);
   overflow-y: auto;
   min-height: 0;
 }
