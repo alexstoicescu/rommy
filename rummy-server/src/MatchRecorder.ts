@@ -104,6 +104,8 @@ export interface MatchTape {
   eloAffected: Record<string, boolean>;
   /** "ranked" if all starting players were human, else "social". */
   matchType: MatchType;
+  /** v3.0.0 — true when ELO writes did not hit Supabase (Ephemeral Mode). */
+  ephemeral?: boolean;
   winnerSessionId: string;
   closingTile: Tile;
 }

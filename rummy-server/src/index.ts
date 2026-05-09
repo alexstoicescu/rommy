@@ -11,7 +11,7 @@ import {
   type Player,
   type Room,
 } from "./GameState";
-import { EloLedger } from "./EloLedger";
+import { SupabaseLedger } from "./SupabaseLedger";
 import { computeEloDeltas, tierForEloServer, type EloSeat } from "./EloEngine";
 import {
   addTileWithSlot,
@@ -49,9 +49,12 @@ import {
 } from "./SessionStore";
 import { MatchRecorder } from "./MatchRecorder";
 
-// Syndicate Reputation Ledger — single shared instance.
-const LEDGER_PATH = process.env.LEDGER_PATH ?? "./ledger.json";
-const eloLedger = new EloLedger(LEDGER_PATH);
+// Syndicate Reputation Ledger — Supabase-backed in v3.0.0. Single
+// shared instance; hydrate() runs at boot below (httpServer.listen).
+// If Supabase is unreachable the ledger silently flips into Ephemeral
+// Mode and serves an in-memory cache only — gameplay continues, but
+// nothing persists across restarts.
+const eloLedger = new SupabaseLedger();
 setEloLookup((signatureId) => {
   if (!signatureId) return 1200;
   return eloLedger.get(signatureId).eloScore;
@@ -210,7 +213,9 @@ io.use((socket, next) => {
   if (auth?.signatureId) {
     session.signatureId = auth.signatureId;
     session.alias = (auth.alias || "").trim() || session.alias || "Anon";
-    eloLedger.upsert(session.signatureId, session.alias ?? "Anon");
+    // Fire-and-forget: don't block the handshake on a Supabase round-trip.
+    // Failures already log inside the ledger and flip Ephemeral Mode.
+    void eloLedger.upsert(session.signatureId, session.alias ?? "Anon");
   }
   (socket.data as { session: Session }).session = session;
   next();
@@ -383,14 +388,20 @@ function runAutoPass(room: Room): void {
     meta: { tileId: tile.id },
   });
   if (player.hand.length === 0) {
-    finalizeRound(room, player.socketId, tile);
+    void finalizeRound(room, player.socketId, tile).catch((err) => {
+      console.error(`[finalize] auto-pass finalize error in ${room.id}:`, err);
+    });
     return;
   }
   advanceTurn(room);
   maybeScheduleBotTurn(room);
 }
 
-function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
+async function finalizeRound(
+  room: Room,
+  winnerId: string,
+  closingTile: Tile,
+): Promise<void> {
   const scoreMap = calculateFinalScores(room.players, winnerId, closingTile);
   const scoresByName: Record<string, number> = {};
   const globalScoresByName: Record<string, number> = {};
@@ -446,20 +457,31 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
   console.log(
     `[ELO] finalizeRound room=${room.id} startingHumans=${startingHumans.length} eloCalculated=${eloCalculated} winner=${winner?.name ?? "?"}`,
   );
-  // Apply deltas to the ledger for every starting human (even ones
-  // who disconnected — their forfeit-penalty score still costs them).
-  // The ≥2-humans guard is in computeEloDeltas itself; we re-state
-  // it here only so the loop body is unambiguous to readers.
+  // v3.0.0 — Hidden Backbone flow:
+  //   1. Stop the turn timer + flip the room out of "playing" BEFORE
+  //      we await the DB so no concurrent socket events can land.
+  //   2. await every applyDelta — the in-memory cache AND the
+  //      Postgres row are settled before we proceed.
+  //   3. Only then read eloAfter and emit RANK_UPDATE downstream.
+  // If Supabase is down, applyDelta still resolves (it falls into
+  // Ephemeral Mode internally) — gameplay does not stall on a DB
+  // outage, but the match_tape is stamped with `ephemeral: true` so
+  // the AAR can surface the warning.
+  stopTurnTimer(room);
+  room.gameStarted = false;
+  room.currentTurn = null;
+  room.phase = "scoreboard";
   if (eloCalculated) {
-    for (const seat of eloSeats) {
-      const delta = deltaBySig.get(seat.signatureId) ?? 0;
-      const updated = eloLedger.applyDelta(seat.signatureId, delta);
-      // [ELO] v2.9.7 Reputation Sync: per-seat post-write tier check.
-      // Fires after applyDelta so `updated.eloScore` is the new value.
-      console.log(
-        `[ELO] Reputation Sync: ${updated.eloScore} -> ${tierForEloServer(updated.eloScore)} (sig=${seat.signatureId})`,
-      );
-    }
+    await Promise.all(
+      eloSeats.map(async (seat) => {
+        const delta = deltaBySig.get(seat.signatureId) ?? 0;
+        const updated = await eloLedger.applyDelta(seat.signatureId, delta);
+        // [ELO] v2.9.7 Reputation Sync: per-seat post-write tier check.
+        console.log(
+          `[ELO] Reputation Sync: ${updated.eloScore} -> ${tierForEloServer(updated.eloScore)} (sig=${seat.signatureId})`,
+        );
+      }),
+    );
   } else {
     console.warn(
       `[ELO] Skipped ledger update — reason=${startingHumans.length === 0 ? "no_humans" : "solo_vs_bots"} (need ≥2 humans, had ${startingHumans.length})`,
@@ -496,10 +518,6 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
       eloAffectedBySession[p.sessionId] = false;
     }
   }
-  stopTurnTimer(room);
-  room.gameStarted = false;
-  room.currentTurn = null;
-  room.phase = "scoreboard";
   room.scoreboardEndsAt = Date.now() + SCOREBOARD_DURATION_MS;
   console.log(
     `Game over in ${room.id}: winner=${winner?.name} closing=${closingTile.isJoker ? "JOKER" : closingTile.value} scores=${JSON.stringify(scoresByName)} totals=${JSON.stringify(globalScoresByName)}`,
@@ -537,7 +555,14 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
     tape.eloAfter = eloAfterBySession;
     tape.eloAffected = eloAffectedBySession;
     tape.matchType = matchType;
+    // v3.0.0 — stamp the tape with ephemeral status so the AAR can
+    // optionally surface a "session-only stats" warning.
+    tape.ephemeral = eloLedger.isEphemeral();
     io.to(room.id).emit("match_tape", tape);
+    // v3.0.0 — archive the tape into the matches table. Best-effort:
+    // failures don't block the wire emit (already sent above) and are
+    // logged inside the ledger.
+    void eloLedger.archiveMatch(tape);
   }
   // Free the recorder so its events array doesn't linger between
   // rounds. A new recorder is created at the next beginScramble.
@@ -648,7 +673,9 @@ function botSafeMove(room: Room, bot: Player): void {
   const tile = bot.hand.pop()!;
   room.discardPile.push(tile);
   if (bot.hand.length === 0) {
-    finalizeRound(room, bot.socketId, tile);
+    void finalizeRound(room, bot.socketId, tile).catch((err) => {
+      console.error(`[finalize] bot finalize error in ${room.id}:`, err);
+    });
     return;
   }
   advanceTurn(room);
@@ -723,7 +750,9 @@ function runBotTurnInner(room: Room, bot: Player): void {
   bot.hand = bot.hand.filter((t) => t.id !== tile.id);
   room.discardPile.push(tile);
   if (bot.hand.length === 0) {
-    finalizeRound(room, bot.socketId, tile);
+    void finalizeRound(room, bot.socketId, tile).catch((err) => {
+      console.error(`[finalize] bot finalize error in ${room.id}:`, err);
+    });
     return;
   }
   advanceTurn(room);
@@ -801,7 +830,7 @@ io.on("connection", (socket: Socket) => {
       // Keep the ledger alias in sync with the in-game display name
       // — joining a room is the natural moment to commit that.
       session.alias = name;
-      eloLedger.upsert(session.signatureId, name);
+      void eloLedger.upsert(session.signatureId, name);
     }
     room.players.push({
       sessionId: session.sessionId,
@@ -1138,7 +1167,9 @@ io.on("connection", (socket: Socket) => {
       meta: { tileId: tile.id },
     });
     if (player.hand.length === 0) {
-      finalizeRound(room, socket.id, tile);
+      void finalizeRound(room, socket.id, tile).catch((err) => {
+      console.error(`[finalize] discard finalize error in ${room.id}:`, err);
+    });
       return;
     }
     advanceTurn(room);
@@ -1680,4 +1711,14 @@ function evictSession(sessionId: string): void {
 
 httpServer.listen(PORT, () => {
   console.log(`Rommy server listening on http://localhost:${PORT}`);
+  // Hydrate the in-memory ELO cache from Supabase. Best-effort: on
+  // failure we log + flip Ephemeral Mode internally and gameplay
+  // proceeds with session-only stats.
+  void eloLedger.hydrate().then(() => {
+    if (eloLedger.isEphemeral()) {
+      console.warn("[boot] Ledger is in EPHEMERAL MODE — no persistence.");
+    } else {
+      console.log("[boot] Ledger hydrated — persistence ONLINE.");
+    }
+  });
 });

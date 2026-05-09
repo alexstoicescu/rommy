@@ -1,12 +1,43 @@
 # Rommy Changelog
 
-## [v2.9.7] - The "Tightened Thresholds" Patch
+## [v3.0.0] - The "Hidden Backbone" Update
+This major release marks the transition from a session-based prototype to a permanent, server-authorized competitive platform. By integrating Supabase via the MCP protocol, the Syndicate's reputation ledger is now etched into a global database while maintaining the intimacy of private room play.
 
-Logic: Gold threshold lowered from 1500 → 1400 to compress the progression curve. New bands: Bronze 1200-1299, Silver 1300-1399, Gold 1400+.
+🏛️ Persistent Infrastructure
+PostgreSQL Integration: Migrated all player data and match results to a permanent Supabase backend. Reputation is no longer tied to a browser cache.
 
-Visual: Switched from neon to classical metallic palette (#CD7F32 / #C0C0C0 / #FFD700). Halo intensity bumped to keep the "neon" feel since the base hexes are darker. Gold breathing animation slowed from 2.6s → 3.6s.
+Sovereign Identity: Your Signature ID now acts as a global primary key. Your ELO, rank, and alias follow you across any terminal or mobile device via the Neural Link.
 
-Logging: Added `[ELO] Reputation Sync: <score> -> <TIER>` server-side log per seat after every ledger write, so a finalize log line tells you both the new rating and the new tier in one place.
+Match Vaulting: Every game now generates a permanent record in the matches table, including the full v2.7.0 Match Tape JSON for future replay analysis.
+
+🧠 Server-Side Authority
+Reputation Shield: Relocated ELO calculation logic from the client to the server. This prevents client-side state manipulation and ensures the integrity of the Bronze/Silver/Gold hierarchy.
+
+Atomic Transactions: Rank updates now trigger only upon verified match completion. The server performs a handshake with the database before emitting the final results to the room.
+
+Ghost-Bot Verification: Maintained the "Ghost" protocol. Bots participate in the arena but are filtered out of the database's ELO commit layer.
+
+📡 Hidden Leaderboard UI
+Localized Competition: The sidebar leaderboard now dynamically fetches data from the global backbone but filters it to show only the players present in your current room.
+
+Live Rank Sync: Metallic neon badges (Bronz, Argint, Aur) are synchronized in real-time. When a player joins a room, their true global standing is instantly revealed to their opponents.
+
+Threshold Calibration: Finalized the high-velocity progression tiers:
+
+Bronze (Bronz): 1200 - 1299
+
+Silver (Argint): 1300 - 1399
+
+Gold (Aur): 1400+
+
+🛡️ Resiliency & Protocol
+Ephemeral Fallover: Implemented a "Shadow Mode." If the Supabase connection is interrupted, the game remains playable in a local-only state with a terminal warning.
+
+Infrastructure-as-Code: Utilized Claude Code MCP to automate the creation of SQL tables and security policies, ensuring the database structure is perfectly aligned with the game logic.
+
+## [v2.9.7]
+
+⚙️ Reputation CalibrationHigh-Velocity Progression: Reduced the gap between tiers to $100$ ELO points to accelerate player "Rank Up" moments.Balanced Entry: Bronze remains the baseline at $1200$.🎨 Visual IdentityMetallic Neon: Finalized hex-color mapping for Bronze, Silver, and Gold.Localized Strings: Verified Bronz, Argint, and Aur translations are active in Romanian mode.
 
 ## [v2.9.6] - The "Classic Tier" Update
 

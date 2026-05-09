@@ -8,8 +8,8 @@ function getConnectionStatus(sessionId: string): "active" | "disconnected" {
   return getSession(sessionId)?.connectionStatus ?? "active";
 }
 
-// Pluggable ELO lookup. index.ts wires the EloLedger in at boot via
-// setEloLookup; until then publicView returns the starting rating
+// Pluggable ELO lookup. index.ts wires the SupabaseLedger in at boot
+// via setEloLookup; until then publicView returns the starting rating
 // (1200) for everyone. Keeps GameState.ts free of a hard dependency
 // on the ledger module.
 let eloLookup: (signatureId: string | null) => number = () => 1200;
