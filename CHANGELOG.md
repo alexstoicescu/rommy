@@ -1,5 +1,15 @@
 # Rommy Changelog
 
+## [v2.9.6] - The "Classic Tier" Update
+
+UI: Universal Hierarchy: Replaced thematic ranks with Bronze, Silver, and Gold for instant skill-level recognition.
+
+Visual: Metallic Neon: Implemented tier-specific color palettes with custom CSS neon glows and "breathing" animations for top-tier players.
+
+Logic: Threshold Standardization: Unified the tier-mapping utility across the frontend and backend.
+
+Localization: Fully translated the new tiers into Romanian (Bronz / Argint / Aur).
+
 ## [v2.9.5] - The "Reputation Committal" Patch
 
 Logic: Human-to-Human Lock: Hardened the detection for multi-human matches to ensure ELO delta triggers even when bots are present.

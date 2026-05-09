@@ -279,6 +279,69 @@
   opacity: 0.75;
 }
 
+/* Universal-tier rank badge (v2.9.6). Sits inside the MVP elo badge
+   and inherits the same pill shape as the leaderboard tier chip. */
+.aar__rank-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.aar__rank-badge--initiate {
+  color: rgba(207, 226, 214, 0.6);
+}
+
+.aar__rank-badge--bronze {
+  color: #ffa64d;
+  background: rgba(255, 166, 77, 0.1);
+  border-color: rgba(255, 166, 77, 0.7);
+  text-shadow: 0 0 4px rgba(255, 140, 40, 0.5);
+  box-shadow: 0 0 6px rgba(255, 140, 40, 0.2);
+}
+
+.aar__rank-badge--silver {
+  color: #cfe6ff;
+  background: rgba(180, 215, 255, 0.1);
+  border-color: rgba(180, 215, 255, 0.75);
+  text-shadow: 0 0 4px rgba(150, 200, 255, 0.55);
+  box-shadow: 0 0 6px rgba(150, 200, 255, 0.22);
+}
+
+.aar__rank-badge--gold {
+  color: #ffe066;
+  background: rgba(255, 224, 102, 0.12);
+  border-color: rgba(255, 224, 102, 0.9);
+  text-shadow: 0 0 5px rgba(255, 215, 60, 0.6);
+  animation: aar-rank-gold-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes aar-rank-gold-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 6px rgba(255, 215, 60, 0.28),
+      inset 0 0 4px rgba(255, 215, 60, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(255, 215, 60, 0.65),
+      inset 0 0 8px rgba(255, 215, 60, 0.24);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aar__rank-badge--gold {
+    animation: none;
+    box-shadow: 0 0 8px rgba(255, 215, 60, 0.45);
+  }
+}
+
 /* Compact +/- delta in the fortune table. */
 .aar__delta {
   font-variant-numeric: tabular-nums;

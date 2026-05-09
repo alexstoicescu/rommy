@@ -5,6 +5,7 @@ import { analyzeTape } from "../replay/analytics";
 import { ScoreChart } from "./ScoreChart";
 import { TileComponent } from "./TileComponent";
 import { getSignatureId } from "../identity";
+import { tierForElo, tierLabelKey } from "../replay/rankTier";
 import "./AfterActionReport.css";
 
 interface Props {
@@ -134,6 +135,7 @@ export function AfterActionReport({
                     : "aar__elo-badge aar__elo-badge--null";
               const sign = delta > 0 ? "+" : "";
               const before = after != null ? after - delta : null;
+              const tier = after != null ? tierForElo(after) : null;
               return (
                 <div className={cls}>
                   <span className="aar__elo-label">{t("aar_elo")}</span>
@@ -146,6 +148,11 @@ export function AfterActionReport({
                     ({sign}
                     {delta})
                   </span>
+                  {tier && (
+                    <span className={`aar__rank-badge aar__rank-badge--${tier}`}>
+                      {t(tierLabelKey(tier))}
+                    </span>
+                  )}
                 </div>
               );
             })()}

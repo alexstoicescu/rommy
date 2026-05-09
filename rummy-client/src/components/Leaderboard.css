@@ -130,22 +130,58 @@
 }
 
 .leaderboard__tier--initiate {
+  /* Provisional / sub-1200. Muted on purpose — players below the floor
+     should read as "unranked" not "Bronze-adjacent". */
   color: rgba(207, 226, 214, 0.6);
 }
 
-.leaderboard__tier--street {
-  color: #87b29c;
+/* Bronze (1200-1299) — amber-orange neon stroke + text. */
+.leaderboard__tier--bronze {
+  color: #ffa64d;
+  background: rgba(255, 166, 77, 0.08);
+  border-color: rgba(255, 166, 77, 0.65);
+  text-shadow: 0 0 4px rgba(255, 140, 40, 0.5);
+  box-shadow: 0 0 6px rgba(255, 140, 40, 0.18);
 }
 
-.leaderboard__tier--operator {
-  color: #00f2ff;
-  text-shadow: 0 0 4px rgba(0, 242, 255, 0.4);
+/* Silver (1300-1499) — cold silver-blue neon. */
+.leaderboard__tier--silver {
+  color: #cfe6ff;
+  background: rgba(180, 215, 255, 0.08);
+  border-color: rgba(180, 215, 255, 0.7);
+  text-shadow: 0 0 4px rgba(150, 200, 255, 0.55);
+  box-shadow: 0 0 6px rgba(150, 200, 255, 0.2);
 }
 
-.leaderboard__tier--elite {
-  color: #ff66ff;
-  background: rgba(255, 102, 255, 0.08);
-  text-shadow: 0 0 4px rgba(255, 102, 255, 0.45);
+/* Gold (1500+) — brilliant yellow-gold neon with a subtle breathing
+   pulse. The animation modulates the glow only (color/border stay
+   stable) so the badge never feels jittery in peripheral vision. */
+.leaderboard__tier--gold {
+  color: #ffe066;
+  background: rgba(255, 224, 102, 0.1);
+  border-color: rgba(255, 224, 102, 0.85);
+  text-shadow: 0 0 5px rgba(255, 215, 60, 0.6);
+  animation: rank-gold-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes rank-gold-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 6px rgba(255, 215, 60, 0.25),
+      inset 0 0 4px rgba(255, 215, 60, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(255, 215, 60, 0.6),
+      inset 0 0 8px rgba(255, 215, 60, 0.22);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaderboard__tier--gold {
+    animation: none;
+    box-shadow: 0 0 8px rgba(255, 215, 60, 0.4);
+  }
 }
 
 .leaderboard__score {
