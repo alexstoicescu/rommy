@@ -4,6 +4,12 @@ dist/
 .DS_Store
 *.log
 
+# Local environment files — never commit secrets (Supabase service role
+# key, etc.). The committed .env.example documents the variable names.
+.env
+.env.*
+!.env.example
+
 # Syndicate Reputation Ledger — runtime persistent store.
 ledger.json
 ledger.json.tmp
