@@ -1,5 +1,23 @@
 # Rommy Changelog
 
+## [v3.3.0] - The "Fluid Disposal" Update
+
+⚙️ UX: Natural Navigation
+
+Kinetic Scrolling: Mapped vertical mouse wheel input to the horizontal axis for the Discarded Pile. Browsing history is now a zero-friction experience.
+
+Scroll Multiplier: Tuned the wheel-to-scroll ratio to ensure quick scanning of large tile sets without losing precision.
+
+🎨 UI: Expanded Horizon
+
+Dimensional Boost: Extended the Discarded Pile container by 10%, providing a wider field of view for discarded assets.
+
+Edge Masking: Implemented neon-alpha gradients at container boundaries to provide visual cues for scrollable content.
+
+⚡ Optimization
+
+Event Throttling: Utilized passive event listeners to ensure the new scrolling logic does not impact game loop performance or frame timing.
+
 ## [v3.2.0] - The "Chroma Clarity" Update
 
 🎨 Visual: Luminous Calibration
@@ -16,7 +34,8 @@ High-Contrast Mode: Added a system-wide toggle to amplify glow intensity and typ
 
 ⚙️ Optimization
 
-Luminance Balancing: Verified all card combinations meet a minimum 4.5:1 contrast ratio against the primary board background.
+Luminance Balancing: Verified all card combinations meet a minimum 4.5:1 contrast ratio against the primary board background.da
+
 
 ## [v3.1.0] - The "Adaptive Terminal" Update
 

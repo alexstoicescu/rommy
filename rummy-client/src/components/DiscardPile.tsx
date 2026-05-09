@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import type { Tile } from "../types/game";
 import { TileComponent } from "./TileComponent";
 import "./DiscardPile.css";
+
+// v3.3.0 Fluid Disposal — wheel multiplier. Roughly 1.2× the raw
+// deltaY gives a tactile, slightly accelerated feel without
+// overshooting on a single notch of a discrete mouse wheel.
+const WHEEL_MULTIPLIER = 1.2;
 
 interface Props {
   tiles: Tile[];
@@ -41,6 +46,35 @@ export function DiscardPile({
   const { setNodeRef, isOver } = useDroppable({ id: DISCARD_PILE_ID });
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const { t } = useTranslation();
+  // v3.3.0 — Horizontal Wheel Navigation. Vertical wheel deltas are
+  // redirected into scrollLeft so a regular mouse wheel can pan the
+  // pile horizontally. Native horizontal trackpad gestures (deltaX)
+  // still bubble through unchanged.
+  //
+  // The listener is passive (`{ passive: true }`) — we never call
+  // preventDefault, which lets the browser keep its compositor-level
+  // scroll perf intact even during heavy game ticks. Vertical wheel
+  // events have nowhere else to scroll on this surface (every
+  // ancestor has overflow:hidden and the meld-zone is a sibling, not
+  // an ancestor), so the missing preventDefault is a no-op in
+  // practice.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY === 0) return;
+      el.scrollLeft += e.deltaY * WHEEL_MULTIPLIER;
+    };
+    el.addEventListener("wheel", onWheel, { passive: true });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+  // Compose the dnd-kit droppable ref with our local scroller ref so
+  // the same DOM node serves both purposes.
+  const composedRef = (node: HTMLDivElement | null) => {
+    setNodeRef(node);
+    scrollerRef.current = node;
+  };
 
   const lastIdx = tiles.length - 1;
   const interactive = !!canRupere && !locked;
@@ -56,7 +90,7 @@ export function DiscardPile({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={composedRef}
       className={containerCls}
       aria-label={t("discard_aria_pile")}
       title={locked ? t("discard_locked_title") : undefined}

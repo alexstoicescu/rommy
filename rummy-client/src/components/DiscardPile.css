@@ -5,30 +5,40 @@
   border-radius: 8px;
   padding: 4px 12px;
   transition: background 120ms, box-shadow 120ms;
-  /* Single-row scroller capped at 60% of the .table-header lane
-     (v2026.1 spec). Atu + DrawPile sit on the left of the header,
-     the discard strip occupies up to 60% on the right. */
+  /* v3.3.0 — Container Expansion: the strip now occupies up to 66%
+     of the .table-header lane (was 60%, +10%). The slot overlap
+     below shrinks proportionally so the extra width fans tiles
+     wider rather than just adding empty space. */
   flex: 1 1 auto;
-  max-width: 60%;
+  max-width: 66%;
   overflow-x: auto;
-  /* Custom scrollbar — invisible by default, thin neon pill on
-     hover. Webkit-only; Firefox falls back to its native thin
-     scrollbar via scrollbar-width below. */
-  scrollbar-width: none;
-  scrollbar-color: rgba(0, 242, 255, 0.55) transparent;
-}
-
-.discard-pile:hover {
+  /* v3.3.0 — Always-on thin neon scrollbar in the v3.2.0 Electric
+     Cyan palette. Firefox honours the two scrollbar-* properties;
+     WebKit gets the same look via the pseudo-elements below. */
   scrollbar-width: thin;
+  scrollbar-color: #00E5FF transparent;
+  /* v3.3.0 — Edge fade. A linear-gradient mask fades the leftmost
+     and rightmost ~24px to transparent so when there are more tiles
+     past the visible edge the strip reads as "more cards over here"
+     rather than an abrupt cutoff. Always-on (subtle) per spec. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent 100%
+  );
 }
 
 .discard-pile::-webkit-scrollbar {
-  height: 0;
-  transition: height 0.15s;
-}
-
-.discard-pile:hover::-webkit-scrollbar {
-  height: 6px;
+  height: 4px;
 }
 
 .discard-pile::-webkit-scrollbar-track {
@@ -36,13 +46,14 @@
 }
 
 .discard-pile::-webkit-scrollbar-thumb {
-  background: rgba(0, 242, 255, 0.55);
+  background: #00E5FF;
   border-radius: 999px;
-  box-shadow: 0 0 6px rgba(0, 242, 255, 0.45);
+  box-shadow: 0 0 6px rgba(0, 229, 255, 0.55);
 }
 
 .discard-pile::-webkit-scrollbar-thumb:hover {
-  background: #00f2ff;
+  background: #5cf3ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
 }
 
 .discard-pile--over {
@@ -166,7 +177,11 @@
   background: transparent;
   border: none;
   padding: 0;
-  margin-left: -12px; /* roomy fan — most of each tile readable */
+  /* v3.3.0 — Container Expansion: overlap shrunk from -12px → -8px
+     so each tile shows ~4 more px of face. Combined with the +10%
+     container width above, tiles get ~10% more lateral room without
+     looking stretched. */
+  margin-left: -8px;
   cursor: default;
   transition: transform 140ms ease, filter 140ms ease;
   position: relative;
