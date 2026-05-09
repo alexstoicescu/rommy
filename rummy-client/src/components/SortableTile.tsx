@@ -6,9 +6,11 @@ import { TileComponent } from "./TileComponent";
 interface Props {
   tile: Tile;
   style?: React.CSSProperties;
+  /** v3.6.0 — pass-through to TileComponent for joker ghost-rank. */
+  ghostRank?: number | null;
 }
 
-export function SortableTile({ tile, style: outerStyle }: Props) {
+export function SortableTile({ tile, style: outerStyle, ghostRank }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: tile.id });
 
@@ -29,7 +31,7 @@ export function SortableTile({ tile, style: outerStyle }: Props) {
       {...attributes}
       {...listeners}
     >
-      <TileComponent tile={tile} />
+      <TileComponent tile={tile} ghostRank={ghostRank} />
     </div>
   );
 }

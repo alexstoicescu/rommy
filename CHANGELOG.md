@@ -1,5 +1,20 @@
 # Rommy Changelog
 
+## [v3.6.0] - The "Wildcard Fix" Update
+This patch corrects a critical flaw in the Meld Validator, ensuring that Jokers correctly fulfill their role as polymorphic assets within the Syndicate.
+
+🧠 Logic: Wildcard Polymorphism
+Set Inheritance: Refactored isValidSet to allow Jokers to mimic any rank. A 3+3+Joker combo is now correctly identified as a valid Three-of-a-Kind.
+
+Run Gap-Filling: Enhanced isValidRun to utilize Jokers as bridges for missing sequential values.
+
+Suit Uniqueness Check: Optimized the validator to ignore Joker suit-identity while strictly enforcing suit uniqueness for the remaining natural cards in a set.
+
+🧪 Quality Assurance
+Regression Testing: Implemented five new test cases covering edge-case Joker placements in sets and runs.
+
+Suit Conflict Resolution: Fixed a bug where two identical cards (e.g., 3♥ and 3♥) plus a Joker were erroneously passing; the validator now correctly identifies this as an illegal set.
+
 ## [v3.5.0] - The "Lean Circuitry" Update
 This update introduces a specialized execution mode for low-memory environments, ensuring the Syndicate remains accessible on legacy hardware and lightweight mobile terminals.
 

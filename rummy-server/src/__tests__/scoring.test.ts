@@ -252,5 +252,69 @@ console.log("\nreifySuita");
   record(!isValidSuita(meld), "13-1-2 wrap-around is rejected");
 }
 
+// === Wildcard validation regression — v3.6.0 =================================
+//
+// Recorded after a bug report claimed `3+3+Joker` was being rejected. A
+// trace of isValidFormatie + isValidSuita against the existing code
+// showed the cases below already validate correctly. These tests are
+// here to LOCK IN that behaviour so a future "fix" doesn't regress it.
+//
+// Mapping from the report's notation:
+//   3♠ → black 3,  3♥ → red 3,  3♦ → blue 3
+//   5♦ / 7♦       → yellow 5 / yellow 7 (single-suit run)
+console.log("\nWildcard validation (v3.6.0)");
+
+const joker = (id: string): Tile => tile(id, "joker", 0, true);
+
+// [3♣ 3♥ J]  3-card set with a joker filling the 4th rank-3 slot.
+{
+  const meld: Tile[] = [
+    tile("k-3", "black", 3),
+    tile("r-3", "red", 3),
+    joker("j-1"),
+  ];
+  record(isValidFormatie(meld), "[3♣ 3♥ J] is a valid Formatie");
+  record(!isValidSuita(meld), "[3♣ 3♥ J] is NOT a Suita");
+}
+
+// [5♦ J 7♦]  3-card run, joker fills the gap at rank 6.
+{
+  const meld: Tile[] = [
+    tile("y-5", "yellow", 5),
+    joker("j-2"),
+    tile("y-7", "yellow", 7),
+  ];
+  record(isValidSuita(meld), "[5♦ J 7♦] is a valid Suita (joker = 6)");
+  record(!isValidFormatie(meld), "[5♦ J 7♦] is NOT a Formatie");
+}
+
+// [3♣ 3♣ J]  same suit twice → must be rejected even with the joker.
+{
+  const meld: Tile[] = [
+    tile("k-3-a", "black", 3),
+    tile("k-3-b", "black", 3),
+    joker("j-3"),
+  ];
+  record(
+    !isValidFormatie(meld),
+    "[3♣ 3♣ J] rejected — duplicate suits not allowed even with a joker",
+  );
+}
+
+// 4-card set with two jokers must FAIL the joker-ratio guard:
+// real=2, jokers=2 → 2 >= 2*2 is false.
+{
+  const meld: Tile[] = [
+    tile("k-3", "black", 3),
+    tile("r-3", "red", 3),
+    joker("j-4"),
+    joker("j-5"),
+  ];
+  record(
+    !isValidFormatie(meld),
+    "[3♣ 3♥ J J] rejected — joker ratio (real ≥ 2× jokers) violated",
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);

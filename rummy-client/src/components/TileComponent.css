@@ -160,6 +160,28 @@
   pointer-events: none;
 }
 
+/* v3.6.0 — Joker ghost-rank. Faint oversize glyph behind the "J"
+   showing the rank the joker is currently representing in its
+   meld. Sits behind the J via z-index/opacity rather than a
+   separate layer. Only rendered when the parent meld validated
+   (jokerGhostRanks returned a value), so its presence on a tile
+   is itself a confirmation that the meld is legal. */
+.tile__joker-ghost {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7em;
+  font-weight: 900;
+  font-family: "Georgia", "Times New Roman", serif;
+  line-height: 1;
+  color: var(--suit-color);
+  opacity: 0.18;
+  pointer-events: none;
+  user-select: none;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

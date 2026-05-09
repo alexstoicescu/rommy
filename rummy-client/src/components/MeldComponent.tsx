@@ -1,10 +1,11 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import type { Tile } from "../types/game";
+import { jokerGhostRanks } from "../rules";
 import { SortableTile } from "./SortableTile";
 import { TileComponent } from "./TileComponent";
 import "./MeldComponent.css";
@@ -25,9 +26,11 @@ interface Props {
 interface JokerSlotProps {
   meldId: string;
   tile: Tile;
+  /** v3.6.0 — rank the joker is currently representing in this meld. */
+  ghostRank?: number | null;
 }
 
-function JokerSlot({ meldId, tile }: JokerSlotProps) {
+function JokerSlot({ meldId, tile, ghostRank }: JokerSlotProps) {
   // Server-confirmed meld ids look like `board-meld:<ownerId>:<idx>`.
   // The joker slot id collapses to `joker-slot:<ownerId>:<idx>:<jokerId>`
   // so the client/server can parse it with a simple split.
@@ -42,7 +45,7 @@ function JokerSlot({ meldId, tile }: JokerSlotProps) {
       className={`joker-slot${isOver ? " joker-slot--over" : ""}`}
       data-slot-id={slotId}
     >
-      <TileComponent tile={tile} />
+      <TileComponent tile={tile} ghostRank={ghostRank} />
     </div>
   );
 }
@@ -55,12 +58,28 @@ function MeldComponentImpl({ id, tiles, interactive = true }: Props) {
     interactive ? "" : " meld--confirmed"
   }${isDraft ? " meld--draft" : ""}`;
 
+  // v3.6.0 — Joker ghost-rank. For confirmed (non-interactive) melds
+  // the meld is server-validated so we always get a Map back. For
+  // draft melds the player may be mid-edit; jokerGhostRanks returns
+  // null on invalid drafts and the tile renders the bare "J".
+  // Memoized on the tile array reference so we don't reify on every
+  // turn-timer tick.
+  const ghostByTileId = useMemo(
+    () => jokerGhostRanks(tiles) ?? new Map<string, number>(),
+    [tiles],
+  );
+
   if (!interactive) {
     return (
       <div ref={setNodeRef} className={className} data-meld-id={id}>
         {tiles.map((tile) =>
           tile.isJoker ? (
-            <JokerSlot key={tile.id} meldId={id} tile={tile} />
+            <JokerSlot
+              key={tile.id}
+              meldId={id}
+              tile={tile}
+              ghostRank={ghostByTileId.get(tile.id) ?? null}
+            />
           ) : (
             <TileComponent key={tile.id} tile={tile} />
           ),
@@ -77,7 +96,13 @@ function MeldComponentImpl({ id, tiles, interactive = true }: Props) {
         strategy={horizontalListSortingStrategy}
       >
         {tiles.map((tile) => (
-          <SortableTile key={tile.id} tile={tile} />
+          <SortableTile
+            key={tile.id}
+            tile={tile}
+            ghostRank={
+              tile.isJoker ? (ghostByTileId.get(tile.id) ?? null) : null
+            }
+          />
         ))}
       </SortableContext>
     </div>

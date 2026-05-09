@@ -34,7 +34,11 @@ function matchSequence(meld: Tile[], seq: number[]): Reified[] | null {
   return out;
 }
 
-function reifySuita(meld: Tile[]): Reified[] | null {
+// v3.6.0 — exported so MeldComponent can derive each joker's
+// "ghost rank" (the value it's currently standing in for) and
+// surface it on the tile face. Server-side rules.ts mirror exports
+// the same shape.
+export function reifySuita(meld: Tile[]): Reified[] | null {
   const L = meld.length;
   for (let start = MIN_VALUE; start <= MAX_VALUE; start++) {
     const end = start + L - 1;
@@ -94,6 +98,35 @@ function formatieTilePoints(setValue: number): number {
   if (setValue === 1) return 25;
   if (setValue >= 2 && setValue <= 9) return 5;
   return 10;
+}
+
+// v3.6.0 — given a meld already known to be valid (Suita or
+// Formatie), return a map of jokerTileId → the rank that joker is
+// representing on the board. Returns null if the meld isn't a
+// valid Suita or Formatie. The MeldComponent uses this to render a
+// ghost-rank glyph behind the "J" so players can see why their
+// 3+3+J was accepted.
+export function jokerGhostRanks(meld: Tile[]): Map<string, number> | null {
+  if (isValidSuita(meld)) {
+    const r = reifySuita(meld);
+    if (!r) return null;
+    const out = new Map<string, number>();
+    for (let i = 0; i < meld.length; i++) {
+      if (meld[i].isJoker) out.set(meld[i].id, r[i].effective);
+    }
+    return out;
+  }
+  if (isValidFormatie(meld)) {
+    const real = meld.filter((t) => !t.isJoker);
+    if (real.length === 0) return null;
+    const setValue = real[0].value;
+    const out = new Map<string, number>();
+    for (const t of meld) {
+      if (t.isJoker) out.set(t.id, setValue);
+    }
+    return out;
+  }
+  return null;
 }
 
 export function calculateMeldPoints(meld: Tile[]): number {
