@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## [v2.9.7] - The "Tightened Thresholds" Patch
+
+Logic: Gold threshold lowered from 1500 → 1400 to compress the progression curve. New bands: Bronze 1200-1299, Silver 1300-1399, Gold 1400+.
+
+Visual: Switched from neon to classical metallic palette (#CD7F32 / #C0C0C0 / #FFD700). Halo intensity bumped to keep the "neon" feel since the base hexes are darker. Gold breathing animation slowed from 2.6s → 3.6s.
+
+Logging: Added `[ELO] Reputation Sync: <score> -> <TIER>` server-side log per seat after every ledger write, so a finalize log line tells you both the new rating and the new tier in one place.
+
 ## [v2.9.6] - The "Classic Tier" Update
 
 UI: Universal Hierarchy: Replaced thematic ranks with Bronze, Silver, and Gold for instant skill-level recognition.

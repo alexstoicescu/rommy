@@ -8,11 +8,18 @@
 // as a sub-Bronze provisional rank for anyone whose rating has fallen
 // below 1200 — folding it into Bronze would erase the visual signal
 // that they're below the floor.
+//
+// v2.9.7 recalibration: Gold lowered from 1500 to 1400 to tighten the
+// progression curve. New bands:
+//   initiate  : <1200    (provisional / below floor)
+//   bronze    : 1200-1299
+//   silver    : 1300-1399
+//   gold      : 1400+
 
 export type RankTier = "initiate" | "bronze" | "silver" | "gold";
 
 export function tierForElo(elo: number): RankTier {
-  if (elo >= 1500) return "gold";
+  if (elo >= 1400) return "gold";
   if (elo >= 1300) return "silver";
   if (elo >= 1200) return "bronze";
   return "initiate";

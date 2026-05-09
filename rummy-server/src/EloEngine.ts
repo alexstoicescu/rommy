@@ -33,6 +33,21 @@ export function expectedScore(self: number, opp: number): number {
 }
 
 /**
+ * Server-side tier label for finalize logging. Mirrors
+ * `rummy-client/src/replay/rankTier.ts:tierForElo` — keep the two in
+ * sync. Thresholds (v2.9.7): bronze 1200 / silver 1300 / gold 1400.
+ *
+ * Intentionally not exported as a `RankTier` union here — this is a
+ * log helper, not a wire type. Tier *display* is still client-driven.
+ */
+export function tierForEloServer(elo: number): string {
+  if (elo >= 1400) return "GOLD";
+  if (elo >= 1300) return "SILVER";
+  if (elo >= 1200) return "BRONZE";
+  return "INITIATE";
+}
+
+/**
  * Compute integer deltas keyed by signatureId. Bots are admitted to
  * the seat list (so callers can pass the full table) but excluded
  * from every pair, guaranteeing no ELO change for or because of bots.

@@ -135,45 +135,51 @@
   color: rgba(207, 226, 214, 0.6);
 }
 
-/* Bronze (1200-1299) — amber-orange neon stroke + text. */
+/* v2.9.7 — classical metallic palette (#CD7F32/#C0C0C0/#FFD700).
+   Note: the base bronze/silver hexes are darker than the v2.9.6
+   neon palette, so the "neon" effect now lives in the box-shadow
+   halo more than in the text colour itself. Halo intensity bumped
+   to compensate. */
+
+/* Bronze (1200-1299) — #CD7F32 metallic + amber halo. */
 .leaderboard__tier--bronze {
-  color: #ffa64d;
-  background: rgba(255, 166, 77, 0.08);
-  border-color: rgba(255, 166, 77, 0.65);
-  text-shadow: 0 0 4px rgba(255, 140, 40, 0.5);
-  box-shadow: 0 0 6px rgba(255, 140, 40, 0.18);
+  color: #cd7f32;
+  background: rgba(205, 127, 50, 0.1);
+  border-color: rgba(205, 127, 50, 0.85);
+  text-shadow: 0 0 5px rgba(205, 127, 50, 0.7);
+  box-shadow: 0 0 8px rgba(205, 127, 50, 0.35);
 }
 
-/* Silver (1300-1499) — cold silver-blue neon. */
+/* Silver (1300-1399) — #C0C0C0 metallic. */
 .leaderboard__tier--silver {
-  color: #cfe6ff;
-  background: rgba(180, 215, 255, 0.08);
-  border-color: rgba(180, 215, 255, 0.7);
-  text-shadow: 0 0 4px rgba(150, 200, 255, 0.55);
-  box-shadow: 0 0 6px rgba(150, 200, 255, 0.2);
+  color: #c0c0c0;
+  background: rgba(192, 192, 192, 0.1);
+  border-color: rgba(192, 192, 192, 0.85);
+  text-shadow: 0 0 5px rgba(192, 192, 192, 0.65);
+  box-shadow: 0 0 8px rgba(192, 192, 192, 0.3);
 }
 
-/* Gold (1500+) — brilliant yellow-gold neon with a subtle breathing
-   pulse. The animation modulates the glow only (color/border stay
-   stable) so the badge never feels jittery in peripheral vision. */
+/* Gold (1400+) — #FFD700 metallic + slow breathing pulse. The
+   animation modulates only the box-shadow halo so the badge never
+   feels jittery in peripheral vision. */
 .leaderboard__tier--gold {
-  color: #ffe066;
-  background: rgba(255, 224, 102, 0.1);
-  border-color: rgba(255, 224, 102, 0.85);
-  text-shadow: 0 0 5px rgba(255, 215, 60, 0.6);
-  animation: rank-gold-breathe 2.6s ease-in-out infinite;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  border-color: rgba(255, 215, 0, 0.9);
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
+  animation: rank-gold-breathe 3.6s ease-in-out infinite;
 }
 
 @keyframes rank-gold-breathe {
   0%, 100% {
     box-shadow:
-      0 0 6px rgba(255, 215, 60, 0.25),
-      inset 0 0 4px rgba(255, 215, 60, 0.1);
+      0 0 6px rgba(255, 215, 0, 0.3),
+      inset 0 0 4px rgba(255, 215, 0, 0.12);
   }
   50% {
     box-shadow:
-      0 0 14px rgba(255, 215, 60, 0.6),
-      inset 0 0 8px rgba(255, 215, 60, 0.22);
+      0 0 16px rgba(255, 215, 0, 0.7),
+      inset 0 0 8px rgba(255, 215, 0, 0.26);
   }
 }
 

@@ -12,7 +12,7 @@ import {
   type Room,
 } from "./GameState";
 import { EloLedger } from "./EloLedger";
-import { computeEloDeltas, type EloSeat } from "./EloEngine";
+import { computeEloDeltas, tierForEloServer, type EloSeat } from "./EloEngine";
 import {
   addTileWithSlot,
   placeTileAtSlot,
@@ -453,7 +453,12 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
   if (eloCalculated) {
     for (const seat of eloSeats) {
       const delta = deltaBySig.get(seat.signatureId) ?? 0;
-      eloLedger.applyDelta(seat.signatureId, delta);
+      const updated = eloLedger.applyDelta(seat.signatureId, delta);
+      // [ELO] v2.9.7 Reputation Sync: per-seat post-write tier check.
+      // Fires after applyDelta so `updated.eloScore` is the new value.
+      console.log(
+        `[ELO] Reputation Sync: ${updated.eloScore} -> ${tierForEloServer(updated.eloScore)} (sig=${seat.signatureId})`,
+      );
     }
   } else {
     console.warn(
