@@ -4,6 +4,7 @@ import type { MatchTape } from "../replay/types";
 import { analyzeTape } from "../replay/analytics";
 import { ScoreChart } from "./ScoreChart";
 import { TileComponent } from "./TileComponent";
+import { getSignatureId } from "../identity";
 import "./AfterActionReport.css";
 
 interface Props {
@@ -45,6 +46,31 @@ export function AfterActionReport({
 
   const matchType = tape.matchType ?? "ranked";
   const isSocial = matchType === "social";
+
+  // [ELO] Dev-mode trace: when the tape lands, dump per-seat math so a
+  // QA-er watching devtools can immediately see why a seat shows ±0.
+  useEffect(() => {
+    for (const p of tape.players) {
+      const delta = tape.eloDeltas[p.sessionId] ?? 0;
+      const after = tape.eloAfter[p.sessionId];
+      const affected = tape.eloAffected?.[p.sessionId] ?? delta !== 0;
+      if (!affected) {
+        const reason = p.isBot
+          ? "bot_seat"
+          : matchType === "social"
+            ? "match_too_short_or_solo_vs_bots"
+            : "no_human_opponent_detected";
+        console.warn(
+          `[ELO] ${p.name} (sid=${p.sessionId}) Δ=0 — reason=${reason}`,
+        );
+        continue;
+      }
+      const before = after != null ? after - delta : null;
+      console.log(
+        `[ELO] ${p.name}: ${before ?? "?"} → ${after ?? "?"} (${delta >= 0 ? "+" : ""}${delta})`,
+      );
+    }
+  }, [tape, matchType]);
 
   return (
     <div
@@ -107,16 +133,19 @@ export function AfterActionReport({
                     ? "aar__elo-badge aar__elo-badge--down"
                     : "aar__elo-badge aar__elo-badge--null";
               const sign = delta > 0 ? "+" : "";
+              const before = after != null ? after - delta : null;
               return (
                 <div className={cls}>
                   <span className="aar__elo-label">{t("aar_elo")}</span>
-                  <span className="aar__elo-delta">
-                    {sign}
-                    {delta}
-                  </span>
-                  {after != null && (
-                    <span className="aar__elo-after">→ {after}</span>
+                  {before != null && after != null && (
+                    <span className="aar__elo-math">
+                      {before} → {after}
+                    </span>
                   )}
+                  <span className="aar__elo-delta">
+                    ({sign}
+                    {delta})
+                  </span>
                 </div>
               );
             })()}
@@ -265,6 +294,13 @@ export function AfterActionReport({
             </button>
           </div>
         </footer>
+        {/* [QA-AUDIT v2.8.1] Identity footer — exposes the local
+            signatureId so the QA pass can verify the persistent
+            identity is the same one keying the ledger row. Remove
+            once the audit is closed. */}
+        <div className="aar__sig-footer" aria-hidden="true">
+          sig:{getSignatureId() || "(none)"}
+        </div>
       </div>
     </div>
   );

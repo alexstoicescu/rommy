@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## [v2.9.5] - The "Reputation Committal" Patch
+
+Logic: Human-to-Human Lock: Hardened the detection for multi-human matches to ensure ELO delta triggers even when bots are present.
+
+Persistence: Transactional Updates: Moved the ELO calculation to the start of the GameOver sequence to prevent data loss during session disconnects.
+
+UI: Tier Standardization: Verified STRADĂ / Street logic scales across languages and correctly maps to the 1200 baseline.
+
 ## [v2.9.4] - The "Agency" Update
 
 Logic: Agency Restoration: Permanently removed output randomness from player actions (Discard/Meld).

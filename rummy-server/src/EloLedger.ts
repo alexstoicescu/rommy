@@ -159,11 +159,25 @@ export class EloLedger {
 
   /** Apply a signed delta and bump games-played. Returns the new entry. */
   applyDelta(signatureId: string, delta: number): LedgerEntry {
-    if (!signatureId || !Number.isFinite(delta)) return this.get(signatureId);
+    if (!signatureId || !Number.isFinite(delta)) {
+      console.warn(
+        `[ELO] applyDelta SKIPPED: signatureId=${signatureId || "(empty)"} delta=${delta} — entry untouched`,
+      );
+      return this.get(signatureId);
+    }
     const entry = this.entries.get(signatureId) ?? this.upsert(signatureId, "");
-    entry.eloScore = Math.max(FLOOR_ELO, Math.round(entry.eloScore + delta));
+    const oldScore = entry.eloScore;
+    const newScore = Math.max(FLOOR_ELO, Math.round(oldScore + delta));
+    entry.eloScore = newScore;
     entry.gamesPlayed += 1;
     entry.lastSeen = Date.now();
+    // [ELO] mutation log — the only place ledger eloScore changes,
+    // so this line is authoritative for "what actually hit the row."
+    // delta=0 transitions are still logged so we can distinguish
+    // "ELO computed but tied" from "ELO never computed at all."
+    console.log(
+      `[ELO] Updating Signature ${signatureId} from ${oldScore} to ${newScore} (delta=${delta >= 0 ? "+" : ""}${delta})`,
+    );
     this.scheduleWrite();
     return entry;
   }

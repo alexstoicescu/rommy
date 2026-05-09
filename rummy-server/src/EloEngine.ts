@@ -54,6 +54,15 @@ export function computeEloDeltas(seats: EloSeat[]): Map<string, number> {
       else actualA = 0.5;
       const dA = K_BASE * (actualA - ea);
       const dB = K_BASE * (1 - actualA - (1 - ea));
+      // [QA-AUDIT v2.8.1] Logic-trace: print the four canonical Elo
+      // inputs (R_A, R_B, K, S_A) and the resulting deltas for every
+      // human pair. Remove once the audit is closed.
+      console.log(
+        `[ELO-TRACE] pair=(${a.signatureId.slice(0, 8)} vs ${b.signatureId.slice(0, 8)}) ` +
+          `R_A=${a.rating} R_B=${b.rating} K=${K_BASE} ` +
+          `score_A=${a.score} score_B=${b.score} S_A=${actualA} ` +
+          `E_A=${ea.toFixed(4)} ΔA=${dA.toFixed(4)} ΔB=${dB.toFixed(4)}`,
+      );
       deltas.set(a.signatureId, (deltas.get(a.signatureId) ?? 0) + dA);
       deltas.set(b.signatureId, (deltas.get(b.signatureId) ?? 0) + dB);
     }

@@ -441,13 +441,24 @@ function finalizeRound(room: Room, winnerId: string, closingTile: Tile): void {
   });
   const deltaBySig = computeEloDeltas(eloSeats);
   const eloCalculated = startingHumans.length >= 2;
+  // [ELO] Outcome-trigger trace. Every finalize emits exactly one of
+  // these, so a missing line in the log == finalizeRound never ran.
+  console.log(
+    `[ELO] finalizeRound room=${room.id} startingHumans=${startingHumans.length} eloCalculated=${eloCalculated} winner=${winner?.name ?? "?"}`,
+  );
   // Apply deltas to the ledger for every starting human (even ones
   // who disconnected — their forfeit-penalty score still costs them).
+  // The ≥2-humans guard is in computeEloDeltas itself; we re-state
+  // it here only so the loop body is unambiguous to readers.
   if (eloCalculated) {
     for (const seat of eloSeats) {
       const delta = deltaBySig.get(seat.signatureId) ?? 0;
       eloLedger.applyDelta(seat.signatureId, delta);
     }
+  } else {
+    console.warn(
+      `[ELO] Skipped ledger update — reason=${startingHumans.length === 0 ? "no_humans" : "solo_vs_bots"} (need ≥2 humans, had ${startingHumans.length})`,
+    );
   }
   // Determine match type from the starting roster (NOT the finalize
   // roster — a bot could have been auto-removed mid-round).
