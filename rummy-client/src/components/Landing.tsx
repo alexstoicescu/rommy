@@ -190,7 +190,7 @@ export function Landing({
               : t("landing_export_btn")}
         </button>
 
-        <div className="landing__version">v2.8.2 - FINAL AUDIT PASS</div>
+        <div className="landing__version">v2.8.3 - ACE HIGH HOTFIX</div>
       </div>
     </div>
   );

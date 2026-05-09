@@ -1,5 +1,7 @@
 # Rommy Changelog
 
+## [v2.8.2] - The "Ace High" Hotfix⚙️ Game LogicCorrected Point Attribution: Updated the scoring engine to differentiate between "Low Aces" (5 pts) and "High Aces" (10 pts) in run formations.Meld Validation: Hardened the sequence checker to ensure $12-13-1$ is recognized as a high-value strategic play.📊 Analytics SyncReputation Accuracy: Ensured that the 10-point value is correctly factored into the Elo calculation and the "Match Tape" post-game debrief.
+
 ## [v2.8.1] - The "True Reputation" Patch
 
 ⚙️ Reputation Ledger Refinement

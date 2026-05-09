@@ -133,24 +133,39 @@ export function isValidFormatie(meld: Tile[]): boolean {
 // =====================================================================
 
 /**
- * Per-tile point value within a Suita, given the tile's effective value
- * and its position in the run. Jolys inherit the value of whatever
- * rung they replace.
+ * Per-tile point value within a Suita (Etalare scoring).
  *
+ * Standard rungs:
  *   2..9                          = 5
  *   10..13                        = 10
- *   1 at the low end of the run   = 5     (e.g. 1-2-3)
- *   1 at the high end of the run  = 10    (e.g. 12-13-1)
+ *
+ * The "1" tile is positionally weighted — it can legally appear only
+ * at the LOW end of a run (1-2-3...) or at the HIGH end after a 13
+ * (...-12-13-1). reifySuita guarantees these are the only possible
+ * positions (mid-run "1" is rejected as invalid, never reaches here).
+ *
+ *   "1" at the low end                = 5    (e.g. 1-2-3)
+ *   "1" preceded by 13 (high end)     = 10   (e.g. 12-13-1)  ← Ace High
+ *
+ * Jokers never call this — they're always 50 via calculateMeldPoints.
  */
-function suitaTilePoints(effective: number, position: number, length: number): number {
+function suitaTilePoints(
+  effective: number,
+  position: number,
+  length: number,
+): number {
   if (effective === 1) {
-    if (position === 0) return 5;
-    if (position === length - 1) return 10;
-    // Defensive: a run can't legally have a "1" in the middle.
-    return 0;
+    // Position-based scoring for the Ace. reifySuita lays the "1"
+    // at index 0 for low runs (start=1) or at index length-1 for
+    // high runs (preceded by 13). Anything else is impossible by
+    // construction.
+    const isHighEnd = position === length - 1 && length >= 2;
+    if (isHighEnd) return 10; // preceded by 13
+    if (position === 0) return 5; // low end (1-2-3...)
+    return 0; // unreachable in practice — defensive only
   }
   if (effective >= 2 && effective <= 9) return 5;
-  return 10;
+  return 10; // 10..13
 }
 
 /**

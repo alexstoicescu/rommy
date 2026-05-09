@@ -78,9 +78,13 @@ export function isValidFormatie(meld: Tile[]): boolean {
 
 function suitaTilePoints(eff: number, pos: number, len: number): number {
   if (eff === 1) {
-    if (pos === 0) return 5;
-    if (pos === len - 1) return 10;
-    return 0;
+    // Ace is positionally weighted. reifySuita only ever lays the "1"
+    // at index 0 (low run, e.g. 1-2-3) or index len-1 (high run,
+    // preceded by 13, e.g. 12-13-1).
+    const isHighEnd = pos === len - 1 && len >= 2;
+    if (isHighEnd) return 10; // preceded by 13
+    if (pos === 0) return 5; // low end
+    return 0; // unreachable in practice
   }
   if (eff >= 2 && eff <= 9) return 5;
   return 10;
