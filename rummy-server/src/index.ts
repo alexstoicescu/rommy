@@ -561,6 +561,12 @@ async function finalizeRound(
     // sessionId on the tape so the AAR can render the breakdown line
     // and the "GRANTED TO" tag.
     tape.atuOwnerSessionId = room.atuOwnerSessionId;
+    // v3.8.0 — Joker Gambit metadata. The 2× has already been applied
+    // by calculateFinalScores; the flag + multiplier are stamped here
+    // so the AAR / replay scrubber can surface the doubled-stakes
+    // framing without re-deriving it.
+    tape.isJokerWin = closingTile.isJoker;
+    tape.multiplier = closingTile.isJoker ? 2 : 1;
     // v3.0.0 — stamp the tape with ephemeral status so the AAR can
     // optionally surface a "session-only stats" warning.
     tape.ephemeral = eloLedger.isEphemeral();

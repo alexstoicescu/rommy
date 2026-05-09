@@ -114,6 +114,20 @@ export interface MatchTape {
    * Atu card with "GRANTED TO: <name>".
    */
   atuOwnerSessionId?: string | null;
+  /**
+   * v3.8.0 — Joker Gambit. True iff the closingTile was a Joker. When
+   * true, every entry in finalScores has already been doubled by the
+   * scoring engine; the AAR uses the flag to render the 2X STAKES
+   * banner + the purple-glow column treatment.
+   */
+  isJokerWin?: boolean;
+  /**
+   * v3.8.0 — Score multiplier applied to every player's row. 1 for
+   * normal rounds, 2 for Joker Gambit. Stored explicitly (rather
+   * than re-derived from isJokerWin) so future rules can introduce
+   * 1.5× / 3× without breaking the AAR.
+   */
+  multiplier?: number;
   winnerSessionId: string;
   closingTile: Tile;
 }

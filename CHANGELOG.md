@@ -1,5 +1,7 @@
 # Rommy Changelog
 
+## [v3.8.0] - The "Joker Gambit" UpdateThis update introduces a high-stakes mechanical shift, rewarding (or punishing) players based on the nature of the final move.⚖️ Scoring: Double Stakes ProtocolJoker Multiplier: Closing a round with a Joker now triggers a 2x Multiplier applied to the entire game's scoring packet.Aggressive Atu: Under Joker Gambit conditions, the Atu bonus is elevated from +50 to +100 points.ELO Volatility: Matches closed with a Joker will result in double the standard ELO gain/loss, allowing for rapid movement through the Argint and Aur tiers.🎨 UI/UX: Visual ExcitementGambit Banner: Introduced a high-intensity 'Joker Gambit' overlay for the After Action Report to signal the doubled stakes.Enhanced Accounting: The Score Breakdown table now explicitly shows the $2\times$ calculation, ensuring transparency in high-stakes outcomes.⚙️ MaintenanceVersion Sync: Main Menu now reflects build v3.8.0.Archival Precision: The Supabase Match Tape now includes a multiplier attribute to preserve the integrity of the permanent ledger.
+
 [v3.7.0] - The "Atu Ledger" Update
 This update finalizes the Atu protocol, ensuring that the most valuable asset in the game is tracked with absolute precision from the moment of the deal.
 

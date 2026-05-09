@@ -368,6 +368,19 @@ export function calculateFinalScores(
 ): Record<string, number> {
   const out: Record<string, number> = {};
 
+  // v3.8.0 — Joker Gambit. Closing the round with a Joker doubles
+  // every player's final score (winner AND losers, including the
+  // Atu +50 bonus, including the -100 forfeit penalty for unmelded
+  // losers). NOTE: this multiplier is applied AFTER the existing
+  // joker-winner 400 base, so a joker-close winner ends up at
+  // (400 + meldedScore) * 2 = 800 + 2*meldedScore. That is a literal
+  // reading of the v3.8.0 spec ("multiply the final calculated score
+  // for every player by 2"). If the intent is "the new 2x replaces
+  // the old 400 base," collapse the base to 200 in the winner branch
+  // and the rest of the math still works.
+  const isJokerWin = closingTile.isJoker;
+  const multiplier = isJokerWin ? 2 : 1;
+
   for (const player of players) {
     let score: number;
     if (player.socketId === winnerId) {
@@ -388,7 +401,10 @@ export function calculateFinalScores(
     // v3.7.0 — bonusPoints carries the Atu owner's +50 grant (set in
     // dealRoom). Attributed to the player who received the Atu at
     // deal time, regardless of where the card ended up.
-    out[player.socketId] = score + player.bonusPoints;
+    // v3.8.0 — joker-close 2x is applied last, AFTER the bonus is
+    // folded in, so the Atu bonus correctly becomes +100 in a Joker
+    // Gambit round, per spec.
+    out[player.socketId] = (score + player.bonusPoints) * multiplier;
   }
 
   return out;

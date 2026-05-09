@@ -597,6 +597,91 @@
   color: rgba(207, 226, 214, 0.75);
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   v3.8.0 — Joker Gambit. Closing with a Joker doubles every score
+   on the breakdown table; a banner + electric-purple final-score
+   column communicate that the round was a 2× stakes round.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Pulsing top-banner inside the Atu card. Electric-purple over a
+   semi-translucent background so it pops without overwhelming the
+   bento. Pause via prefers-reduced-motion. */
+.aar__joker-banner {
+  margin: -2px -4px 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(178, 102, 255, 0.6);
+  background: linear-gradient(
+    90deg,
+    rgba(178, 102, 255, 0.18),
+    rgba(255, 102, 255, 0.18)
+  );
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 3px;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: center;
+  color: #d8b6ff;
+  text-shadow:
+    0 0 1px #d8b6ff,
+    0 0 6px rgba(178, 102, 255, 0.7),
+    0 0 14px rgba(178, 102, 255, 0.45);
+  box-shadow:
+    0 0 14px rgba(178, 102, 255, 0.45),
+    inset 0 0 12px rgba(178, 102, 255, 0.18);
+  animation: aar-joker-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes aar-joker-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 12px rgba(178, 102, 255, 0.35),
+      inset 0 0 10px rgba(178, 102, 255, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(178, 102, 255, 0.7),
+      0 0 36px rgba(255, 102, 255, 0.35),
+      inset 0 0 14px rgba(178, 102, 255, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aar__joker-banner {
+    animation: none;
+  }
+}
+
+/* The Atu card itself picks up a subtle purple wash so the banner
+   and the table belong to the same stakes-doubled visual frame. */
+.aar__card--joker-gambit {
+  border-color: rgba(178, 102, 255, 0.55);
+  box-shadow:
+    0 0 16px rgba(178, 102, 255, 0.28),
+    inset 0 0 18px rgba(178, 102, 255, 0.08);
+}
+
+/* In a Joker Gambit table, the Final Score column glows electric
+   purple — every value in that column is a doubled value. The
+   third column (Atu Bonus +100 vs +50) is also boosted via the
+   existing aar__atu-bonus rule, so we don't override it here. */
+.aar__table--gambit td:last-child {
+  color: #d8b6ff;
+  text-shadow:
+    0 0 1px #d8b6ff,
+    0 0 5px rgba(178, 102, 255, 0.55);
+}
+
+/* Performance Mode (.app--low-fx) and Lean Mode kill the pulse +
+   the heavier glow stack so we don't pay frame cost on systems
+   that opted into "no idle animations." */
+.app--low-fx .aar__joker-banner,
+.app--lean-mode .aar__joker-banner {
+  animation: none;
+  box-shadow: none;
+}
+
 /* On the v3.1.0 short-screen breakpoint the breakdown is the most
    information-dense card; tighten its padding so it still fits
    without an inner scrollbar. */

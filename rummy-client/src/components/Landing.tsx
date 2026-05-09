@@ -190,7 +190,7 @@ export function Landing({
               : t("landing_export_btn")}
         </button>
 
-        <div className="landing__version">v3.7.0 - ATU LEDGER & SCORE BREAKDOWN</div>
+        <div className="landing__version">v3.8.0 - JOKER GAMBIT & 2X MULTIPLIER</div>
       </div>
     </div>
   );

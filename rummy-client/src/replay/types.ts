@@ -74,6 +74,10 @@ export interface MatchTape {
    * and break the +50 out as its own line in the score table.
    */
   atuOwnerSessionId?: string | null;
+  /** v3.8.0 — Joker Gambit. True when closingTile.isJoker. */
+  isJokerWin?: boolean;
+  /** v3.8.0 — score multiplier applied to every player. 1 normal, 2 joker. */
+  multiplier?: number;
   winnerSessionId: string;
   closingTile: Tile;
 }

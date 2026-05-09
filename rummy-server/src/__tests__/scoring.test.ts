@@ -18,6 +18,7 @@
 
 import {
   calculateMeldPoints,
+  calculateFinalScores,
   scoreMeldFinal,
   scoreTileFinal,
   isValidSuita,
@@ -25,6 +26,7 @@ import {
   reifySuita,
   type Tile,
   type TileColor,
+  type ScoringPlayer,
 } from "../GameRules";
 
 // scoreTileFinal is referenced in the v3.7.0 regression block. Marker
@@ -385,5 +387,79 @@ console.log("\nAtu Ledger scoring (v3.7.0 — designated-asset model)");
   );
 }
 
+// === Joker Gambit — v3.8.0 ===================================================
+//
+// Closing the round with a Joker doubles every player's final score:
+// winner, losers, hand penalties, Atu bonus, and the -100 forfeit
+// for unmelded losers. The doubling is applied AFTER the existing
+// 400-base joker-winner bonus, so a joker-close winner ends up at
+// (400 + meldedScore) * 2 = 800 + 2*meldedScore. Documented in
+// GameRules.ts.
+console.log("\nJoker Gambit (v3.8.0)");
+
+function player(
+  socketId: string,
+  hand: Tile[],
+  meldedScore: number,
+  hasMeldedInitial: boolean,
+  bonusPoints = 0,
+): ScoringPlayer {
+  return { socketId, hand, hasMeldedInitial, meldedScore, bonusPoints };
+}
+
+const noopHand: Tile[] = [];
+const closing: Record<string, Tile> = {
+  joker: tile("close-j", "joker", 0, true),
+  ace: tile("close-1", "red", 1),
+  normal: tile("close-7", "blue", 7),
+};
+
+// Normal close (non-joker, non-ace): no doubling; baseline.
+{
+  const winner = player("W", noopHand, 100, true, 0); // 200 + 100 = 300
+  const loserA = player("A", [tile("y-2", "yellow", 2)], 50, true, 0); // 50 - 5 = 45
+  const loserB = player("B", noopHand, 0, false, 0); // -100
+  const out = calculateFinalScores([winner, loserA, loserB], "W", closing.normal);
+  eq(out.W, 300, "normal close winner = 200 + meldedScore");
+  eq(out.A, 45, "normal close melded loser = melded - hand");
+  eq(out.B, -100, "normal close unmelded loser = -100");
+}
+
+// Joker close: every entry doubles. Atu bonus is included → +100.
+{
+  const winner = player("W", noopHand, 100, true, 0); // (400 + 100) * 2 = 1000
+  const loserA = player("A", [tile("y-2", "yellow", 2)], 50, true, 50); // (50 - 5 + 50) * 2 = 190
+  const loserB = player("B", noopHand, 0, false, 0); // -100 * 2 = -200
+  const out = calculateFinalScores([winner, loserA, loserB], "W", closing.joker);
+  eq(out.W, 1000, "joker close winner = (400 + melded) * 2");
+  eq(
+    out.A,
+    190,
+    "joker close melded loser w/ Atu = (melded - hand + 50) * 2 = +190",
+  );
+  eq(out.B, -200, "joker close unmelded loser = -100 * 2");
+}
+
+// Ace close: winner-only doubling (existing rule); other players
+// stay at their normal totals (no joker-gambit multiplier).
+{
+  const winner = player("W", noopHand, 100, true, 0); // (200 + 100) * 2 = 600
+  const loserA = player("A", [tile("y-2", "yellow", 2)], 50, true, 0); // 50 - 5 = 45 (NOT doubled)
+  const out = calculateFinalScores([winner, loserA], "W", closing.ace);
+  eq(out.W, 600, "ace close winner = (200 + melded) * 2");
+  eq(out.A, 45, "ace close loser unaffected (not doubled)");
+}
+
+// Joker close + Atu owner = winner: bonus and base both doubled.
+// Validates the spec note "must include the Atu Bonus (making it +100)."
+{
+  const winner = player("W", noopHand, 100, true, 50); // (400 + 100 + 50) * 2 = 1100
+  const out = calculateFinalScores([winner], "W", closing.joker);
+  eq(
+    out.W,
+    1100,
+    "joker close + atu owner = (400 + melded + 50) * 2 = 1100 (+100 from Atu doubled)",
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
-process.exit(failed > 0 ? 1 : 0);

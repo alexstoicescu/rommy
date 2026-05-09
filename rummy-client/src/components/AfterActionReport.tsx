@@ -258,7 +258,21 @@ export function AfterActionReport({
               "your final score = hand-summed score, plus +50 if the
               Atu was granted to you." */}
           {tape.atu && (
-            <section className="aar__card aar__card--atu">
+            <section
+              className={
+                "aar__card aar__card--atu" +
+                (tape.isJokerWin ? " aar__card--joker-gambit" : "")
+              }
+            >
+              {tape.isJokerWin && (
+                <div
+                  className="aar__joker-banner"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {t("aar_joker_gambit_banner")}
+                </div>
+              )}
               <div className="aar__card-label">{t("aar_atu_label")}</div>
               <div className="aar__atu-stack">
                 <TileComponent tile={tape.atu} />
@@ -283,7 +297,12 @@ export function AfterActionReport({
                   );
                 })()}
               </div>
-              <table className="aar__table aar__table--breakdown">
+              <table
+                className={
+                  "aar__table aar__table--breakdown" +
+                  (tape.isJokerWin ? " aar__table--gambit" : "")
+                }
+              >
                 <thead>
                   <tr>
                     <th>{t("aar_col_player")}</th>
@@ -339,7 +358,9 @@ export function AfterActionReport({
                   <tfoot>
                     <tr className="aar__breakdown-summary">
                       <td colSpan={3}>{t("aar_atu_holder_line")}</td>
-                      <td className="aar__table-value aar__atu-bonus">+50</td>
+                      <td className="aar__table-value aar__atu-bonus">
+                        {tape.isJokerWin ? "+100" : "+50"}
+                      </td>
                     </tr>
                   </tfoot>
                 )}
