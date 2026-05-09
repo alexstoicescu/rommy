@@ -71,15 +71,35 @@
     0 0 12px rgba(255, 224, 102, 0.35);
 }
 
-/* Tiles in the rack — use grid placement, stacked above slots. */
+/* Tiles in the rack — use grid placement, stacked above slots.
+   Slot-to-slot animation is driven by FLIP in PlayerRack.tsx via the
+   Web Animations API, so we don't transition `transform` here at the
+   CSS layer. The element itself only animates its inner .tile (lift,
+   selection, drag glow) via the rules below. */
 .sortable-tile--slot {
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Snap-back animation when the drag ends — back-out spring curve
-     gives the tile a satisfying overshoot before settling. */
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+}
+
+/* Visual lift for tap-selected tiles — 15px above the rack with a
+   warm-amber + theme glow so it reads as "in hand, ready to meld". */
+.sortable-tile--selected .tile {
+  transform: translateY(-15px);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 224, 102, 0.7),
+    inset 0 0 10px rgba(255, 224, 102, 0.45),
+    0 14px 22px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(255, 224, 102, 0.55);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.18s ease;
+}
+
+.sortable-tile--slot:not(.sortable-tile--selected) .tile {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.18s ease;
 }
 
 /* While dragging — lift + soft cyan/gold neon shadow. */

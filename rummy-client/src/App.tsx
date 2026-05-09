@@ -193,6 +193,11 @@ function App() {
   const { t } = useTranslation();
   const [hand, setHand] = useState<Tile[]>([]);
   const [handLayout, setHandLayout] = useState<Record<string, number>>({});
+  // Tactical Selection (v2.9.4) — set of tile.ids the player has
+  // tapped. Survives sorts (keyed by tile.id, which is stable). When
+  // a selected tile is no longer in hand, it's pruned at every render
+  // via a derived Set below.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [board, setBoard] = useState<Record<string, Tile[][]>>({});
   const [draftMelds, setDraftMelds] = useState<Tile[][]>([]);
   const [discardPile, setDiscardPile] = useState<Tile[]>([]);
@@ -290,6 +295,32 @@ function App() {
     () => hand.filter((t) => !draftTileIds.has(t.id)),
     [hand, draftTileIds],
   );
+
+  // Prune selection of any tile that's no longer in hand (drawn,
+  // discarded, or moved into a draft meld). Returns a stable Set
+  // for comparison + the array of selected Tile objects.
+  const liveSelection = useMemo(() => {
+    const liveIds = new Set<string>();
+    const liveTiles: Tile[] = [];
+    for (const tile of rackTiles) {
+      if (selectedIds.has(tile.id)) {
+        liveIds.add(tile.id);
+        liveTiles.push(tile);
+      }
+    }
+    return { ids: liveIds, tiles: liveTiles };
+  }, [rackTiles, selectedIds]);
+
+  const toggleTileSelection = (tileId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(tileId)) next.delete(tileId);
+      else next.add(tileId);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
 
   useEffect(() => {
     const onConnect = () => {
@@ -604,7 +635,12 @@ function App() {
     setDraftMelds([]);
   };
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  // 5px activation distance lets click-to-select fire cleanly without
+  // accidentally starting a drag. Drags still kick in for any pointer
+  // movement past the threshold.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
 
   const collisionDetection: CollisionDetection = useCallback((args) => {
     const pointerCollisions = pointerWithin(args);
@@ -861,7 +897,52 @@ function App() {
   // Smart meld-button state — derived from the local draft. The server
   // is still the authority on commit, but this gives the player live
   // feedback while they assemble the meld.
+  // === MELD button (v2.9.4 selection-aware) ===
+  // Two paths into the same button:
+  //   1. SELECTION-DRIVEN — player tapped tiles to highlight them.
+  //      The button gates strictly on whether the selection forms
+  //      a valid Suita or Formatie. Click adds to draftMelds (or
+  //      submits play_new_meld if already past Etalare) and clears
+  //      the selection so the player can keep building.
+  //   2. DRAFT-DRIVEN — empty selection, falls back to the existing
+  //      drag-to-draft logic (Etalare 45-pt threshold etc.).
   const meldButton = (() => {
+    if (liveSelection.tiles.length > 0) {
+      const candidate = liveSelection.tiles;
+      const validMeld =
+        isValidSuita(candidate) || isValidFormatie(candidate);
+      if (!validMeld) {
+        return {
+          label: t("meld_btn_invalid"),
+          disabled: true,
+          active: false,
+          onClick: () => {},
+        };
+      }
+      if (hasMelded) {
+        // Post-Etalare: submit immediately as a new meld.
+        return {
+          label: t("meld_btn_play_new"),
+          disabled: false,
+          active: true,
+          onClick: () => {
+            socket.emit("play_new_meld", [candidate]);
+            clearSelection();
+          },
+        };
+      }
+      // Pre-Etalare: stage as a draft meld so the player can keep
+      // composing toward the 45-pt threshold.
+      return {
+        label: t("meld_btn_etalare"),
+        disabled: false,
+        active: true,
+        onClick: () => {
+          setDraftMelds((prev) => [...prev, candidate]);
+          clearSelection();
+        },
+      };
+    }
     if (draftMelds.length === 0) {
       return {
         label: t("meld_btn_select"),
@@ -1238,6 +1319,8 @@ function App() {
               layout={handLayout}
               dragActive={activeTile != null}
               draggingId={activeTile?.id ?? null}
+              selectedIds={liveSelection.ids}
+              onTileClick={toggleTileSelection}
             />
           </div>
         </main>

@@ -190,7 +190,7 @@ export function Landing({
               : t("landing_export_btn")}
         </button>
 
-        <div className="landing__version">v2.9.3 - REDUNDANCY PURGE & DISCARD POLISH</div>
+        <div className="landing__version">v2.9.4 - DETERMINISTIC SORTING & TACTICAL SELECTION</div>
       </div>
     </div>
   );

@@ -1,5 +1,13 @@
 # Rommy Changelog
 
+## [v2.9.4] - The "Agency" Update
+
+Logic: Agency Restoration: Permanently removed output randomness from player actions (Discard/Meld).
+
+UX: Grid-Aware Sorting: Re-engineered the sorting engine to work within the 44-slot tactical rack.
+
+Feel: Persistent Selection: Integrated a "Lift and Lock" selection system that survives hand re-organizations.
+
 ## [v2.9.3] - The "Direct Action" Update
 
 UI: Redundancy Purge: Removed the manual 'End Turn' button to declutter the arena and prioritize tactile gameplay.
